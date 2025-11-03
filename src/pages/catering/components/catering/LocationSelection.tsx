@@ -1,11 +1,15 @@
-// src/components/catering/LocationSelection.tsx
-import React from "react";
+import React, { useEffect, useState } from "react";
+import axios from "axios";
 import { Button } from "../ui/button";
 
+interface Location {
+  id: number;
+  name: string;
+}
+
 interface LocationSelectionProps {
-  selectedLocation: string | null;
-  setSelectedLocation: React.Dispatch<React.SetStateAction<string | null>>;
-  locations: string[];
+  selectedLocation: { id: number | null; name: string | null };
+  setSelectedLocation: React.Dispatch<React.SetStateAction<{ id: number | null; name: string | null }>>;
   handleGoBack: () => void;
   handleContinue: () => void;
 }
@@ -13,10 +17,49 @@ interface LocationSelectionProps {
 const LocationSelection: React.FC<LocationSelectionProps> = ({
   selectedLocation,
   setSelectedLocation,
-  locations,
   handleGoBack,
   handleContinue,
 }) => {
+  const [locations, setLocations] = useState<Location[]>([]); // Updated type for locations
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const baseUrl =
+    import.meta.env.VITE_API_URL || "http://127.0.0.1:8000/api/catering/";
+  const authToken = sessionStorage.getItem("authToken");
+
+  useEffect(() => {
+    const fetchLocations = async () => {
+      try {
+        const response = await axios.get(`${baseUrl}locations/`, {
+          headers: {
+            Authorization: `Token ${authToken}`,
+          },
+        });
+        setLocations(response.data); // Assuming the response is an array of location objects
+        setLoading(false);
+      } catch (err) {
+        setError("Failed to load locations. Please try again later.");
+        setLoading(false);
+      }
+    };
+
+    fetchLocations();
+  }, [baseUrl, authToken]);
+
+  if (loading) {
+    return <div>Loading locations...</div>;
+  }
+
+  if (error) {
+    return <div>{error}</div>;
+  }
+
+  // Handle location selection
+  const handleLocationSelection = (location: { id: number; name: string }) => {
+    setSelectedLocation(location); // Save both id and name of the selected location
+  };
+
   return (
     <div className="bg-neutral-white border rounded-2xl p-6 md:px-6 md:py-5" style={{ border: "1px solid #EDEEF2" }}>
       <div className="flex items-center mb-6 gap-4">
@@ -28,26 +71,26 @@ const LocationSelection: React.FC<LocationSelectionProps> = ({
 
       <div className="ml-12">
         <div className="grid md:grid-cols-3 gap-6 max-w-3xl">
-          {locations.map((location, idx) => (
+          {locations.map((location) => (
             <Button
-              key={idx}
-              onClick={() => setSelectedLocation(location)}
+              key={location.id} // Use the location id as the key
+              onClick={() => handleLocationSelection(location)} // Pass the location object
               style={{
                 fontSize: '16px',
                 height: '56px',
-                backgroundColor: selectedLocation === location ? '#EAF5FF' : '#fff',
+                backgroundColor: selectedLocation?.id === location.id ? '#EAF5FF' : '#fff', // Optional chaining used here
                 color: '#2B2B43',
                 fontWeight: '400',
                 borderRadius: '16px',
                 padding: '12px 16px',
                 width: '245px',
-                border: selectedLocation === location ? '1px solid #054A86' : '1px solid #C7C8D2',
+                border: selectedLocation?.id === location.id ? '1px solid #054A86' : '1px solid #C7C8D2', // Optional chaining used here
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
               }}
             >
-              {location}
+              {location.name} {/* Render the location name */}
             </Button>
           ))}
         </div>
@@ -59,8 +102,8 @@ const LocationSelection: React.FC<LocationSelectionProps> = ({
         </Button>
         <Button
           onClick={handleContinue}
-          disabled={!selectedLocation}
-          className={`bg-[#054A86] text-white hover:bg-[#054A86] hover:bg-opacity-70 ${!selectedLocation ? "cursor-not-allowed" : ""}`}
+          disabled={!selectedLocation?.id} // Disable continue button if no location is selected (using optional chaining)
+          className={`bg-[#054A86] text-white hover:bg-[#054A86] hover:bg-opacity-70 ${!selectedLocation?.id ? "cursor-not-allowed" : ""}`} // Optional chaining here too
           style={{ padding: '12px 24px', borderRadius: '8px', fontSize: '16px', fontWeight: '600', boxShadow: "0px 8px 20px 0px #4E60FF29" }}
         >
           Continue

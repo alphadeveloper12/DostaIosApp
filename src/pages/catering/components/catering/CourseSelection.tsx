@@ -1,24 +1,82 @@
-// src/components/catering/CourseSelection.tsx
-import React from "react";
+import React, { useEffect, useState } from "react";
+import axios from "axios";
 import { Button } from "../ui/button";
 
+interface Course {
+  id: number;
+  name: string;
+  image_url: string;
+}
+
 interface CourseSelectionProps {
-  selectedCourses: string[];
-  setSelectedCourses: React.Dispatch<React.SetStateAction<string[]>>;
-  courseTypes: { name: string; image: string }[];
+  selectedCourses: { id: number; name: string }[];
+  setSelectedCourses: React.Dispatch<React.SetStateAction<{ id: number; name: string }[]>>;
   handleGoBack: () => void;
   handleContinue: () => void;
-  toggleCourse: (course: string) => void;
+  toggleCourse: (course: { id: number; name: string }) => void;
 }
 
 const CourseSelection: React.FC<CourseSelectionProps> = ({
   selectedCourses,
   setSelectedCourses,
-  courseTypes,
   handleGoBack,
   handleContinue,
   toggleCourse,
 }) => {
+  const [courseTypes, setCourseTypes] = useState<Course[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const baseUrl =
+    import.meta.env.VITE_API_URL || "http://127.0.0.1:8000/api/catering/";
+  const authToken = sessionStorage.getItem("authToken");
+
+  useEffect(() => {
+    const fetchCourses = async () => {
+      try {
+        const response = await axios.get(`${baseUrl}courses/`, {
+          headers: {
+            Authorization: `Token ${authToken}`,
+          },
+        });
+
+        // Assuming the response is in the format [{ name, image }]
+        setCourseTypes(response.data);
+        setLoading(false);
+      } catch (err) {
+        console.error("Error fetching courses:", err);
+        setError("Failed to load courses. Please try again later.");
+        setLoading(false);
+      }
+    };
+
+    fetchCourses();
+  }, [baseUrl, authToken]);
+
+  // Render loading and error states
+  if (loading) {
+    return <div>Loading...</div>;
+  }
+
+  if (error) {
+    return <div>{error}</div>;
+  }
+
+  // Toggle course selection and update selected courses state
+  const handleCourseSelection = (course: { id: number; name: string }) => {
+    // Check if the course is already selected
+    const isSelected = selectedCourses.some(
+      (selectedCourse) => selectedCourse.id === course.id
+    );
+
+    // Toggle the selection state
+    if (isSelected) {
+      setSelectedCourses(selectedCourses.filter((c) => c.id !== course.id));
+    } else {
+      setSelectedCourses([...selectedCourses, course]);
+    }
+  };
+
   return (
     <div className="bg-neutral-white border rounded-2xl p-6 md:px-6 md:py-5" style={{ border: "1px solid #EDEEF2" }}>
       <div className="flex items-center mb-6 gap-4">
@@ -34,27 +92,27 @@ const CourseSelection: React.FC<CourseSelectionProps> = ({
         </p>
 
         <div className="grid md:grid-cols-4 gap-6">
-          {courseTypes.map((course, idx) => (
+          {courseTypes.map((course) => (
             <Button
-              key={idx}
-              onClick={() => toggleCourse(course.name)}
+              key={course.id}
+              onClick={() => handleCourseSelection({ id: course.id, name: course.name })}
               style={{
                 fontSize: '16px',
                 height: '80px',
-                backgroundColor: selectedCourses.includes(course.name) ? '#EAF5FF' : '#fff',
+                backgroundColor: selectedCourses.some((selectedCourse) => selectedCourse.id === course.id) ? '#EAF5FF' : '#fff',
                 color: '#2B2B43',
                 fontWeight: '400',
                 borderRadius: '16px',
                 padding: '10px',
                 width: '245px',
-                border: selectedCourses.includes(course.name) ? '1px solid #054A86' : '1px solid #C7C8D2',
+                border: selectedCourses.some((selectedCourse) => selectedCourse.id === course.id) ? '1px solid #054A86' : '1px solid #C7C8D2',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'flex-start',
               }}
             >
               <img
-                src={course.image}
+                src={course.image_url}
                 alt={course.name}
                 style={{
                   width: '60px',
