@@ -1,20 +1,44 @@
 import { Link, useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Menu, X } from "lucide-react";
 import { useLocation } from "react-router-dom";
 const Header = () => {
  const path = useLocation();
  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-   const [isLoggedIn, setIsLoggedIn] = useState(false); // Add login state
-     const navigate = useNavigate(); // Initialize navigate function
-       const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-
+ const [isLoggedIn, setIsLoggedIn] = useState(false); // Add login state
+ const navigate = useNavigate(); // Initialize navigate function
+ const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+ const slug = "/" + path.pathname.split("/")[1]; // → "/vending-home"
+ {
+  /* authentication user login or not  */
+ }
+ useEffect(() => {
+  const checkAuth = () => {
+   const token =
+    localStorage.getItem("authToken") || sessionStorage.getItem("authToken");
+   setIsLoggedIn(!!token);
+  };
+  checkAuth();
+  window.addEventListener("storage", checkAuth);
+  return () => window.removeEventListener("storage", checkAuth);
+ }, []);
+ {
+  /* handle logout  */
+ }
+ const handleLogout = () => {
+  localStorage.removeItem("authToken");
+  sessionStorage.removeItem("authToken");
+  localStorage.removeItem("user");
+  sessionStorage.removeItem("user");
+  setIsLoggedIn(false);
+  navigate("/signin");
+ };
  const toggleMobileMenu = () => {
   setIsMobileMenuOpen(!isMobileMenuOpen);
  };
-const handleLoginClick = () => {
-    navigate("/signin"); // Navigate to /signin when login is clicked
-  };
+ const handleLoginClick = () => {
+  navigate("/signin"); // Navigate to /signin when login is clicked
+ };
  return (
   <header className="bg-neutral-white border-b border-neutral-gray-lightest sticky top-0 z-50">
    <div className="main-container mx-auto ">
@@ -30,7 +54,7 @@ const handleLoginClick = () => {
       ) : (
        <img
         src={
-         path.pathname === "/vending-home"
+         slug === "/vending-home"
           ? "/images/nav/vending_logo.svg"
           : "/images/nav/catering_logo.svg"
         }
@@ -40,9 +64,8 @@ const handleLoginClick = () => {
       )}
      </Link>
 
-
      {/* Desktop Navigation */}
-     <div className="hidden md:flex items-center gap-4 lg:gap-6">
+     <div className="hidden md:flex items-center gap-4 lg:gap-6 relative">
       {/* Language Selector */}
       <select className="text-[14px] lg:text-[16px] leading-[24px] tracking-[0.1px] font-[700] select-none outline-none text-neutral-black cursor-pointer hover:text-primary transition-colors bg-transparent">
        <option value="">En</option>
@@ -52,22 +75,35 @@ const handleLoginClick = () => {
 
       <span className="h-[32px] bg-[#EDEEF2] w-[1px]"></span>
 
-     {/* Login Button or User Icon */}
-            {isLoggedIn ? (
-              <button
-                className="w-[40px] h-[40px] relative lg:w-[48px] lg:h-[48px] bg-neutral-gray rounded-[12px] lg:rounded-[16px] text-white flex items-center justify-center text-[12px] lg:text-[14px] font-[600] flex-shrink-0"
-                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-              >
-                <img src="/images/nav/user.svg" alt="user" />
-              </button>
-            ) : (
-              <button
-                onClick={handleLoginClick} // Trigger navigation on click
-                className="text-[16px] leading-[24px] font-[700] tracking-[0.1px] text-neutral-gray-dark"
-              >
-                Login
-              </button>
-            )}
+      {/* Login Button or User Icon */}
+      {isLoggedIn ? (
+       <button
+        className="w-[40px] h-[40px] relative lg:w-[48px] lg:h-[48px] bg-neutral-gray rounded-[12px] lg:rounded-[16px] text-white flex items-center justify-center text-[12px] lg:text-[14px] font-[600] flex-shrink-0"
+        onClick={() => setIsDropdownOpen(!isDropdownOpen)}>
+        <img src="/images/nav/user.svg" alt="user" />
+       </button>
+      ) : (
+       <button
+        onClick={handleLoginClick} // Trigger navigation on click
+        className="text-[16px] leading-[24px] font-[700] tracking-[0.1px] text-neutral-gray-dark">
+        Login
+       </button>
+      )}
+      {isDropdownOpen && isLoggedIn && (
+       <div className="absolute top-16 right-0 w-[256px] bg-white rounded-[16px] shadow-lg py-[10px]">
+        <div className="hover:bg-primary-light py-[8px] px-[16px] rounded-t-[4px]">
+         <Link to="/orders">My Orders</Link>
+        </div>
+        <div className="hover:bg-primary-light py-[8px] px-[16px]">
+         <Link to="/settings">Account Settings</Link>
+        </div>
+        <div
+         onClick={handleLogout}
+         className="hover:bg-primary-light py-[8px] px-[16px] rounded-b-[4px] cursor-pointer">
+         Logout
+        </div>
+       </div>
+      )}
      </div>
 
      {/* Mobile Menu Button */}

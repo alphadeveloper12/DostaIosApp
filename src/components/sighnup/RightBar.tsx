@@ -20,7 +20,7 @@ const RightBar = () => {
   const [passwordError, setPasswordError] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(false);
 
-  const baseURL = "http://127.0.0.1:8000";
+  const baseURL = import.meta.env.VITE_API_URL;
   console.log("API Base URL:", baseURL);
   const navigate = useNavigate();
 

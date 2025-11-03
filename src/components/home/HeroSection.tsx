@@ -8,8 +8,8 @@ const sliderSettings = {
  infinite: true, // Infinite loop
  slidesToShow: 1, // Show one slide at a time
  slidesToScroll: 1,
- autoplay: false, // Enable autoplay
- autoplaySpeed: 2000, // Change slide every 3 seconds
+ autoplay: true, // Enable autoplay
+ autoplaySpeed: 3000, // Change slide every 3 seconds
  dots: true, // Show pagination dots
  arrows: false, // Hide navigation arrows (optional)
  speed: 500, // Transition speed (ms)

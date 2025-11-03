@@ -57,6 +57,7 @@ const steps = [
  },
 ];
 
+
 const ShowCase = () => {
  const navigate = useNavigate(); // Initialize useNavigate
 

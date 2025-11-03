@@ -14,6 +14,7 @@ import { X } from "lucide-react";
 import Menu from "./Menu";
 import PlanWeekly from "./PlanWeekly";
 import { Input } from "../ui/input";
+import Header from "@/pages/catering/components/layout/Header";
 
 type StepStatus = "completed" | "active" | "pending";
 
@@ -248,7 +249,8 @@ const OrderNow = () => {
 
  return (
   <div className="min-h-screen">
-   <VendingHeader />
+   {/* <VendingHeader /> */}
+   <Header/>
    <main className="flex-1 bg-[#F7F7F9]">
     {/* Breadcrumb and Title */}
     <div className="w-full bg-white pt-2 pb-6">
