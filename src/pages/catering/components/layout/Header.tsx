@@ -107,62 +107,124 @@ const Header = () => {
      </div>
 
      {/* Mobile Menu Button */}
-     <button
-      onClick={toggleMobileMenu}
-      className="md:hidden p-2 text-neutral-black hover:text-primary transition-colors"
-      aria-label="Toggle menu">
-      {isMobileMenuOpen ? (
-       <X className="h-6 w-6" />
-      ) : (
-       <Menu className="h-6 w-6" />
-      )}
-     </button>
+     {/* Notification Icon */}
+     <div className="max-md:flex md:hidden max-md:items-center gap-4">
+      <div className="relative md:hidden">
+       <img
+        src="/images/icons/inbox.svg"
+        className="bg-neutral-gray-lightest p-3 rounded-xl w-12 h-12"
+        alt="inbox"
+       />
+       <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] rounded-full w-4 h-4 flex items-center justify-center">
+        4
+       </span>
+      </div>
+      <span className="h-8 md:hidden w-[1px] bg-neutral-gray-lightest"></span>
+      <button
+       onClick={toggleMobileMenu}
+       className="md:hidden py-2 text-neutral-black hover:text-primary transition-colors"
+       aria-label="Toggle menu">
+       {isMobileMenuOpen ? (
+        <X size={24} />
+       ) : (
+        <img
+         src={
+          slug === "/settings"
+           ? "/images/icons/hambg.svg"
+           : "/images/nav/searchbox.svg"
+         }
+         alt="search icon"
+        />
+       )}
+      </button>
+     </div>
     </div>
 
     {/* Mobile Navigation Menu */}
     {isMobileMenuOpen && (
-     <div className="md:hidden border-t border-neutral-gray-lightest py-4">
-      <nav className="flex flex-col gap-4">
-       {/* Language Selector */}
-       <div className="flex items-center justify-between px-2">
-        <span className="text-[14px] font-[600] text-neutral-black">
-         Language
-        </span>
-        <select className="text-[14px] leading-[24px] tracking-[0.1px] font-[700] select-none outline-none text-neutral-black cursor-pointer hover:text-primary transition-colors bg-transparent px-2 py-1 border border-neutral-gray-lightest rounded">
-         <option value="">En</option>
-         <option value="">Ar</option>
-         <option value="">Cn</option>
-        </select>
-       </div>
-
-       <div className="h-[1px] bg-[#EDEEF2]"></div>
-
-       {/* My Order Link */}
-       <Link
-        to="/orders"
-        onClick={toggleMobileMenu}
-        className="text-[16px] leading-[24px] tracking-[0.1px] font-[700] text-neutral-black hover:text-primary transition-colors px-2 py-2">
-        My Order
-       </Link>
-
-       <div className="h-[1px] bg-[#EDEEF2]"></div>
-
-       {/* Cart and User Section */}
-       <div className="flex items-center justify-between px-2">
-        <button className="relative flex items-center gap-2">
+     <div className="fixed inset-0 bg-neutral-white z-50 md:hidden flex flex-col justify-start py-[18px] px-[15px]">
+      {/* Header */}
+      <div className=" h-full ">
+       <div className="flex justify-between items-center mb-10">
+        {/* Logo */}
+        <div className="flex items-center gap-2">
          <img
-          src="/images/nav/cart.svg"
-          alt="cart"
-          className="h-[40px] w-[40px]"
+          src={
+           slug === "/vending-home"
+            ? "/images/icons/dosta_home_b.svg"
+            : "/images/nav/dosta_blue.svg"
+          }
+          alt="Dosta"
+          className="h-6 w-auto"
          />
-         <span className="text-[14px] font-[600] text-neutral-black">Cart</span>
-        </button>
+         <span className="h-8 w-[1px] bg-[#054A86]"></span>
+         <span className="text-[#054A86] text-[24px]"> VENDING</span>
+        </div>
 
-        <button className="w-[40px] h-[40px] bg-[#054A86] rounded-[12px] text-white flex items-center justify-center text-[12px] font-[600]">
-         NS
+        {/* Close Button (Dummy Icon) */}
+        <button onClick={() => setIsMobileMenuOpen(false)}>
+         <img
+          src="/images/nav/crossbox.svg"
+          alt="close"
+          className="h-11 w-11 bg-gray-100 rounded-xl "
+         />
         </button>
        </div>
-      </nav>
+
+       {/* Menu Items */}
+       <div className="flex flex-col items-center justify-center flex-grow gap-6 pt-[68px]">
+        <Link
+         to="/orders"
+         className="text-[24px] leading-[32px] font-[700] tracking-[0.1px] text-neutral-black">
+         My Orders
+        </Link>
+
+        <Link
+         to="/account"
+         className="text-[24px] leading-[32px] font-[700] tracking-[0.1px] text-neutral-black">
+         Account Settings
+        </Link>
+
+        <button className="text-[24px] leading-[32px] font-[700] tracking-[0.1px] text-neutral-black">
+         العربية
+        </button>
+
+        <button
+         onClick={isLoggedIn ? handleLogout : handleLoginClick}
+         className={`text-[24px] leading-[32px] font-[700] tracking-[0.1px] text-neutral-black
+         }`}>
+         {isLoggedIn ? "Logout" : "Login"}
+        </button>
+       </div>
+      </div>
+
+      {/* Bottom Search Bar */}
+      <div className="w-full  ">
+       <div className="border-t border-gray-200 mb-4"></div>
+
+       <div className="flex items-center gap-2">
+        <div className="flex items-center bg-neutral-gray-lightest rounded-xl px-4 py-3 flex-grow">
+         <input
+          type="text"
+          placeholder="Search"
+          className="bg-neutral-gray-lightest w-full text-[14px] outline-none"
+         />
+         <img src="/images/icons/search.svg" className="w-4 h-4" alt="search" />
+        </div>
+
+        {/* Notification Icon */}
+        <div className="relative">
+         <img
+          src="/images/icons/inbox.svg"
+          className="bg-neutral-gray-lightest p-3 rounded-xl w-10 h-10"
+          alt="inbox"
+         />
+         <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] rounded-full w-4 h-4 flex items-center justify-center">
+          4
+         </span>
+        </div>
+       </div>
+      </div>
      </div>
     )}
    </div>

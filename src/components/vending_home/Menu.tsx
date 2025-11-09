@@ -24,7 +24,7 @@ const Menu: React.FC<MenuProps> = ({ handleConfirmStep }) => {
  const [isSheetOpen, setIsSheetOpen] = useState(false);
  const [selectedItems, setSelectedItems] = useState<FoodItem[]>([]);
  const [toaster, setToaster] = useState<boolean>(false);
-  const [quantity, setQuantity] = useState(1);
+ const [quantity, setQuantity] = useState(1);
 
  const handleCardClick = (item: FoodItem) => {
   setSelectedItem(item);
@@ -172,7 +172,7 @@ const Menu: React.FC<MenuProps> = ({ handleConfirmStep }) => {
        <h2 className="text-[16px] text-[#2B2B43] leading-[24px] font-[700] tracking-[0.1px]">
         Choose your meal from our daily menu of 13 chef-prepared meals
        </h2>
-       <div className="flex gap-4 md:flex-row flex-col py-2">
+       <div className="md:flex gap-4 md:flex-row flex-col py-2 hidden">
         {selectedItems.length > 0 && (
          <Button
           className="bg-transparent w-full hover:bg-transparent text-[#545563] border border-[#545563]"
@@ -194,12 +194,15 @@ const Menu: React.FC<MenuProps> = ({ handleConfirmStep }) => {
        </div>
       </div>
       <div className="flex md:flex-row justify-between flex-col py-2">
-       <p className="text-[14px] font-[400] leading-[20px] tracking-[0.2px] text-[#545563]">
-        {selectedItems.length === 0
-         ? "No selected meals"
-         : `Selected meals: ${selectedItems
-            .map((item) => item.heading)
-            .join(", ")}`}
+       <p className="text-[14px] font-[700] leading-[20px] tracking-[0.2px] text-[#545563]">
+        {selectedItems.length === 0 ? (
+         "No selected meals"
+        ) : (
+         <div>
+          <span className="font-[400]">Selected meals:</span>{" "}
+          {selectedItems.map((item) => item.heading).join(", ")}
+         </div>
+        )}
        </p>
        <p className="text-[14px] font-[400] leading-[20px] tracking-[0.2px] text-[#545563]">
         Total: <span className="font-[700]">{selectedItems.length} Meals</span>
@@ -209,7 +212,7 @@ const Menu: React.FC<MenuProps> = ({ handleConfirmStep }) => {
     </div>
 
     <div className="w-full h-full pb-4">
-     <div className="md:px-[30px] flex gap-[24px] flex-wrap">
+     <div className="md:px-[30px] grid grid-cols-12 md:flex md:gap-[24px] gap-[12px] flex-wrap">
       {foodData.map((data, index) => {
        return (
         <div
@@ -219,20 +222,20 @@ const Menu: React.FC<MenuProps> = ({ handleConfirmStep }) => {
           selectedItems.find((item) => item.imgAlt === data.imgAlt)
            ? "border-[#054A86]"
            : "border-[#EDEEF2]"
-         } max-w-[306px] bg-neutral-white rounded-[16px] px-3 pt-3 pb-5 sm:px-4 sm:pt-4 sm:pb-6 overflow-hidden cursor-pointer hover:shadow-lg transition-shadow`}>
+         } max-w-[306px] max-md:col-span-6 bg-neutral-white rounded-[16px] px-3 pt-3 pb-5 sm:px-4 sm:pt-4 sm:pb-6 overflow-hidden cursor-pointer hover:shadow-lg transition-shadow`}>
          <img
           src={data.imgSrc}
           alt={data.imgAlt}
-          className="block w-full h-auto rounded-[12px] sm:rounded-[16px] object-cover"
+          className="block w-full h-[120px] md:h-auto rounded-[12px] sm:rounded-[16px] object-cover"
          />
-         <h3 className="text-[24px] pt-3 pb-1 leading-[32px] font-[700] tracking-[0.1px] text-[#2B2B43]">
+         <h3 className="text-[16px] leading-[24px] md:text-[24px] pt-3 pb-1 md:leading-[32px] font-[700] tracking-[0.1px] text-[#2B2B43]">
           {data.heading}
          </h3>
          <p className="text-[14px] line-clamp-2 leading-[20px] font-[400] tracking-[0.2px] text-[#83859C]">
           {data.description}
          </p>
          <div className="flex justify-between items-center pt-2">
-          <h4 className="text-[16px]  leading-[24px] font-[700] tracking-[0.1px] text-[#2B2B43]">
+          <h4 className="md:text-[16px] text-[13px] leading-[16px]  md:leading-[24px] font-[700] tracking-[0.1px] text-[#2B2B43]">
            {data.price}
           </h4>
 
@@ -245,7 +248,9 @@ const Menu: React.FC<MenuProps> = ({ handleConfirmStep }) => {
               className="p-1 text-black bg-[#EDEEF2] rounded-[8px]">
               <MinusIcon className="w-3 h-3" />
              </button>
-             <span className="px-3 text-lg font-medium">{quantity}</span>
+             <span className="px-3 md:text-lg text-sm font-[700] md:font-medium">
+              {quantity}
+             </span>
              <button
               onClick={() => setQuantity(quantity + 1)}
               className="p-1 text-black bg-[#EDEEF2] rounded-[8px]">
@@ -260,6 +265,26 @@ const Menu: React.FC<MenuProps> = ({ handleConfirmStep }) => {
         </div>
        );
       })}
+     </div>
+     <div className="flex gap-4 md:flex-row flex-col pt-8 pb-1 md:hidden ">
+      {selectedItems.length > 0 && (
+       <Button
+        className="bg-transparent w-full hover:bg-transparent text-[#545563] border border-[#545563]"
+        onClick={() => setOpenDialouge(true)}>
+        Reset
+       </Button>
+      )}
+      {selectedItems.length > 0 ? (
+       <Button
+        className="bg-[#054A86] hover:bg-[#054A86]"
+        onClick={() => handleConfirmStep()}>
+        Confirm and review
+       </Button>
+      ) : (
+       <Button className="bg-[#F7F7F9] hover:bg-[#F7F7F9] text-[#C7C8D2]">
+        Confirm and review
+       </Button>
+      )}
      </div>
     </div>
 
@@ -277,10 +302,10 @@ const Menu: React.FC<MenuProps> = ({ handleConfirmStep }) => {
         animate={{ x: 0 }}
         exit={{ x: "100%" }}
         transition={{ type: "spring", stiffness: 250, damping: 30 }}
-        className="bg-white w-full px-8 py-4 max-w-[522px] h-full shadow-2xl flex flex-col overflow-y-auto">
+        className="bg-white w-full md:px-8 md:py-4 px-[15px] py-6 max-w-[522px] h-full shadow-2xl flex flex-col overflow-y-auto">
         {/* Header */}
-        <div className="flex items-center justify-between pb-[16px] ">
-         <h2 className="text-[28px] leading-[36px] font-[700] ">
+        <div className="flex items-center justify-between pb-[40px] md:pb-[16px]">
+         <h2 className="text-[28px] leading-[36px] font-[700]  ">
           {selectedItem.heading}
          </h2>
          <button
@@ -306,7 +331,7 @@ const Menu: React.FC<MenuProps> = ({ handleConfirmStep }) => {
          </h3>
 
          {selectedItem && (
-          <div className="pb-[24px]">
+          <div className="md:pb-[24px]">
            <img src="/images/icons/offertag.svg" alt="offer" />
            <p className="py-3 px-[18px]">Buy one get one for free</p>
           </div>
@@ -321,7 +346,7 @@ const Menu: React.FC<MenuProps> = ({ handleConfirmStep }) => {
         </div>
 
         {/* Footer Buttons */}
-        <div className="p-4  flex flex-col sm:flex-row gap-3">
+        <div className="md:p-4  flex flex-col sm:flex-row gap-3">
          <button
           onClick={() => setSelectedItem(null)}
           className="w-full border border-[#054A86] rounded-lg py-2 font-medium text-[#054A86]">
@@ -345,7 +370,7 @@ const Menu: React.FC<MenuProps> = ({ handleConfirmStep }) => {
 
     {openDialouge && (
      <motion.div
-      className="fixed inset-0 bg-black/75 flex items-center justify-center z-50"
+      className="fixed hidden inset-0 bg-black/75 md:flex items-center justify-center z-50"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}>
@@ -377,10 +402,57 @@ const Menu: React.FC<MenuProps> = ({ handleConfirmStep }) => {
       </motion.div>
      </motion.div>
     )}
+    {/* reset dialouge mobile*/}
+    <AnimatePresence>
+     {openDialouge && (
+      <motion.div
+       className="fixed md:hidden inset-0 z-50 flex justify-end bg-black/75 "
+       initial={{ opacity: 0 }}
+       animate={{ opacity: 1 }}
+       exit={{ opacity: 0 }}>
+       {/* Sidebar Panel */}
+       <motion.div
+        initial={{ x: "100%" }}
+        animate={{ x: 0 }}
+        exit={{ x: "100%" }}
+        transition={{ type: "spring", stiffness: 250, damping: 30 }}
+        className="bg-white w-full md:px-8 md:py-4 px-[15px] py-6 max-w-[522px] h-full shadow-2xl flex flex-col overflow-y-auto">
+        {/* Header */}
+        <div className="flex items-center gap-4 pb-[24px] md:pb-[16px]">
+         <img src="/images/icons/info_icon.svg" alt="alert" />
+         <h2 className="text-[28px] leading-[36px] font-[700]  ">
+          Reset Menu Selection?
+         </h2>
+        </div>
+
+        {/* Content */}
+        <div className="flex-1 py-0 ">
+         <p className="text-gray-600 text-[16px] leading-[24px] font-[400] tracking-[0.1px]">
+          Are you sure you want to reset your menu selection?
+         </p>
+        </div>
+
+        {/* Footer Buttons */}
+        <div className="md:p-4  flex flex-col sm:flex-row gap-3">
+         <button
+          onClick={() => setOpenDialouge(false)}
+          className="w-full border border-[#054A86] rounded-lg py-2 font-medium text-[#054A86]">
+          Close
+         </button>
+         <button
+          onClick={() => confirmFunc()}
+          className="w-full bg-[#054A86] text-white rounded-lg py-2 font-medium ">
+          Confirm
+         </button>
+        </div>
+       </motion.div>
+      </motion.div>
+     )}
+    </AnimatePresence>
 
     {/* toaster  */}
     {toaster && (
-     <div className="fixed md:top-[104px] left-1/2 transform -translate-x-1/2 max-w-[540px] w-full h-[52px] bg-[#E8F9F1] rounded-[16px] shadow-[0px_4px_10px_rgba(232,249,241,0.6)] flex items-center px-4 gap-3 z-50">
+     <div className="fixed top-[104px] left-1/2 transform -translate-x-1/2 max-w-[540px] w-full h-[52px] bg-[#E8F9F1] rounded-[16px] shadow-[0px_4px_10px_rgba(232,249,241,0.6)] flex items-center px-4 gap-3 z-50">
       <svg
        width="20"
        height="20"

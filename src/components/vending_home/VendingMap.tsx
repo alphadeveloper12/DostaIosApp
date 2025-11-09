@@ -7,27 +7,27 @@ const containerStyle = {
 };
 
 const vendingLocations = [
-  {
-    id: 1,
-    name: "Barsha 1",
-    position: { lat: 25.118, lng: 55.201 },
-    info: "Near Mall of the Emirates, St. 12",
-    hours: "Open - Closes at 10 PM",
-  },
-  {
-    id: 2,
-    name: "JLT Cluster D",
-    position: { lat: 25.073, lng: 55.141 },
-    info: "Beside Carrefour Market",
-    hours: "Open 24 Hours",
-  },
-  {
-    id: 3,
-    name: "Business Bay",
-    position: { lat: 25.189, lng: 55.273 },
-    info: "Close to Bay Avenue Mall",
-    hours: "Open - Closes at 9 PM",
-  },
+    {
+      id: 1,
+      name: "Barsha 1",
+      position: { lat: 25.118, lng: 55.201 },
+      info: "Near Mall of the Emirates, St. 12",
+      hours: "Open - Closes at 10 PM",
+    },
+    {
+      id: 2,
+      name: "JLT Cluster D",
+      position: { lat: 25.073, lng: 55.141 },
+      info: "Beside Carrefour Market",
+      hours: "Open 24 Hours",
+    },
+    {
+      id: 3,
+      name: "Business Bay",
+      position: { lat: 25.189, lng: 55.273 },
+      info: "Close to Bay Avenue Mall",
+      hours: "Open - Closes at 9 PM",
+    },
 ];
 
 const center = { lat: 25.118, lng: 55.201 };

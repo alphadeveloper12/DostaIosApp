@@ -26,7 +26,7 @@ const OrderSummary: React.FC<OrderSummaryProps> = ({
  const isCouponApplied = coupon === input;
 
  return (
-  <div className="bg-white rounded-lg shadow-md p-6 sticky top-8">
+  <div className="bg-white rounded-lg shadow-md md:p-6 p-4 sticky top-8">
    <h2 className="text-[28px] leading-[36px] font-[700] text-[#2B2B43] mb-4">
     Order Summary
    </h2>

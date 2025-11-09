@@ -148,12 +148,12 @@ const SliderSection: React.FC = () => {
  const scrollTo = useCallback((i: number) => emblaApi?.scrollTo(i), [emblaApi]);
 
  return (
-  <section className="relative container max-w-[1110px] mx-auto py-12">
+  <section className="relative main-container  ">
    <div className="flex flex-col w-full items-center justify-center gap-2 mb-8">
-    <h2 className="text-[28px] font-bold text-[#032F55]">
+    <h2 className="text-[28px] leading-[36px] md:pt-12 pt-6 max-md:text-center font-bold text-[#032F55]">
      Explore Our Daily Menu
     </h2>
-    <p className="text-base font-normal text[#032F55]">
+    <p className="text-base md:font-normal font-[700] max-md:text-center text[#032F55]">
      {" "}
      Daily menu of 13 chef-prepared meals, available Monday to Friday.{" "}
      <Link className="underline text-[#056AC1]" to={"/vending-home/menu"}>

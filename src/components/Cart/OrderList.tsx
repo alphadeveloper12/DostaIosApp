@@ -18,7 +18,7 @@ const OrderList: React.FC<OrderListProps> = ({
  onDeleteItem,
 }) => {
  return (
-  <div className="bg-white rounded-lg shadow-md p-6">
+  <div className="bg-white rounded-lg shadow-md md:p-6 p-4">
    <div className="flex justify-between items-center mb-6">
     <h2 className="text-xl font-semibold text-gray-800">
      Order Now{" "}
@@ -43,7 +43,7 @@ const OrderList: React.FC<OrderListProps> = ({
    </div>
 
    <Link
-    className="mt-6 flex items-center gap-2 text-blue-600 font-medium hover:text-blue-800 transition-colors"
+    className="mt-6 flex items-center gap-2 text-[#054A86] font-medium hover:text-blue-800 transition-colors"
     to={"/vending-home/order-now"}>
     <PlusIcon className="w-5 h-5" />
     <span>Add More Meals</span>

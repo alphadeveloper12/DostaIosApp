@@ -79,7 +79,7 @@ const ProviderTypeSelection: React.FC<ProviderTypeSelectionProps> = ({
   const fetchServiceStyles = async () => {
    try {
     const baseUrl =
-     import.meta.env.VITE_API_URL || "http://127.0.0.1:8000/api/catering";
+     import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";
     const authToken = sessionStorage.getItem("authToken");
 
     const response = await axios.get(

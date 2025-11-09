@@ -66,15 +66,15 @@ const ShowCase = () => {
  };
 
  return (
-  <section className="pb-[24px] pt-[48px]  lg:h-[844px] bg-[#F7F7F9] w-full ">
+  <section className="pb-[24px] pt-[48px]  lg:h-[844px] h-[2800px]  bg-[#F7F7F9] w-full ">
    <div className="main-container relative flex justify-center items-center">
     {/* Steps */}
-    <div className="lg:absolute lg:px-[30px] -top-[145px] grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 my-[24px] justify-items-center ">
+    <div className="absolute lg:px-[30px] px-[15px] -top-[145px] grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 my-[24px] justify-items-center ">
      {steps.map((step, index) => {
       return (
        <div
         key={index}
-        className="relative  w-full max-w-[350px] h-[478px] shadow-xl bg-neutral-white rounded-[16px] flex flex-col justify-between overflow-hidden">
+        className="relative   md:max-w-[350px] w-full h-auto md:h-[478px] shadow-xl bg-neutral-white rounded-[16px] flex flex-col justify-between overflow-hidden">
         <div className="relative w-full h-[224px] md:h-[224px]">
          <img
           src={step.icon}
@@ -86,15 +86,15 @@ const ShowCase = () => {
          </span>
         </div>
 
-        <div className="max-md:flex-1 max-md:flex flex-col md:flex-none  justify-between pt-[24px] md:pt-[32px] px-[16px] md:px-[24px] pb-[16px] md:pb-[24px]">
-         <h3 className="text-[18px] md:text-[28px] leading-[26px] md:leading-[36px] tracking-[0.1px] font-[700] text-primary mb-2">
+        <div className="max-md:flex-1 max-md:flex flex-col md:flex-none  justify-between pt-[24px] md:pt-[32px] px-[16px] md:px-[24px] pb-[24px] md:pb-[24px]">
+         <h2 className=" text-[28px] leading-[36px]  tracking-[0.1px] font-[700] text-primary mb-2">
           {step.title}
-         </h3>
-         <p className="text-neutral-gray-dark text-[13px] md:text-[14px] leading-[20px] font-[400] pb-[16px] md:pb-[24px]">
+         </h2>
+         <p className="text-neutral-gray-dark text-[14px] leading-[20px] font-[400] pb-[24px]">
           {step.description}
          </p>
          <button
-          className="py-3 px-4 border text-[14px] text-primary-dark leading-[20px] tracking-[0.3px] border-[#054A86] rounded-[8px]"
+          className="py-3 px-4 border text-[14px]  w-fit text-primary-dark leading-[20px] tracking-[0.3px] border-[#054A86] rounded-[8px]"
           onClick={() => handleNavigation(step.link)}>
           {" "}
           {step.button}{" "}

@@ -94,20 +94,20 @@ export default function AccountSettings() {
 
  return (
   <LazyLoad>
-   <div className="space-y-2">
+   <div className="md:space-y-2 space-y-6 ">
     <h1 className="text-[20px] leading-[28px] font-[600] tracking-[0.1px] text-neutral-black">
      Account
     </h1>
-    <div className="border border-[#EDEEF2] p-2 md:p-0 rounded-[16px]">
+    <div className="border border-[#EDEEF2] px-4 pt-6  md:p-0 rounded-[16px]">
      {/* Personal Information Section */}
-     <section className="bg-neutral-white rounded-[16px] md:px-[16px] md:py-[24px] sm:p-8 shadow-sm">
-      <h2 className="text-lg font-semibold mb-6 text-foreground">
+     <section className="bg-neutral-white rounded-[16px] py-2 md:px-[16px] md:py-[24px] sm:p-8 shadow-sm">
+      <h2 className="text-lg md:font-semibold md:mb-6 mb-4 font-[700] text-foreground">
        Personal information
       </h2>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
        {/* Full Name */}
-       <div className="space-y-2">
+       <div className="md:space-y-2 space-y-1">
         <label className="text-[0.75rem] text-neutral-gray-dark font-[600] leading-[1rem]">
          Full name
         </label>
@@ -116,12 +116,12 @@ export default function AccountSettings() {
          placeholder={profile.full_name || "Full name"}
          value={profile.full_name || ""}
          onChange={(e) => setProfile({ ...profile, full_name: e.target.value })}
-         className="w-full py-[0.625rem] px-[0.75rem] outline-none border border-[#C7C8D2] rounded-[0.5rem]"
+         className="w-full py-[0.625rem] px-[0.75rem] outline-none border border-neutral-gray-light rounded-[0.5rem]"
         />
        </div>
 
        {/* Company */}
-       <div className="space-y-2">
+       <div className="md:space-y-2 space-y-1">
         <label className="text-[0.75rem] text-neutral-gray-dark font-[600] leading-[1rem]">
          Company
         </label>
@@ -135,7 +135,7 @@ export default function AccountSettings() {
        </div>
 
        {/* Email (readonly) */}
-       <div className="space-y-2">
+       <div className="md:space-y-2 space-y-1">
         <label className="text-[0.75rem] text-neutral-gray-dark font-[600] leading-[1rem]">
          Email
         </label>
@@ -148,7 +148,7 @@ export default function AccountSettings() {
        </div>
 
        {/* Phone (readonly) */}
-       <div className="space-y-2">
+       <div className="md:space-y-2 space-y-1">
         <label className="text-[0.75rem] text-neutral-gray-dark font-[600] leading-[1rem]">
          Phone number
         </label>
@@ -163,12 +163,12 @@ export default function AccountSettings() {
      </section>
 
      {/* Email Notifications Section */}
-     <section className="bg-neutral-white p-6 sm:p-8 shadow-sm">
-      <h2 className="text-lg font-semibold mb-6 text-foreground">
+     <section className="bg-neutral-white pt-[68px] sm:p-8 shadow-sm">
+      <h2 className="text-lg font-semibold md:mb-6 mb-4 text-foreground">
        Email notifications
       </h2>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 pb-10">
        {[
         "New deals",
         "Password changes",
@@ -181,7 +181,7 @@ export default function AccountSettings() {
         const isChecked = checkedNotifications.includes(label);
 
         return (
-         <div key={i} className="flex items-center space-x-3">
+         <div key={i} className="flex items-center space-x-3 ">
           <Checkbox
            id={id}
            checked={isChecked}
@@ -210,10 +210,10 @@ export default function AccountSettings() {
        Log out
       </Button>
 
-      <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+      <div className="flex  gap-3 w-full sm:w-auto">
        <Button
         variant="outline"
-        className="w-full sm:w-auto border border-[#545563]"
+        className="w-full sm:w-auto border border-neutral-gray-lightest"
         onClick={() => window.location.reload()}>
         Discard changes
        </Button>

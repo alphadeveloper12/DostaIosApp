@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import {  useState } from "react";
 import { User, MapPin, CreditCard, Shield } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Header from "@/pages/catering/components/layout/Header";
@@ -6,7 +6,7 @@ import AccountSettings from "@/components/settings/AccountSettings";
 import AddressSettings from "@/components/settings/AddressSettings";
 import PaymentSettings from "@/components/settings/PaymentSettings";
 import SecuritySettings from "@/components/settings/SecuritySettings";
-import { useNavigate } from "react-router-dom";
+
 
 interface NavItem {
   icon: typeof User;
@@ -39,15 +39,7 @@ const navItems: NavItem[] = [
 
 export default function SettingsLayout() {
   const [tab, setTab] = useState(1);
-  const navigate = useNavigate();
 
-  // ✅ Check authentication on mount
-  useEffect(() => {
-    const authToken = sessionStorage.getItem("authToken");
-    if (!authToken) {
-      navigate("/signin");
-    }
-  }, [navigate]);
 
   // ✅ Tab switch logic
   const renderContent = () => {
@@ -70,14 +62,14 @@ export default function SettingsLayout() {
       <Header />
 
       <div className="main-container !py-6">
-        <div className="flex flex-col lg:flex-row gap-6">
+        <div className="flex flex-col lg:flex-row md:gap-6 gap-12">
           {/* Sidebar */}
           <aside className="w-full lg:w-80">
-            <h2 className="text-[20px] leading-[28px] font-[600] text-neutral-black pb-[8px]">
+            <h2 className="text-[20px] leading-[28px] font-[600] text-neutral-black md:pb-[8px] pb-4">
               Settings
             </h2>
 
-            <nav className="space-y-2">
+            <nav className="md:space-y-2 space-y-4">
               {navItems.map((item, index) => {
                 const Icon = item.icon;
                 const isActive = tab === index + 1;
@@ -88,8 +80,8 @@ export default function SettingsLayout() {
                     className={cn(
                       "w-full flex items-center gap-4 p-4 rounded-[16px] transition-all text-left",
                       isActive
-                        ? "bg-accent text-accent-foreground shadow-sm border border-[#054A86]"
-                        : "border border-[#EDEEF2]"
+                        ? "bg-accent text-accent-foreground shadow-sm border-2 border-[#054A86]"
+                        : "md:border border-2 border-[#EDEEF2] "
                     )}
                   >
                     <div

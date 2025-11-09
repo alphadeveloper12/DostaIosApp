@@ -172,7 +172,7 @@ const GrabMenu: React.FC<CrabMenuProps> = ({ handleConfirmStep }) => {
        <h2 className="text-[16px] text-[#2B2B43] leading-[24px] font-[700] tracking-[0.1px]">
         Choose your meal from our daily menu of 13 chef-prepared meals
        </h2>
-       <div className="flex gap-4 md:flex-row flex-col">
+       <div className="md:flex gap-4 hidden md:flex-row flex-col">
         {selectedItems.length > 0 && (
          <Button
           className="bg-transparent hover:bg-transparent text-[#545563] border border-[#545563]"
@@ -209,7 +209,7 @@ const GrabMenu: React.FC<CrabMenuProps> = ({ handleConfirmStep }) => {
     </div>
 
     <div className="w-full h-full pb-4">
-     <div className="md:px-[30px]  flex gap-[24px] flex-wrap">
+     <div className="md:px-[30px] grid grid-cols-12 md:flex md:gap-[24px] gap-[12px] flex-wrap">
       {foodData.map((data, index) => {
        return (
         <div
@@ -219,20 +219,20 @@ const GrabMenu: React.FC<CrabMenuProps> = ({ handleConfirmStep }) => {
           selectedItems.find((item) => item.imgAlt === data.imgAlt)
            ? "border-[#054A86]"
            : "border-[#EDEEF2]"
-         } max-w-[306px] bg-neutral-white rounded-[16px] px-3 pt-3 pb-5 sm:px-4 sm:pt-4 sm:pb-6 overflow-hidden cursor-pointer hover:shadow-lg transition-shadow`}>
+         } max-w-[306px] bg-neutral-white max-md:col-span-6 rounded-[16px] px-3 pt-3 pb-5 sm:px-4 sm:pt-4 sm:pb-6 overflow-hidden cursor-pointer hover:shadow-lg transition-shadow`}>
          <img
           src={data.imgSrc}
           alt={data.imgAlt}
-          className="block w-full h-auto rounded-[12px] sm:rounded-[16px] object-cover"
+          className="block w-full md:h-auto h-[120px] rounded-[12px] sm:rounded-[16px] object-cover"
          />
-         <h3 className="text-[24px] pt-3 pb-1 leading-[32px] font-[700] tracking-[0.1px] text-[#2B2B43]">
+         <h3 className="text-[16px] leading-[24px] md:text-[24px] pt-3 pb-1 md:leading-[32px] font-[700] tracking-[0.1px] text-[#2B2B43]">
           {data.heading}
          </h3>
          <p className="text-[14px] line-clamp-2 leading-[20px] font-[400] tracking-[0.2px] text-[#83859C]">
           {data.description}
          </p>
          <div className="flex justify-between items-center pt-2">
-          <h4 className="text-[16px]  leading-[24px] font-[700] tracking-[0.1px] text-[#2B2B43]">
+          <h4 className="text-[13px] leading-[18px] md:text-[16px]  md:leading-[24px] font-[700] tracking-[0.1px] text-[#2B2B43]">
            {data.price}
           </h4>
 
@@ -244,7 +244,9 @@ const GrabMenu: React.FC<CrabMenuProps> = ({ handleConfirmStep }) => {
               className="p-1 text-black bg-[#EDEEF2] rounded-[8px]">
               <MinusIcon className="w-3 h-3" />
              </button>
-             <span className="px-3 text-lg font-medium">{quantity}</span>
+             <span className="md:px-3 px-2 md:text-lg text-sm font-medium">
+              {quantity}
+             </span>
              <button
               onClick={() => setQuantity(quantity + 1)}
               className="p-1 text-black bg-[#EDEEF2] rounded-[8px]">
@@ -259,6 +261,26 @@ const GrabMenu: React.FC<CrabMenuProps> = ({ handleConfirmStep }) => {
         </div>
        );
       })}
+     </div>
+     <div className="flex gap-4 md:flex-row flex-col md:hidden pt-6">
+      {selectedItems.length > 0 && (
+       <Button
+        className="bg-transparent hover:bg-transparent text-[#545563] border border-[#545563]"
+        onClick={() => setOpenDialouge(true)}>
+        Reset
+       </Button>
+      )}
+      {selectedItems.length > 0 ? (
+       <Button
+        className="bg-[#054A86] hover:bg-[#054A86]"
+        onClick={() => handleConfirmStep()}>
+        Confirm and review
+       </Button>
+      ) : (
+       <Button className="bg-[#F7F7F9] hover:bg-[#F7F7F9] text-[#C7C8D2]">
+        Confirm and review
+       </Button>
+      )}
      </div>
     </div>
 
@@ -276,7 +298,7 @@ const GrabMenu: React.FC<CrabMenuProps> = ({ handleConfirmStep }) => {
         animate={{ x: 0 }}
         exit={{ x: "100%" }}
         transition={{ type: "spring", stiffness: 250, damping: 30 }}
-        className="bg-white w-full px-8 py-4 max-w-[522px] h-full shadow-2xl flex flex-col overflow-y-auto">
+        className="bg-white w-full md:px-8 md:py-4 py-6 px-[15px] max-w-[522px] h-full shadow-2xl flex flex-col overflow-y-auto">
         {/* Header */}
         <div className="flex items-center justify-between pb-[16px] ">
          <h2 className="text-[28px] leading-[36px] font-[700] ">
@@ -297,7 +319,7 @@ const GrabMenu: React.FC<CrabMenuProps> = ({ handleConfirmStep }) => {
         />
 
         {/* Content */}
-        <div className="flex-1 p-5 space-y-4">
+        <div className="flex-1 md:p-5  py-6 space-y-4">
          <p className="text-gray-600 text-sm">{selectedItem.description}</p>
 
          <h3 className="text-[24px] leading-[32px] font-[700] tracking-[0.1px]">
@@ -305,14 +327,14 @@ const GrabMenu: React.FC<CrabMenuProps> = ({ handleConfirmStep }) => {
          </h3>
 
          {selectedItem && (
-          <div className="pb-[24px]">
+          <div className="md:pb-[24px]">
            <img src="/images/icons/offertag.svg" alt="offer" />
            <p className="py-3 px-[18px]">Buy one get one for free</p>
           </div>
          )}
-         <div>
+         <div className="mt-0">
           <Link
-           className="text-[#056AC1] text-[16px] leading-[24px] font-[400] tracking-[0.1px] underline"
+           className="text-[#056AC1] text-[16px] leading-[24px] md:font-[400] font-[600] tracking-[0.1px] underline"
            to={"/"}>
            Terms & conditions Apply
           </Link>
@@ -320,7 +342,7 @@ const GrabMenu: React.FC<CrabMenuProps> = ({ handleConfirmStep }) => {
         </div>
 
         {/* Footer Buttons */}
-        <div className="p-4  flex flex-col sm:flex-row gap-3">
+        <div className="md:p-4  flex flex-col sm:flex-row gap-3">
          <button
           onClick={() => setSelectedItem(null)}
           className="w-full border border-[#054A86] rounded-lg py-2 font-medium text-[#054A86]">
@@ -344,7 +366,7 @@ const GrabMenu: React.FC<CrabMenuProps> = ({ handleConfirmStep }) => {
 
     {openDialouge && (
      <motion.div
-      className="fixed inset-0 bg-black/75 flex items-center justify-center z-50"
+      className="fixed hidden inset-0 bg-black/75 md:flex items-center justify-center z-50"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}>
@@ -376,10 +398,57 @@ const GrabMenu: React.FC<CrabMenuProps> = ({ handleConfirmStep }) => {
       </motion.div>
      </motion.div>
     )}
+    {/* reset dialouge mobile*/}
+    <AnimatePresence>
+     {openDialouge && (
+      <motion.div
+       className="fixed md:hidden inset-0 z-50 flex justify-end bg-black/75 "
+       initial={{ opacity: 0 }}
+       animate={{ opacity: 1 }}
+       exit={{ opacity: 0 }}>
+       {/* Sidebar Panel */}
+       <motion.div
+        initial={{ x: "100%" }}
+        animate={{ x: 0 }}
+        exit={{ x: "100%" }}
+        transition={{ type: "spring", stiffness: 250, damping: 30 }}
+        className="bg-white w-full md:px-8 md:py-4 px-[15px] py-6 max-w-[522px] h-full shadow-2xl flex flex-col overflow-y-auto">
+        {/* Header */}
+        <div className="flex items-center gap-4 pb-[24px] md:pb-[16px]">
+         <img src="/images/icons/info_icon.svg" alt="alert" />
+         <h2 className="text-[28px] leading-[36px] font-[700]  ">
+          Reset Menu Selection?
+         </h2>
+        </div>
+
+        {/* Content */}
+        <div className="flex-1 py-0 ">
+         <p className="text-gray-600 text-[16px] leading-[24px] font-[400] tracking-[0.1px]">
+          Are you sure you want to reset your menu selection?
+         </p>
+        </div>
+
+        {/* Footer Buttons */}
+        <div className="md:p-4  flex flex-col sm:flex-row gap-3">
+         <button
+          onClick={() => setOpenDialouge(false)}
+          className="w-full border border-[#054A86] rounded-lg py-2 font-medium text-[#054A86]">
+          Close
+         </button>
+         <button
+          onClick={() => confirmFunc()}
+          className="w-full bg-[#054A86] text-white rounded-lg py-2 font-medium ">
+          Confirm
+         </button>
+        </div>
+       </motion.div>
+      </motion.div>
+     )}
+    </AnimatePresence>
 
     {/* toaster  */}
     {toaster && (
-     <div className="fixed md:top-[104px] left-1/2 transform -translate-x-1/2 max-w-[540px] w-full h-[52px] bg-[#E8F9F1] rounded-[16px] shadow-[0px_4px_10px_rgba(232,249,241,0.6)] flex items-center px-4 gap-3 z-50">
+     <div className="fixed top-[104px] left-1/2 transform -translate-x-1/2 max-w-[540px] w-full h-[52px] bg-[#E8F9F1] rounded-[16px] shadow-[0px_4px_10px_rgba(232,249,241,0.6)] flex items-center px-4 gap-3 z-50">
       <svg
        width="20"
        height="20"

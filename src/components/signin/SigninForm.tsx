@@ -24,23 +24,23 @@ const SignInFormComponent = ({
  navigate,
  onBack,
 }) => (
- <div className="md:w-[45%] w-[100%] max-h-[100vh] overflow-y-auto scrollbar-hide bg-white px-4 sm:px-10 md:px-12 lg:px-14 pt-16 pb-4 flex flex-col">
+ <div className="md:w-[45%] w-[100%] max-h-[100vh] overflow-y-auto scrollbar-hide bg-white px-[15px] sm:px-10 md:px-12 lg:px-14 pt-6 pb-4 flex flex-col">
   <div className="w-full max-w-sm mx-auto">
    <Link to={"/"}>
-    <img src="/images/nav/logo.svg" alt="Logo" className="mb-[50px] h-[24px]" />
+    <img src="/images/nav/dosta_blue.svg" alt="Logo" className="md:mb-[50px] h-[24px]" />
    </Link>
 
-   <h1 className="text-[60px] font-bold tracking-tight text-[#2B2B43]">
+   <h1 className="text-[60px] font-bold tracking-tight text-[#2B2B43] pt-[68px]">
     Sign in
    </h1>
-   <p className="mt-3 text-base font-normal text-[#545563]">
+   <p className="mt-4 text-base font-normal text-[#545563]">
     Sign in with your data that you entered during your registration.
    </p>
 
    {/* ✅ Use a form element and attach the handler to onSubmit */}
    <form onSubmit={handleLogin}>
     {/* Email */}
-    <div className="space-y-1 mt-7">
+    <div className="space-y-1 mt-6">
      <label htmlFor="email" className="text-xs font-semibold text-[#545563]">
       Email
      </label>
@@ -56,7 +56,7 @@ const SignInFormComponent = ({
     </div>
 
     {/* Password */}
-    <div className="mt-6 space-y-1">
+    <div className="mt-7 space-y-1">
      <label htmlFor="password" className="text-xs font-semibold text-[#545563]">
       Password
      </label>
@@ -86,7 +86,7 @@ const SignInFormComponent = ({
     </div>
 
     {/* Keep logged in */}
-    <label className="mt-6 flex items-center gap-2">
+    <label className="mt-7 flex items-center gap-2">
      <input
       type="checkbox"
       checked={keepLoggedIn}
@@ -108,14 +108,14 @@ const SignInFormComponent = ({
      variant="default"
      type="submit" // ✅ Use type="submit" for the button within a form
      disabled={loading}
-     className="mt-5 w-full h-11 font-bold"
+     className="mt-10 w-full h-11 font-bold"
      style={{ boxShadow: "0px 8px 20px 0px #4E60FF29" }}>
      {loading ? "Logging in..." : "Login"}
     </Button>
    </form>
 
    {/* Forgot Password */}
-   <div className="mt-6 text-center">
+   <div className="mt-7 text-center">
     <button
      className="text-sm font-bold text-[#054A86] hover:underline"
      onClick={() => setForgetForm(true)}>

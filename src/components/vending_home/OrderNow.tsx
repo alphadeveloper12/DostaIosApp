@@ -15,6 +15,7 @@ import Menu from "./Menu";
 import PlanWeekly from "./PlanWeekly";
 import { Input } from "../ui/input";
 import Header from "@/pages/catering/components/layout/Header";
+import MobileFooterNav from "../home/MobileFooterNav";
 
 type StepStatus = "completed" | "active" | "pending";
 
@@ -84,14 +85,14 @@ const OrderNow = () => {
    status: getStepStatus(2),
    content: (
     <div className="mt-6 space-y-6">
-     <div className="flex gap-4 md:flex-row flex-col">
+     <div className="md:flex gap-4 md:flex-row grid grid-cols-12">
       <Button
        onClick={() => handleOrderTypeSelect("Order Now")}
        className={` ${
         orderType === "Order Now"
          ? "bg-[#EAF5FF] hover:bg-[#EAF5FF] border border-[#054A86] text-[#2B2B43]"
          : "bg-neutral-white hover:bg-neutral-white border border-[#C7C8D2] text-[#2B2B43]"
-       } px-6 py-3  rounded-[16px] font-bold`}>
+       } px-6 py-3  md:rounded-[16px] rounded-[10px] font-bold col-span-4`}>
        Order Now
       </Button>
       <Button
@@ -100,7 +101,7 @@ const OrderNow = () => {
         orderType === "Start a Plan"
          ? "bg-[#EAF5FF] hover:bg-[#EAF5FF] border border-[#054A86] text-[#2B2B43]"
          : "bg-neutral-white hover:bg-neutral-white border border-[#C7C8D2] text-[#2B2B43]"
-       } px-6 py-3  rounded-[16px] font-bold`}>
+       } px-6 py-3  md:rounded-[16px] rounded-[10px] font-bold col-span-4`}>
        Start a Plan
       </Button>
       <Button
@@ -109,7 +110,7 @@ const OrderNow = () => {
         orderType === "Smart Grab"
          ? "bg-[#EAF5FF] hover:bg-[#EAF5FF] border border-[#054A86] text-[#2B2B43]"
          : "bg-neutral-white hover:bg-neutral-white border border-[#C7C8D2] text-[#2B2B43]"
-       } px-6 py-3  rounded-[16px] font-bold`}>
+       } px-6 py-3  md:rounded-[16px] rounded-[10px] font-bold col-span-4`}>
        Smart Grab
       </Button>
      </div>
@@ -140,7 +141,7 @@ const OrderNow = () => {
             planType === "weekly"
              ? "bg-[#EAF5FF] hover:bg-[#EAF5FF] border border-[#054A86] text-[#2B2B43]"
              : "bg-neutral-white hover:bg-neutral-white border border-[#C7C8D2] text-[#2B2B43]"
-           } px-6 py-3  rounded-[16px] font-bold`}>
+           } px-6 py-3  md:rounded-[16px] rounded-[10px] font-bold`}>
            Weekly
           </Button>
           <Button
@@ -149,7 +150,7 @@ const OrderNow = () => {
             planType === "monthly"
              ? "bg-[#EAF5FF] hover:bg-[#EAF5FF] border border-[#054A86] text-[#2B2B43]"
              : "bg-neutral-white hover:bg-neutral-white border border-[#C7C8D2] text-[#2B2B43]"
-           } px-6 py-3  rounded-[16px] font-bold`}>
+           } px-6 py-3  md:rounded-[16px] rounded-[10px] font-bold`}>
            Monthly
           </Button>
          </div>
@@ -188,14 +189,14 @@ const OrderNow = () => {
    status: getStepStatus(3),
    content: (
     <div className="mt-6 space-y-6">
-     <div className="flex gap-4 md:flex-row flex-col">
+     <div className="flex gap-4 flex-row ">
       <Button
        onClick={() => SetPickOrder("Pickup Today")}
        className={` ${
         pickOrder === "Pickup Today"
          ? "bg-[#EAF5FF] hover:bg-[#EAF5FF] border border-[#054A86] text-[#2B2B43]"
          : "bg-neutral-white hover:bg-neutral-white border border-[#C7C8D2] text-[#2B2B43]"
-       } px-6 py-3  rounded-[16px] font-bold`}>
+       } px-6 py-3  md:rounded-[16px] rounded-[10px] font-bold`}>
        Pickup Today
       </Button>
       <Button
@@ -204,14 +205,14 @@ const OrderNow = () => {
         pickOrder === "Pickup in 24"
          ? "bg-[#EAF5FF] hover:bg-[#EAF5FF] border border-[#054A86] text-[#2B2B43]"
          : "bg-neutral-white hover:bg-neutral-white border border-[#C7C8D2] text-[#2B2B43]"
-       } px-6 py-3  rounded-[16px] font-bold`}>
+       } px-6 py-3  md:rounded-[16px] rounded-[10px] font-bold`}>
        Pickup in 24
       </Button>
      </div>
 
      <div className="flex md:flex-row flex-col items-start gap-8">
       <div className="flex-1">
-       <h3 className="text-[20px] leading-[28px] font-bold text-[#545563] mb-3">
+       <h3 className="text-[20px] leading-[28px]  md:font-bold text-[#545563] mb-3">
         Select a timeframe to pickup your meal
        </h3>
        <p className="text-[14px] leading-[20px] text-[#545563] mb-4">
@@ -233,7 +234,10 @@ const OrderNow = () => {
   },
   {
    id: 4,
-   title: (planType === "weekly" && orderType === "Start a Plan") ? "Plan Your Week Menu" : "Choose Your Meal",
+   title:
+    planType === "weekly" && orderType === "Start a Plan"
+     ? "Plan Your Week Menu"
+     : "Choose Your Meal",
    status: getStepStatus(4),
    content:
     orderType === "Smart Grab" ? (
@@ -248,10 +252,10 @@ const OrderNow = () => {
  ];
 
  return (
-  <div className="min-h-screen">
+  <div className="min-h-screen relative ">
    {/* <VendingHeader /> */}
-   <Header/>
-   <main className="flex-1 bg-[#F7F7F9]">
+   <Header />
+   <main className="flex-1 bg-[#F7F7F9] max-md:pb-[122px]">
     {/* Breadcrumb and Title */}
     <div className="w-full bg-white pt-2 pb-6">
      <div className="main-container">
@@ -276,7 +280,7 @@ const OrderNow = () => {
           : "hidden"
         }`}>
         <div className="py-[20px] md:px-[24px] px-3">
-         <div className="flex md:flex-row flex-col justify-between">
+         <div className="flex flex-row  justify-between max-md:gap-4">
           <div className="flex gap-4">
            <div
             className={`md:h-[32px] h-[26px] w-[26px] md:w-[32px] rounded-full inline-flex items-center justify-center flex-shrink-0 transition-all ${
@@ -307,21 +311,25 @@ const OrderNow = () => {
            </div>
           </div>
           {/* save plan button */}
-          {orderType === "Start a Plan" && step.id === 4 && currentStep > 4 && (
-           <Button
-            onClick={() => savedMenu()}
-            className="border text-[14px] hover:bg-[#054A86] hover:text-white leading-[20px] font-[700] tracking-[0.3px] border-[#545563] rounded-[8px] bg-transparent text-[#545563] mt-4 md:mt-0">
-            Save Plan
-           </Button>
-          )}
-          {/* edit button */}
-          {step.status === "completed" && (
-           <Button
-            onClick={() => setCurrentStep(index + 1)}
-            className="border text-[14px] hover:bg-[#054A86] hover:text-white leading-[20px] font-[700] tracking-[0.3px] border-[#545563] rounded-[8px] bg-transparent text-[#545563] mt-4 md:mt-0">
-            Edit
-           </Button>
-          )}
+          <div className="flex flex-col md:flex-row md:gap-4 gap-1">
+           {orderType === "Start a Plan" &&
+            step.id === 4 &&
+            currentStep > 4 && (
+             <Button
+              onClick={() => savedMenu()}
+              className="border md:text-[14px]  text-[12px] leading-[18px] hover:bg-[#054A86] hover:text-white md:leading-[20px] font-[700] tracking-[0.3px] border-[#545563] rounded-[8px] bg-transparent text-[#545563] mt-4 md:mt-0">
+              Save Plan
+             </Button>
+            )}
+           {/* edit button */}
+           {step.status === "completed" && (
+            <Button
+             onClick={() => setCurrentStep(index + 1)}
+             className="border md:text-[14px] py-[6px]! px-3! text-[12px] leading-[18px] hover:bg-[#054A86] hover:text-white md:leading-[20px] font-[700] tracking-[0.3px] border-[#545563] rounded-[8px] bg-transparent text-[#545563]  md:mt-0">
+             Edit
+            </Button>
+           )}
+          </div>
          </div>
 
          {/* Step Content */}
@@ -334,7 +342,7 @@ const OrderNow = () => {
      </div>
      {currentStep > 4 && (
       <div className="w-full">
-       <div className="main-container flex md:flex-row flex-col gap-4 !py-10">
+       <div className="main-container flex md:flex-row flex-col-reverse gap-4 !py-10">
         <Button
          className="md:min-w-[200px] bg-neutral-white text-[#545563] hover:bg-neutral-white border border-[#545563]"
          onClick={() => navigate("/vending-home")}>
@@ -364,10 +372,10 @@ const OrderNow = () => {
         animate={{ x: 0 }}
         exit={{ x: "100%" }}
         transition={{ type: "spring", stiffness: 250, damping: 30 }}
-        className="bg-white w-full px-8 py-4 max-w-[522px] h-full shadow-2xl flex flex-col overflow-y-auto">
+        className="bg-white w-full md:px-8 md:py-4 px-[15px] py-6 max-w-[522px] h-full shadow-2xl flex flex-col overflow-y-auto">
         {/* Header */}
         <div className="flex items-center justify-between pb-[16px] ">
-         <h2 className="text-[28px] leading-[36px] font-[700] ">
+         <h2 className="text-[20px] leading-[24px] font-[600] md:text-[28px] md:leading-[36px] md:font-[700] ">
           Select a Timeframe
          </h2>
          <button
@@ -405,14 +413,14 @@ const OrderNow = () => {
         {/* Footer Buttons */}
         <div className="p-4  flex flex-col sm:flex-row gap-3">
          <button
-          onClick={() => setIsOpen(false)}
-          className="w-full border border-[#054A86] rounded-lg py-2 font-medium text-[#054A86]">
-          Close
-         </button>
-         <button
           className="w-full bg-[#054A86]  text-white rounded-lg py-2 font-medium "
           onClick={handleConfirmStep}>
           Confirm
+         </button>
+         <button
+          onClick={() => setIsOpen(false)}
+          className="w-full border border-[#054A86] rounded-lg py-2 font-medium text-[#054A86]">
+          Close
          </button>
         </div>
        </motion.div>
@@ -434,7 +442,7 @@ const OrderNow = () => {
         animate={{ x: 0 }}
         exit={{ x: "100%" }}
         transition={{ type: "spring", stiffness: 250, damping: 30 }}
-        className="bg-white w-full px-8 py-4 max-w-[522px] h-full shadow-2xl flex flex-col overflow-y-auto">
+        className="bg-white w-full md:px-8 md:py-4 px-[15px] py-6 max-w-[522px] h-full shadow-2xl flex flex-col overflow-y-auto">
         {/* Header */}
         <div className="flex items-center justify-between pb-[16px] ">
          <h2 className="text-[28px] leading-[36px] font-[700] ">
@@ -455,19 +463,23 @@ const OrderNow = () => {
           since:
          </p>
          <div>
-          <label className="text-[12px] leading-[16px] font-[600] text-[#545563]">Enter Plan Name</label>
-          <Input type="text" placeholder="Example: Low Carbs" className="md:max-w-[350px] w-full bg-neutral-white"/>
+          <label className="text-[12px] leading-[16px] font-[600] text-[#545563]">
+           Enter Plan Name
+          </label>
+          <Input
+           type="text"
+           placeholder="Example: Low Carbs"
+           className="md:max-w-[350px] w-full bg-neutral-white"
+          />
          </div>
          <div className="flex gap-3">
-          <input type="checkbox" className="h-5 w-5"/>
+          <input type="checkbox" className="h-5 w-5" />
           <span>Set as default</span>
+         </div>
         </div>
-        </div>
-
-        
 
         {/* Footer Buttons */}
-        <div className="p-4  flex flex-col sm:flex-row gap-3">
+        <div className="md:p-4  flex flex-col sm:flex-row gap-3">
          <button
           onClick={() => savedMenu()}
           className="w-full border border-[#054A86] rounded-lg py-2 font-medium text-[#054A86]">
@@ -484,8 +496,8 @@ const OrderNow = () => {
      )}
     </AnimatePresence>
    </main>
-
-   <Footer />
+   <MobileFooterNav />
+   {/* <Footer /> */}
   </div>
  );
 };

@@ -5,7 +5,7 @@ const GuestMiddleware = () => {
     localStorage.getItem("authToken") || sessionStorage.getItem("authToken");
 
   // ✅ if token exists → redirect to home
-  if (authToken) {
+  if (!authToken) {
     return <Navigate to="/" replace />;
   }
 

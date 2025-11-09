@@ -113,106 +113,115 @@ export default function PaymentSettings() {
     </h1>
 
     {/* Connected Payment Methods */}
-    <section className="bg-neutral-white rounded-[16px] py-2 md:px-[16px] md:py-[24px] sm:p-8 shadow-sm">
-     <h2 className="text-lg font-semibold mb-6 text-foreground">
-      Connected payment methods
-     </h2>
+    <div className="border border-[#EDEEF2] px-4 pt-6  md:p-0 rounded-[16px]">
+     <section className="bg-neutral-white rounded-[16px] py-2 md:px-[16px] md:py-[24px] sm:p-8 shadow-sm">
+      <h2 className="text-lg md:font-semibold font-[700] md:mb-6 mb-4 text-foreground">
+       Connected payment methods
+      </h2>
 
-     <div className="flex flex-wrap items-center md:flex-row gap-4">
-      {payments.length === 0 && <p>No saved payment methods.</p>}
-      {payments.map((card) => (
-       <div
-        key={card.id}
-        className="h-[88px] w-[228px] border border-[#C7C8D2] rounded-[8px] p-[12px]">
-        <h3 className="text-[16px] leading-[24px] font-[700] tracking-[0.1px] text-neutral-black pb-[2px]">
-         {card.masked_card}
-        </h3>
-        <p className="text-neutral-gray text-[12px] font-[400] leading-[16px] pb-2">
-         {card.expiration}
-        </p>
-        <div className="flex justify-between items-center">
-         <p className="text-[14px] font-[400] leading-[20px] text-neutral-gray-dark">
-          {card.cardholder_name}
+      <div className="flex flex-wrap items-center md:flex-row gap-4">
+       {payments.length === 0 && <p>No saved payment methods.</p>}
+       {payments.map((card) => (
+        <div
+         key={card.id}
+         className="h-[88px] relative md:w-[228px] w-full border border-[#C7C8D2] rounded-[8px] p-[12px]">
+         <h3 className="text-[16px] leading-[24px] font-[700] tracking-[0.1px] text-neutral-black pb-[2px]">
+          {card.masked_card}
+         </h3>
+         <p className="text-neutral-gray text-[12px] font-[400] leading-[16px] pb-2">
+          {card.expiration}
          </p>
+         <div className="flex justify-between items-center">
+          <p className="text-[14px] font-[400] leading-[20px] text-neutral-gray-dark">
+           {card.cardholder_name}
+          </p>
+         </div>
+         <img
+          src="/images/icons/three_dots.svg"
+          alt="edit icon"
+          className="absolute top-[14px]  right-3 z-50"
+         />
+        </div>
+       ))}
+      </div>
+     </section>
+
+     {/* New Payment Method */}
+     <section className="bg-neutral-white rounded-[16px] py-2 md:px-[16px] md:py-[24px] sm:p-8 shadow-sm">
+      <h2 className="text-lg font-semibold md:mb-6 mb-4 max-md:pt-[48px] text-foreground">
+       New payment method
+      </h2>
+
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+       <div className="space-y-2 md:col-span-2">
+        <label className="text-[0.75rem] text-neutral-gray-dark font-[600] leading-[1rem] mb-[0.5rem]">
+         Card number
+        </label>
+        <input
+         type="text"
+         name="card_number"
+         value={newPayment.card_number}
+         onChange={handleChange}
+         placeholder="XXXX-XXXX-XXXX-XXXX"
+         className="w-full py-[0.625rem] px-[0.75rem] outline-none border border-[#C7C8D2] rounded-[0.5rem] text-[0.875rem] sm:text-[1rem]"
+        />
+       </div>
+
+       <div className="md:col-span-2 flex flex-row gap-4">
+        <div className="space-y-2">
+         <label className="text-[0.75rem] text-neutral-gray-dark font-[600] leading-[1rem] mb-[0.5rem]">
+          Expiration
+         </label>
+         <input
+          type="text"
+          name="expiration"
+          value={newPayment.expiration}
+          onChange={handleChange}
+          placeholder="MM/YYYY"
+          className="w-full py-[0.625rem] px-[0.75rem] outline-none border border-[#C7C8D2] rounded-[0.5rem] text-[0.875rem] sm:text-[1rem]"
+         />
+        </div>
+
+        <div className="space-y-2">
+         <label className="text-[0.75rem] text-neutral-gray-dark font-[600] leading-[1rem] mb-[0.5rem]">
+          CVC
+         </label>
+         <input
+          type="text"
+          name="cvc"
+          value={newPayment.cvc}
+          onChange={handleChange}
+          placeholder="XXX"
+          className="w-full py-[0.625rem] px-[0.75rem] outline-none border border-[#C7C8D2] rounded-[0.5rem] text-[0.875rem] sm:text-[1rem]"
+         />
         </div>
        </div>
-      ))}
-     </div>
-    </section>
 
-    {/* New Payment Method */}
-    <section className="bg-neutral-white rounded-[16px] py-2 md:px-[16px] md:py-[24px] sm:p-8 shadow-sm">
-     <h2 className="text-lg font-semibold mb-6 text-foreground">
-      New payment method
-     </h2>
-
-     <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-      <div className="space-y-2 md:col-span-2">
-       <label className="text-[0.75rem] text-neutral-gray-dark font-[600] leading-[1rem] mb-[0.5rem]">
-        Card number
-       </label>
-       <input
-        type="text"
-        name="card_number"
-        value={newPayment.card_number}
-        onChange={handleChange}
-        placeholder="XXXX-XXXX-XXXX-XXXX"
-        className="w-full py-[0.625rem] px-[0.75rem] outline-none border border-[#C7C8D2] rounded-[0.5rem] text-[0.875rem] sm:text-[1rem]"
-       />
+       <div className="space-y-2 md:col-span-4">
+        <label className="text-[0.75rem] text-neutral-gray-dark font-[600] leading-[1rem] mb-[0.5rem]">
+         Cardholder
+        </label>
+        <input
+         type="text"
+         name="cardholder_name"
+         value={newPayment.cardholder_name}
+         onChange={handleChange}
+         placeholder="Enter name on card"
+         className="w-full py-[0.625rem] px-[0.75rem] outline-none border border-[#C7C8D2] rounded-[0.5rem] text-[0.875rem] sm:text-[1rem]"
+        />
+       </div>
       </div>
 
-      <div className="space-y-2">
-       <label className="text-[0.75rem] text-neutral-gray-dark font-[600] leading-[1rem] mb-[0.5rem]">
-        Expiration
-       </label>
-       <input
-        type="text"
-        name="expiration"
-        value={newPayment.expiration}
-        onChange={handleChange}
-        placeholder="MM/YYYY"
-        className="w-full py-[0.625rem] px-[0.75rem] outline-none border border-[#C7C8D2] rounded-[0.5rem] text-[0.875rem] sm:text-[1rem]"
-       />
+      <div className="gap-4 py-5 md:px-4 flex justify-end mt-3">
+       <Button
+        variant="outline"
+        className="w-full sm:w-auto"
+        onClick={handleAddPayment}>
+        Add new payment method
+       </Button>
       </div>
-
-      <div className="space-y-2">
-       <label className="text-[0.75rem] text-neutral-gray-dark font-[600] leading-[1rem] mb-[0.5rem]">
-        CVC
-       </label>
-       <input
-        type="text"
-        name="cvc"
-        value={newPayment.cvc}
-        onChange={handleChange}
-        placeholder="XXX"
-        className="w-full py-[0.625rem] px-[0.75rem] outline-none border border-[#C7C8D2] rounded-[0.5rem] text-[0.875rem] sm:text-[1rem]"
-       />
-      </div>
-
-      <div className="space-y-2 md:col-span-4">
-       <label className="text-[0.75rem] text-neutral-gray-dark font-[600] leading-[1rem] mb-[0.5rem]">
-        Cardholder
-       </label>
-       <input
-        type="text"
-        name="cardholder_name"
-        value={newPayment.cardholder_name}
-        onChange={handleChange}
-        placeholder="Enter name on card"
-        className="w-full py-[0.625rem] px-[0.75rem] outline-none border border-[#C7C8D2] rounded-[0.5rem] text-[0.875rem] sm:text-[1rem]"
-       />
-      </div>
-     </div>
-
-     <div className="gap-4 py-5 px-4 flex justify-end">
-      <Button
-       variant="outline"
-       className="w-full sm:w-auto"
-       onClick={handleAddPayment}>
-       Add new payment method
-      </Button>
-     </div>
-    </section>
+     </section>
+    </div>
    </div>
   </LazyLoad>
  );
