@@ -23,16 +23,16 @@ const HeroSection = () => {
     }}
    />
    {/* Dark overlay */}
-   <div className="absolute inset-0 h-[512px] bg-black/30" />
+   <div className="absolute inset-0 h-[512px] md:bg-black/30" />
 
    {/* Content container with the white box */}
    <div className="absolute inset-0 h-[512px]">
-    <div className="mx-auto h-full max-w-6xl px-4 flex items-center justify-center">
-     <div className="w-full max-w-[585px] h-[440px] rounded-2xl bg-white shadow-[0_12px_24px_0_#2B2B4329] py-5 md:py-8 px-[20px] sm:px-[64px]">
-      <h1 className="text-[32px] md:text-[40px] font-extrabold text-[#054A86] text-center">
+    <div className="mx-auto h-full max-w-6xl px-4  flex items-center justify-center">
+     <div className="w-full max-w-[585px] h-auto rounded-2xl bg-white shadow-[0_12px_24px_0_#2B2B4329] py-6 md:py-8 px-5 sm:px-[64px]">
+      <h1 className=" text-[40px] leading-[56px] font-extrabold text-[#054A86] text-center">
        Meals on Your Schedule
       </h1>
-      <p className="mt-6 text-base font-semibold text-center text-[#545563]">
+      <p className="mt-6 text-[20px] leading-[28px]  font-semibold text-center text-[#545563]">
        Plan and reserve your meal and pick it up from a vending location nearby.
       </p>
 
@@ -107,8 +107,8 @@ const HeroSection = () => {
        transition={{ type: "spring", stiffness: 250, damping: 30 }}
        className="bg-white w-full sm:max-w-[522px] h-full shadow-2xl flex flex-col overflow-hidden">
        {/* Header */}
-       <div className="flex items-center justify-between px-8 pt-6 pb-4 border-b border-gray-200">
-        <h2 className="text-[28px] leading-[36px] font-[700] text-gray-900">
+       <div className="flex items-center justify-between md:px-8 md:pt-6 md:pb-4 py-[18px] px-[15px] border-b border-gray-200">
+        <h2 className=" text-[20px] leading-[28px] font-[600] md:text-[28px] md:leading-[36px] md:font-[700] text-gray-900">
          Vending Locator
         </h2>
         <button
@@ -158,7 +158,7 @@ const HeroSection = () => {
        </div>
 
        {/* Toggle Tabs */}
-       <div className="px-8 pb-4">
+       <div className="px-8 pb-4 shadow-xl">
         <div className="flex bg-gray-100 rounded-xl p-1">
          <button
           onClick={() => setActiveView("list")}
@@ -185,8 +185,8 @@ const HeroSection = () => {
 
        {/* List View */}
        {activeView === "list" && (
-        <div className="flex-1 overflow-y-auto px-8 space-y-4 pb-28">
-         <div className="border border-gray-200 rounded-2xl shadow-sm p-4">
+        <div className="flex-1 overflow-y-auto px-8 space-y-4 py-8">
+         <div className="border border-gray-200 rounded-2xl shadow-md p-4">
           <span className="inline-block bg-[#A7CF38] text-[#054A86] text-[12px] font-semibold px-3 py-1 rounded-full mb-2">
            SELECTED LOCATION
           </span>
@@ -202,7 +202,7 @@ const HeroSection = () => {
          {[2, 3].map((i) => (
           <div
            key={i}
-           className="border border-gray-200 rounded-2xl shadow-sm p-4">
+           className="border border-gray-200 rounded-2xl  shadow-md p-4">
            <h3 className="text-[20px] font-[700] text-gray-900">
             Location {i}
            </h3>
@@ -222,7 +222,7 @@ const HeroSection = () => {
 
        {/* Map View 👇 */}
        {activeView === "map" && (
-        <div className="flex-1 overflow-y-auto px-8 space-y-4 pb-28">
+        <div className="flex-1 overflow-y-auto px-8 space-y-4 py-8">
          <div className="w-full h-[500px] rounded-2xl overflow-hidden">
           <VendingMap />
          </div>

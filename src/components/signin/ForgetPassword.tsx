@@ -3,11 +3,11 @@ import { Button } from "../ui/button";
 
 const ForgetPassword = ({ onBack }) => {
  return (
-  <div className="md:w-[45%] w-[100%] bg-white px-6 sm:px-10 md:px-12 lg:px-14 pt-20 pb-3 flex flex-col">
+  <div className="md:w-[45%] w-[100%] bg-white px-[15px] sm:px-10 md:px-12 lg:px-14 pt-6 pb-3 flex flex-col">
    <div className="max-w-sm w-full mx-auto">
     <Link to={"/"}>
      <svg
-      className="mb-[50px]"
+      className="md:mb-[50px]"
       width="135"
       height="24"
       viewBox="0 0 135 24"
@@ -40,7 +40,9 @@ const ForgetPassword = ({ onBack }) => {
      </svg>
     </Link>
     {onBack && (
-     <button className="flex ga-2 mb-[25px] cursor-pointer" onClick={onBack}>
+     <button
+      className="flex ga-2 mb-[25px] cursor-pointer max-md:pt-[44px] "
+      onClick={onBack}>
       <svg
        width="20"
        height="20"
@@ -55,17 +57,17 @@ const ForgetPassword = ({ onBack }) => {
         stroke-linejoin="round"
        />
       </svg>
-      <span className="text-sm font-bold text-[#545563]">Back to Signin</span>
+      <span className="text-sm font-bold text-[#545563] ">Back to Signin</span>
      </button>
     )}
-    <h1 className="text-[40px] font-bold tracking-tight text-[#2B2B43]">
+    <h1 className="text-[40px] leading-[56px] font-[800] tracking-tight text-[#2B2B43]">
      Forgot password
     </h1>
-    <p className="mt-3 text-base font-normal text-[#545563]">
+    <p className="mt-[22px] text-base font-normal text-[#545563]">
      Enter the email associated with your account and we’ll send an email with
      instructions to reset your password.{" "}
     </p>
-    <div className="space-y-1 mt-8">
+    <div className="space-y-1 md:mt-8 pt-[20px]">
      <label htmlFor="email" className="text-xs font-semibold text-[#545563]">
       Email
      </label>
@@ -78,7 +80,7 @@ const ForgetPassword = ({ onBack }) => {
     </div>
     <Button
      variant="default"
-     className="mt-5 w-full h-11 font-bold"
+     className="md:mt-5 mt-10 w-full h-11 font-bold"
      style={{ boxShadow: "0px 8px 20px 0px #4E60FF29" }}>
      Send instructions
     </Button>

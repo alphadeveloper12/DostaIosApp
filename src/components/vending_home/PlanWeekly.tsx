@@ -193,7 +193,7 @@ const PlanWeekly: React.FC<MenuProps> = ({ handleConfirmStep }) => {
        <h2 className="text-[16px] text-[#2B2B43] leading-[24px] font-[700] tracking-[0.1px]">
         Choose meals for each weekday :
        </h2>
-       <div className="flex gap-4 md:flex-row flex-col">
+       <div className="md:flex gap-4 hidden md:flex-row flex-col">
         {selectedItems.length > 0 && (
          <Button
           className="bg-transparent hover:bg-transparent text-[#545563] border border-[#545563]"
@@ -216,7 +216,7 @@ const PlanWeekly: React.FC<MenuProps> = ({ handleConfirmStep }) => {
       </div>
 
       {/* select your favourite buttons */}
-      <div className="flex md:flex-row flex-col md:justify-between items-center gap-3  py-[8px] w-full">
+      <div className="flex flex-row  md:justify-between items-center gap-3 py-[8px] w-full">
        {features.map((data, index) => {
         return (
          <div
@@ -225,8 +225,8 @@ const PlanWeekly: React.FC<MenuProps> = ({ handleConfirmStep }) => {
            tab1 === index
             ? "bg-[#EAF5FF]  border-[#054A86]"
             : "bg-neutral-white border-[#C7C8D2]"
-          } md:h-[56px] w-full md:w-[50%] h-[26px]  cursor-pointer text-center inline-flex items-center  justify-center rounded-[8px]  md:rounded-[16px] border-2 `}>
-          <span className="md:text-[16px] text-[12px] leading-[18px]  md:leading-[24px] font-[400]">
+          } md:h-[56px] w-full md:w-[50%] h-auto max-md:py-[11px]  cursor-pointer text-center inline-flex items-center  justify-center rounded-[8px]  md:rounded-[16px] border-2 `}>
+          <span className="md:text-[16px] text-[14px] leading-[20px] font-[600] md:leading-[24px] md:font-[400]">
            {data.feature}
           </span>
          </div>
@@ -235,30 +235,71 @@ const PlanWeekly: React.FC<MenuProps> = ({ handleConfirmStep }) => {
       </div>
 
       {/* weekly tabs and saved button */}
-      <div className="flex items-center gap-3 flex-wrap pt-[8px]">
-       {/* tabs */}
-       {days.map((week, index) => {
-        return (
-         <div
-          key={index}
-          onClick={() => setTab(index)}
-          className={` ${
-           tab === index
-            ? "bg-[#EAF5FF]  border-[#054A86]"
-            : "bg-neutral-white border-[#C7C8D2]"
-          } md:h-[56px] h-[26px]   cursor-pointer text-center inline-flex items-center w-full justify-center md:max-w-[153px] max-w-[80px] rounded-[8px] md:rounded-[16px] border-2 `}>
-          <span className="md:text-[16px] text-[12px] leading-[18px]  md:leading-[24px] font-[400]">
+      <div className="flex w-full items-center justify-between gap-3  pt-[8px]">
+       <div className="flex md:hidden w-full max-w-[250px]">
+        <select
+         // Uses the existing 'tab' state for the current selection
+         value={tab}
+         // Uses the existing 'setTab' function to update state
+         onChange={(e) => setTab(parseInt(e.target.value, 10))}
+         className="w-full h-[30px] p-0 px-2  text-[12px] leading-[18px] 
+                   border-2 border-[#054A86] text-[#054A86] bg-[#EAF5FF] rounded-[8px] 
+                   focus:ring-[#054A86] focus:border-[#054A86] font-medium appearance-none"
+         // Custom styling to add a dropdown arrow icon
+         style={{
+          backgroundImage:
+           "url(\"data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23054A86' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E\")",
+          backgroundRepeat: "no-repeat",
+          backgroundPosition: "right 0.25rem center",
+          backgroundSize: "1.2em",
+         }}>
+         {days.map((week, index) => (
+          <option key={index} value={index}>
            {week?.day}
-          </span>
-         </div>
-        );
-       })}
-       {/* saved plans  */}
+          </option>
+         ))}
+        </select>
+       </div>
+
+       {/* Desktop Tabs (Original - Hidden on screens < md) */}
+       <div className="hidden md:flex md:w-full items-center gap-3 flex-wrap">
+        {days.map((week, index) => {
+         return (
+          <div
+           key={index}
+           onClick={() => setTab(index)}
+           className={` ${
+            tab === index
+             ? "bg-[#EAF5FF] border-[#054A86]"
+             : "bg-white border-[#C7C8D2]"
+           } md:h-[56px] h-[26px] cursor-pointer text-center inline-flex items-center w-full justify-center md:max-w-[153px] max-w-[80px] rounded-[8px] md:rounded-[16px] border-2 `}>
+           <span className="md:text-[16px] text-[12px] leading-[18px] md:leading-[24px] font-[400]">
+            {week?.day}
+           </span>
+          </div>
+         );
+        })}
+       </div>
+
+       {/* Saved Plans Button (Original - Visible on all screens) */}
        <div
         onClick={() => setSavedPlans(true)}
-        className={`md:h-[44px] h-[26px] gap-2 bg-neutral-white cursor-pointer text-center inline-flex items-center w-full justify-center md:max-w-[153px] max-w-[120px] rounded-[8px] border md:border-2 border-[#054A86]`}>
-        <img src="/images/icons/hamburger.svg" alt="menu icon" />
-        <span className="md:text-[16px] text-[#545563] font-[700] text-[12px] leading-[18px]  md:leading-[24px] ">
+        className={`md:h-[44px] h-[30px] gap-2 bg-neutral-white cursor-pointer text-center inline-flex items-center w-full justify-center md:max-w-[153px] max-w-[120px] rounded-[8px] border md:border-2 border-[#054A86]`}>
+        {/* Replaced image with inline SVG for self-containment */}
+        <svg
+         className="w-4 h-4 text-[#054A86]"
+         fill="none"
+         stroke="currentColor"
+         viewBox="0 0 24 24"
+         xmlns="http://www.w3.org/2000/svg">
+         <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth="2"
+          d="M4 6h16M4 12h16M4 18h16"></path>
+        </svg>
+
+        <span className="md:text-[16px] text-[#545563] font-[700] text-[12px] leading-[18px] md:leading-[24px] ">
          Saved Plans
         </span>
        </div>
@@ -266,10 +307,10 @@ const PlanWeekly: React.FC<MenuProps> = ({ handleConfirmStep }) => {
 
       <div className="flex md:flex-row justify-between flex-col gap-2 md:py-2 pt-4">
        <p className="text-[14px] font-[400] leading-[20px] tracking-[0.2px] text-[#545563]">
-        {selectedItems.length === 0
+        {selectedItems?.length === 0
          ? "No selected meals"
-         : `Selected for ${days[tab].day} : ${selectedItems
-            .map((item) => item.heading)
+         : `Selected for ${days[tab]?.day} : ${selectedItems
+            .map((item) => item?.heading)
             .join(", ")}`}
        </p>
        <p className="text-[14px] font-[400] leading-[20px] tracking-[0.2px] text-[#545563]">
@@ -280,7 +321,7 @@ const PlanWeekly: React.FC<MenuProps> = ({ handleConfirmStep }) => {
     </div>
 
     <div className="w-full h-full pb-4">
-     <div className="md:px-[30px]   flex gap-[24px] flex-wrap">
+     <div className="md:px-[30px] grid grid-cols-12  md:flex md:gap-[24px] gap-[12px] flex-wrap">
       {foodData.map((data, index) => {
        return (
         <div
@@ -290,20 +331,20 @@ const PlanWeekly: React.FC<MenuProps> = ({ handleConfirmStep }) => {
           selectedItems.find((item) => item.imgAlt === data.imgAlt)
            ? "border-[#054A86]"
            : "border-[#EDEEF2]"
-         } max-w-[306px] bg-neutral-white rounded-[16px] px-3 pt-3 pb-5 sm:px-4 sm:pt-4 sm:pb-6 overflow-hidden cursor-pointer hover:shadow-lg transition-shadow`}>
+         } max-w-[306px] max-md:col-span-6 bg-neutral-white rounded-[16px] px-3 pt-3 pb-5 sm:px-4 sm:pt-4 sm:pb-6 overflow-hidden cursor-pointer hover:shadow-lg transition-shadow`}>
          <img
           src={data.imgSrc}
           alt={data.imgAlt}
-          className="block w-full h-auto rounded-[12px] sm:rounded-[16px] object-cover"
+          className="block w-full md:h-auto h-[120px] rounded-[12px] sm:rounded-[16px] object-cover"
          />
-         <h3 className="text-[24px] pt-3 pb-1 leading-[32px] font-[700] tracking-[0.1px] text-[#2B2B43]">
+         <h3 className="text-[16px] leading-[24px] md:text-[24px] pt-3 pb-1 md:leading-[32px] font-[700] tracking-[0.1px] text-[#2B2B43]">
           {data.heading}
          </h3>
          <p className="text-[14px] line-clamp-2 leading-[20px] font-[400] tracking-[0.2px] text-[#83859C]">
           {data.description}
          </p>
          <div className="flex justify-between items-center pt-2">
-          <h4 className="text-[16px]  leading-[24px] font-[700] tracking-[0.1px] text-[#2B2B43]">
+          <h4 className="text-[13px] leading-[18px] md:text-[16px]  md:leading-[24px] font-[700] tracking-[0.1px] text-[#2B2B43]">
            {data.price}
           </h4>
 
@@ -316,7 +357,9 @@ const PlanWeekly: React.FC<MenuProps> = ({ handleConfirmStep }) => {
               className="p-1 text-black bg-[#EDEEF2] rounded-[8px]">
               <MinusIcon className="w-3 h-3" />
              </button>
-             <span className="px-3 text-lg font-medium">{quantity}</span>
+             <span className="md:px-3 px-2 md:text-lg text-sm font-medium">
+              {quantity}
+             </span>
              <button
               onClick={() => setQuantity(quantity + 1)}
               className="p-1 text-black bg-[#EDEEF2] rounded-[8px]">
@@ -331,6 +374,26 @@ const PlanWeekly: React.FC<MenuProps> = ({ handleConfirmStep }) => {
         </div>
        );
       })}
+     </div>
+     <div className="flex gap-4 md:hidden  flex-col pt-6">
+      {selectedItems.length > 0 && (
+       <Button
+        className="bg-transparent hover:bg-transparent text-[#545563] border border-[#545563]"
+        onClick={() => setOpenDialouge(true)}>
+        Reset
+       </Button>
+      )}
+      {selectedItems.length > 0 ? (
+       <Button
+        className="bg-[#054A86] hover:bg-[#054A86]"
+        onClick={() => handleConfirmStep()}>
+        Confirm and review
+       </Button>
+      ) : (
+       <Button className="bg-[#F7F7F9] hover:bg-[#F7F7F9] text-[#C7C8D2]">
+        Confirm and review
+       </Button>
+      )}
      </div>
     </div>
 
@@ -348,10 +411,10 @@ const PlanWeekly: React.FC<MenuProps> = ({ handleConfirmStep }) => {
         animate={{ x: 0 }}
         exit={{ x: "100%" }}
         transition={{ type: "spring", stiffness: 250, damping: 30 }}
-        className="bg-white w-full px-8 py-4 max-w-[522px] h-full shadow-2xl flex flex-col overflow-y-auto">
+        className="bg-white w-full md:px-8 md:py-4 px-[15px] py-6 max-w-[522px] h-full shadow-2xl flex flex-col overflow-y-auto">
         {/* Header */}
-        <div className="flex items-center justify-between pb-[16px] ">
-         <h2 className="text-[28px] leading-[36px] font-[700] ">
+        <div className="flex items-center justify-between pb-[40px] md:pb-[16px]">
+         <h2 className="text-[28px] leading-[36px] font-[700]  ">
           {selectedItem.heading}
          </h2>
          <button
@@ -377,7 +440,7 @@ const PlanWeekly: React.FC<MenuProps> = ({ handleConfirmStep }) => {
          </h3>
 
          {selectedItem && (
-          <div className="pb-[24px]">
+          <div className="md:pb-[24px]">
            <img src="/images/icons/offertag.svg" alt="offer" />
            <p className="py-3 px-[18px]">Buy one get one for free</p>
           </div>
@@ -392,7 +455,7 @@ const PlanWeekly: React.FC<MenuProps> = ({ handleConfirmStep }) => {
         </div>
 
         {/* Footer Buttons */}
-        <div className="p-4  flex flex-col sm:flex-row gap-3">
+        <div className="md:p-4  flex flex-col sm:flex-row gap-3">
          <button
           onClick={() => setSelectedItem(null)}
           className="w-full border border-[#054A86] rounded-lg py-2 font-medium text-[#054A86]">
@@ -416,7 +479,7 @@ const PlanWeekly: React.FC<MenuProps> = ({ handleConfirmStep }) => {
 
     {openDialouge && (
      <motion.div
-      className="fixed inset-0 bg-black/75 flex items-center justify-center z-50"
+      className="fixed hidden inset-0 bg-black/75 md:flex items-center justify-center z-50"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}>
@@ -448,10 +511,57 @@ const PlanWeekly: React.FC<MenuProps> = ({ handleConfirmStep }) => {
       </motion.div>
      </motion.div>
     )}
+    {/* reset dialouge mobile*/}
+    <AnimatePresence>
+     {openDialouge && (
+      <motion.div
+       className="fixed md:hidden inset-0 z-50 flex justify-end bg-black/75 "
+       initial={{ opacity: 0 }}
+       animate={{ opacity: 1 }}
+       exit={{ opacity: 0 }}>
+       {/* Sidebar Panel */}
+       <motion.div
+        initial={{ x: "100%" }}
+        animate={{ x: 0 }}
+        exit={{ x: "100%" }}
+        transition={{ type: "spring", stiffness: 250, damping: 30 }}
+        className="bg-white w-full md:px-8 md:py-4 px-[15px] py-6 max-w-[522px] h-full shadow-2xl flex flex-col overflow-y-auto">
+        {/* Header */}
+        <div className="flex items-center gap-4 pb-[24px] md:pb-[16px]">
+         <img src="/images/icons/info_icon.svg" alt="alert" />
+         <h2 className="text-[28px] leading-[36px] font-[700]  ">
+          Reset Menu Selection?
+         </h2>
+        </div>
+
+        {/* Content */}
+        <div className="flex-1 py-0 ">
+         <p className="text-gray-600 text-[16px] leading-[24px] font-[400] tracking-[0.1px]">
+          Are you sure you want to reset your menu selection?
+         </p>
+        </div>
+
+        {/* Footer Buttons */}
+        <div className="md:p-4  flex flex-col sm:flex-row gap-3">
+         <button
+          onClick={() => setOpenDialouge(false)}
+          className="w-full border border-[#054A86] rounded-lg py-2 font-medium text-[#054A86]">
+          Close
+         </button>
+         <button
+          onClick={() => confirmFunc()}
+          className="w-full bg-[#054A86] text-white rounded-lg py-2 font-medium ">
+          Confirm
+         </button>
+        </div>
+       </motion.div>
+      </motion.div>
+     )}
+    </AnimatePresence>
 
     {/* toaster  */}
     {toaster && (
-     <div className="fixed md:top-[104px] left-1/2 transform -translate-x-1/2 max-w-[540px] w-full h-[52px] bg-[#E8F9F1] rounded-[16px] shadow-[0px_4px_10px_rgba(232,249,241,0.6)] flex items-center px-4 gap-3 z-50">
+     <div className="fixed top-[104px] left-1/2 transform -translate-x-1/2 max-w-[540px] w-full h-[52px] bg-[#E8F9F1] rounded-[16px] shadow-[0px_4px_10px_rgba(232,249,241,0.6)] flex items-center px-4 gap-3 z-50">
       <svg
        width="20"
        height="20"
@@ -507,12 +617,10 @@ const PlanWeekly: React.FC<MenuProps> = ({ handleConfirmStep }) => {
         animate={{ x: 0 }}
         exit={{ x: "100%" }}
         transition={{ type: "spring", stiffness: 250, damping: 30 }}
-        className="bg-white w-full px-8 py-4 max-w-[522px] h-full shadow-2xl flex flex-col overflow-y-auto">
+        className="bg-white w-full md:px-8 md:py-4 px-[16px] py-[22px] max-w-[522px] h-full shadow-2xl flex flex-col overflow-y-auto">
         {/* Header */}
         <div className="flex items-center justify-between pb-[16px] ">
-         <h2 className="text-[28px] leading-[36px] font-[700] ">
-          Saved Plans
-         </h2>
+         <h2 className="text-[28px] leading-[36px] font-[700] ">Saved Plans</h2>
          <button
           onClick={() => setSavedPlans(false)}
           className="p-2 rounded-full hover:bg-gray-100">
@@ -546,7 +654,7 @@ const PlanWeekly: React.FC<MenuProps> = ({ handleConfirmStep }) => {
         </div>
 
         {/* Footer Buttons */}
-        <div className="p-4  flex flex-col sm:flex-row gap-3">
+        <div className="md:p-4  flex flex-col sm:flex-row gap-3">
          <button
           onClick={() => setSavedPlans(false)}
           className="w-full border border-[#054A86] rounded-lg py-2 font-medium text-[#054A86]">

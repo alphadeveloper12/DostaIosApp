@@ -5,6 +5,7 @@ import SliderSection from "@/components/vending_home/SliderSection";
 import GetApp from "@/components/vending_home/GetApp";
 import Newsletter from "@/components/home/Newsletter";
 import Header from "./catering/components/layout/Header";
+import MobileFooterNav from "@/components/home/MobileFooterNav";
 
 const VendingHome = () => {
  return (
@@ -19,7 +20,7 @@ const VendingHome = () => {
 
     
    </main>
-
+    <MobileFooterNav />
    <Footer />
   </div>
  );

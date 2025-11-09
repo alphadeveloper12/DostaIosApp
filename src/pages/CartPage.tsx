@@ -5,6 +5,7 @@ import OrderSummary from "@/components/Cart/OrderSummary";
 import VendingHeader from "@/components/vending_home/VendingHeader";
 import Footer from "@/components/layout/Footer";
 import BreadCrumb from "@/components/home/BreadCrumb";
+import Header from "./catering/components/layout/Header";
 
 // Define the type for a single cart item for type safety
 export interface CartItemType {
@@ -82,7 +83,7 @@ const CartPage: React.FC = () => {
 
  return (
   <div className="bg-gray-50 min-h-screen ">
-   <VendingHeader />
+   <Header />
    {/* Breadcrumbs and title section  */}
    <div className="w-full bg-white pt-2 pb-6">
     <div className="main-container">

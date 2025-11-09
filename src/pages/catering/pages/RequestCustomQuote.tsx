@@ -1,9 +1,10 @@
 import { ChevronLeft, Mail, CheckCircle2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
 import { useState, useMemo } from "react";
+import Header from "../components/layout/Header";
+import BreadCrumb from "@/components/home/BreadCrumb";
 
 const RequestCustomQuote = () => {
  const navigate = useNavigate();
@@ -32,27 +33,17 @@ const RequestCustomQuote = () => {
 
    <main className="flex-1 bg-background">
     <div className="bg-neutral-white">
-     <div className="container py-6">
-      <div className="flex items-center gap-2 text-sm mb-6">
-       <button
-        onClick={() => navigate(-1)}
-        className="flex items-center gap-1 text-neutral-gray-dark hover:text-primary transition-colors">
-        <ChevronLeft className="w-4 h-4" />
-        Breadcrumbs
-       </button>
-       <span className="text-neutral-gray">/</span>
-       <span className="text-neutral-gray-dark">Breadcrumbs</span>
-      </div>
+     <div className="main-container !py-6">
+      <BreadCrumb />
 
       <h1 className="md:text-4xl font-bold text-primary text-[28px]">
-       {!submitted && ("Catering Service Confirmation")}
-       {submitted && ("Confirmation Message")}
-
+       {!submitted && "Catering Service Confirmation"}
+       {submitted && "Confirmation Message"}
       </h1>
      </div>
     </div>
 
-    <div className="container mx-auto px-2 py-6 pb-24">
+    <div className="main-container px-2 !py-6 pb-24">
      <div className="rounded-2xl border border-[#EDEEF2] bg-white p-6">
       <div className="flex items-start justify-between gap-6 w-full flex-col">
        {/* ===================== FORM SECTION ===================== */}
@@ -77,7 +68,10 @@ const RequestCustomQuote = () => {
           {/* Radio options */}
           <fieldset
            onChange={(e) => {
-            if (e.target?.name === "send_to") setSendTo(e.target.value);
+            const target = e.target as HTMLInputElement;
+            if (target.name === "send_to") {
+             setSendTo(target.value);
+            }
            }}>
            <legend className="sr-only">Where should we send your quote?</legend>
 
@@ -191,15 +185,15 @@ const RequestCustomQuote = () => {
           </div>
           <p className="text-xl font-semibold text-[#545563]">
            We’ve received your details and will send your custom quote to{" "}
-            {sendTo === "other"
-             ? otherEmail || "[email address]"
-             : "[email address] "} 
+           {sendTo === "other"
+            ? otherEmail || "[email address]"
+            : "[email address] "}
            shortly.
           </p>
 
           <div className="mt-2 flex items-center gap-3">
            <button
-            className="px-4 py-3 bg-white leading-[18x] text-sm font-bold text-[#054A86] border border-[#054A86] rounded-md hover:text-white hover:bg-[#0A3B79]" 
+            className="px-4 py-3 bg-white leading-[18x] text-sm font-bold text-[#054A86] border border-[#054A86] rounded-md hover:text-white hover:bg-[#0A3B79]"
             onClick={() => navigate("/")}>
             DOSTA Home
            </button>

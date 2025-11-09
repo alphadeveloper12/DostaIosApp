@@ -124,7 +124,7 @@ All colors MUST be HSL.
 /* Customize the overall position of the dots */
 .slick-dots {
  position: absolute;
- bottom: -52px; /* Adjust bottom position */
+ bottom: -80px !important; /* Adjust bottom position */
  left: 50%;
  transform: translateX(-50%);
  display: flex;
@@ -165,11 +165,18 @@ All colors MUST be HSL.
  opacity: 100% !important;
 }
 .main-container {
- max-width: 1170px;
- width: 100%;
- padding: 0px 30px;
- margin: 0 auto;
+  max-width: 1170px;
+  width: 100%;
+  padding: 0 30px;
+  margin: 0 auto;
 }
+
+@media (max-width: 1023px) {
+  .main-container {
+    padding: 0 15px;
+  }
+}
+
 @layer base {
  * {
   @apply border-border;
