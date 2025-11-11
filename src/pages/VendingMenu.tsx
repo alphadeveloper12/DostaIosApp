@@ -11,6 +11,7 @@ import LazyLoad from "@/components/ui/LazyLoad";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchMenuByDay } from "../redux/slices/menuSlice";
 import MobileFooterNav from "@/components/home/MobileFooterNav";
+
 // Define the interface for the food item
 interface FoodItem {
  name: string;
@@ -26,13 +27,35 @@ interface FoodItem {
 const VendingMenu = () => {
  const [scrolled, setScrolled] = useState(false);
  const [selectedItem, setSelectedItem] = useState<FoodItem | null>(null);
+ const [selectedItems, setSelectedItems] = useState<FoodItem[]>([]);
  const [isSheetOpen, setIsSheetOpen] = useState(false);
  const [tab, setTab] = useState<number>(0);
- //  const [foodData, setFoodData] = useState<FoodItem[]>([]);
- //  const [isLoading, setIsLoading] = useState<boolean>(false);
- //  const [error, setError] = useState<boolean>(false);
  const dispatch = useDispatch();
- const { foodData, isLoading, error } = useSelector((state) => state?.menu);
+ const { foodData, isLoading, error } = useSelector(
+  (state: any) => state?.menu
+ );
+ const userData = useSelector((state: any) => state?.user?.user);
+ const [orderData, setOrderData] = useState<any>({
+  user: userData ? userData.id : "",
+  monday: [],
+  tuesday: [],
+  wednesday: [],
+  thursday: [],
+  friday: [],
+ });
+ useEffect(() => {
+  const storedOrder = sessionStorage.getItem("orderData");
+  if (storedOrder) {
+   try {
+    const parsed = JSON.parse(storedOrder);
+    setOrderData(parsed);
+    console.log("🛒 Restored orderData:", parsed);
+   } catch (err) {
+    console.error("Error parsing orderData:", err);
+   }
+  }
+ }, []);
+
  const days = [
   { day: "Monday" },
   { day: "Tuesday" },
@@ -40,6 +63,35 @@ const VendingMenu = () => {
   { day: "Thursday" },
   { day: "Friday" },
  ];
+ const startOrder = () => {
+  if (selectedItem && days?.[tab]?.day) {
+   const dayKey = days[tab].day.toLowerCase(); // e.g. "monday"
+
+   setOrderData((prev: any) => {
+    const existingDayItems = prev[dayKey] || [];
+    const exists = existingDayItems.some(
+     (item: any) => item.name === selectedItem.name
+    );
+
+    if (!exists) {
+     const updatedDayItems = [...existingDayItems, selectedItem];
+
+     const updatedOrder = {
+      ...prev,
+      user: userData?.id,
+      [dayKey]: updatedDayItems,
+     };
+
+     console.log("✅ Updated Order Data:", JSON.stringify(updatedOrder));
+     sessionStorage.setItem("orderData", JSON.stringify(updatedOrder)); // optional persistence
+     return updatedOrder;
+    }
+
+    console.log("⚠️ Item already added for", dayKey, ":", selectedItem.name);
+    return prev;
+   });
+  }
+ };
 
  // Function to handle card click and open the item details in the sidebar
  const handleCardClick = (item: FoodItem) => {
@@ -54,40 +106,6 @@ const VendingMenu = () => {
   return () => window.removeEventListener("scroll", onScroll);
  }, []);
 
- // Fetch menu data for the selected day
- //  useEffect(() => {
- //   const fetchMenuForDay = async () => {
- //    const authToken = sessionStorage.getItem("authToken"); // Get the auth token from sessionStorage
- //    const baseUrl = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";
- //    try {
- //     const response = await fetch(
- //      `${baseUrl}/api/vending/menu/${days[tab].day}`,
- //      {
- //       method: "GET",
- //       headers: {
- //        Authorization: `Token ${authToken}`, // Send the authorization token with the request
- //       },
- //      }
- //     );
-
- //     if (response.ok) {
- //      const data = await response.json();
- //      setFoodData(data.items); // Assuming API returns an array of items
- //      setError(false);
- //     } else {
- //      console.error("Failed to fetch menu data:", response.statusText);
- //      setError(true);
- //     }
- //    } catch (error) {
- //     console.error("Failed to fetch menu data:", error);
- //     setError(true);
- //    } finally {
- //     setIsLoading(false);
- //    }
- //   };
-
- //   fetchMenuForDay();
- //  }, [tab]);
  useEffect(() => {
   if (days?.[tab]?.day) {
    dispatch(fetchMenuByDay(days[tab].day));
@@ -260,7 +278,13 @@ const VendingMenu = () => {
           className="w-full border border-[#054A86] rounded-lg py-2 font-medium text-[#054A86]">
           Close
          </button>
-         <button className="w-full bg-[#054A86] text-white rounded-lg py-2 font-medium hover:bg-blue-700">
+         <button
+          onClick={() => {
+           startOrder();
+           setIsSheetOpen(false);
+           setSelectedItem(null);
+          }}
+          className="w-full bg-[#054A86] text-white rounded-lg py-2 font-medium hover:bg-blue-700">
           Start Your Order
          </button>
         </div>

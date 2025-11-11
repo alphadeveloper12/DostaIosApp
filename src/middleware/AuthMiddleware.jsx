@@ -6,7 +6,7 @@ const GuestMiddleware = () => {
 
   // ✅ if token exists → redirect to home
   if (!authToken) {
-    return <Navigate to="/" replace />;
+    return <Navigate to="/signup" replace />;
   }
 
   // ✅ otherwise allow visiting guest routes

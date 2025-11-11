@@ -23,41 +23,46 @@ import GuestMiddleware from "./middleware/GuestMiddleware";
 const queryClient = new QueryClient();
 
 const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <Routes>
-          {/* Public Routes */}
-          <Route path="/" element={<Index />} />
-          <Route path="/vending-home" element={<VendingHome />} />
-          <Route path="/vending-home/menu" element={<VendingMenu />} />
-          <Route path="/vending-home/order-now" element={<OrderNow />} />
-          <Route path="/vending-home/cart" element={<CartPage />} />
-          <Route path="/vending-home/my-orders" element={<MyOrders />} />
-          <Route path="/catering" element={<CateringHome />} />
-          <Route path="/catering/plan" element={<CateringPlan />} />
-          <Route path="/catering/confirmation" element={<CateringConfirmation />} />
-          <Route path="/catering/request-custom-quote" element={<RequestCustomQuote />} />
+ <QueryClientProvider client={queryClient}>
+  <TooltipProvider>
+   <Toaster />
+   <Sonner />
+   <BrowserRouter>
+    <Routes>
+     {/* Public Routes */}
+     <Route path="/" element={<Index />} />
+     <Route path="/vending-home" element={<VendingHome />} />
+     <Route path="/vending-home/menu" element={<VendingMenu />} />
+     <Route path="/vending-home/order-now" element={<OrderNow />} />
+     <Route path="/vending-home/cart" element={<CartPage />} />
+     <Route element={<AuthMiddleware />}>
+      <Route path="/vending-home/my-orders" element={<MyOrders />} />
+     </Route>
+     <Route path="/catering" element={<CateringHome />} />
+     <Route path="/catering/plan" element={<CateringPlan />} />
+     <Route path="/catering/confirmation" element={<CateringConfirmation />} />
+     <Route
+      path="/catering/request-custom-quote"
+      element={<RequestCustomQuote />}
+     />
 
-          {/* Guest Routes (Only for unauthenticated users) */}
-          <Route element={<GuestMiddleware />}>
-            <Route path="/signin" element={<SignIn />} />
-            <Route path="/signup" element={<Signup />} />
-          </Route>
+     {/* Guest Routes (Only for unauthenticated users) */}
+     <Route element={<GuestMiddleware />}>
+      <Route path="/signin" element={<SignIn />} />
+      <Route path="/signup" element={<Signup />} />
+     </Route>
 
-          {/* Protected Routes (Only for authenticated users) */}
-          <Route element={<AuthMiddleware />}>
-            <Route path="/settings" element={<Settings />} />
-          </Route>
+     {/* Protected Routes (Only for authenticated users) */}
+     <Route element={<AuthMiddleware />}>
+      <Route path="/settings" element={<Settings />} />
+     </Route>
 
-          {/* Fallback Route */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
-    </TooltipProvider>
-  </QueryClientProvider>
+     {/* Fallback Route */}
+     <Route path="*" element={<NotFound />} />
+    </Routes>
+   </BrowserRouter>
+  </TooltipProvider>
+ </QueryClientProvider>
 );
 
 export default App;

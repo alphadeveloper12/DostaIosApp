@@ -1,0 +1,184 @@
+{
+ "activeStep": 5,
+ "maxCompleted": 4,
+ "time": "10:00 AM – 12:00 PM",
+ "pickOrder": "Pickup Today",
+ "orderType": "Order Now",
+ "planType": "monthly",
+ "orderNowMenu": [
+  {
+   "imgSrc": "/images/vending_home/food.svg",
+   "heading": "Angus Burger",
+   "imgAlt": "food1",
+   "description": "Ea his sensibus eleifend, mollis iudicabit omittantur id mel. Et cum ignota euismod corpora, et saepe.",
+   "price": "AED 47.25",
+   "quantity": 1
+  },
+  {
+   "imgSrc": "/images/vending_home/food.svg",
+   "heading": "Angus Burger",
+   "imgAlt": "food2",
+   "description": "Ea his sensibus eleifend, mollis iudicabit omittantur id mel. Et cum ignota euismod corpora, et saepe.",
+   "price": "AED 47.25",
+   "quantity": 2
+  }
+ ],
+ "smartGrabMenu": [
+  {
+   "imgSrc": "/images/vending_home/soft_drink.svg",
+   "heading": "Soft Drink",
+   "imgAlt": "food1",
+   "description": "Ea his sensibus eleifend, mollis iudicabit omittantur id mel. Et cum ignota euismod corpora, et saepe.",
+   "price": "AED 47.25",
+   "quantity": 1
+  }
+ ],
+ "weekMenu": {
+  "Monday": [
+   {
+    "imgSrc": "/images/vending_home/food.svg",
+    "heading": "Angus Burger",
+    "imgAlt": "food1",
+    "description": "Ea his sensibus eleifend, mollis iudicabit omittantur id mel. Et cum ignota euismod corpora, et saepe.",
+    "price": "AED 47.25",
+    "quantity": 2
+   }
+  ],
+  "Tuesday": [],
+  "Wednesday": [
+   {
+    "imgSrc": "/images/vending_home/food.svg",
+    "heading": "Angus Burger",
+    "imgAlt": "food2",
+    "description": "Ea his sensibus eleifend, mollis iudicabit omittantur id mel. Et cum ignota euismod corpora, et saepe.",
+    "price": "AED 47.25",
+    "quantity": 1
+   },
+   {
+    "imgSrc": "/images/vending_home/food.svg",
+    "heading": "Angus Burger",
+    "imgAlt": "food3",
+    "description": "Ea his sensibus eleifend, mollis iudicabit omittantur id mel. Et cum ignota euismod corpora, et saepe.",
+    "price": "AED 47.25",
+    "quantity": 1
+   }
+  ],
+  "Thursday": [],
+  "Friday": [
+   {
+    "imgSrc": "/images/vending_home/food.svg",
+    "heading": "Angus Burger",
+    "imgAlt": "food5",
+    "description": "Ea his sensibus eleifend, mollis iudicabit omittantur id mel. Et cum ignota euismod corpora, et saepe.",
+    "price": "AED 47.25",
+    "quantity": 1
+   }
+  ]
+ },
+ "weekMenu1": {
+  "Monday": [
+   {
+    "imgSrc": "/images/vending_home/food.svg",
+    "heading": "Angus Burger",
+    "imgAlt": "food2",
+    "description": "Ea his sensibus eleifend, mollis iudicabit omittantur id mel. Et cum ignota euismod corpora, et saepe.",
+    "price": "AED 47.25",
+    "quantity": 1
+   }
+  ],
+  "Tuesday": [],
+  "Wednesday": [],
+  "Thursday": [],
+  "Friday": []
+ },
+ "weekMenu2": {
+  "Monday": [
+   {
+    "imgSrc": "/images/vending_home/food.svg",
+    "heading": "Angus Burger",
+    "imgAlt": "food1",
+    "description": "Ea his sensibus eleifend, mollis iudicabit omittantur id mel. Et cum ignota euismod corpora, et saepe.",
+    "price": "AED 47.25",
+    "quantity": 2
+   }
+  ],
+  "Tuesday": [],
+  "Wednesday": [
+   {
+    "imgSrc": "/images/vending_home/food.svg",
+    "heading": "Angus Burger",
+    "imgAlt": "food2",
+    "description": "Ea his sensibus eleifend, mollis iudicabit omittantur id mel. Et cum ignota euismod corpora, et saepe.",
+    "price": "AED 47.25",
+    "quantity": 1
+   },
+   {
+    "imgSrc": "/images/vending_home/food.svg",
+    "heading": "Angus Burger",
+    "imgAlt": "food3",
+    "description": "Ea his sensibus eleifend, mollis iudicabit omittantur id mel. Et cum ignota euismod corpora, et saepe.",
+    "price": "AED 47.25",
+    "quantity": 1
+   }
+  ],
+  "Thursday": [],
+  "Friday": [
+   {
+    "imgSrc": "/images/vending_home/food.svg",
+    "heading": "Angus Burger",
+    "imgAlt": "food5",
+    "description": "Ea his sensibus eleifend, mollis iudicabit omittantur id mel. Et cum ignota euismod corpora, et saepe.",
+    "price": "AED 47.25",
+    "quantity": 1
+   }
+  ]
+ },
+ "weekMenu3": {
+  "Monday": [
+   {
+    "imgSrc": "/images/vending_home/food.svg",
+    "heading": "Angus Burger",
+    "imgAlt": "food1",
+    "description": "Ea his sensibus eleifend, mollis iudicabit omittantur id mel. Et cum ignota euismod corpora, et saepe.",
+    "price": "AED 47.25",
+    "quantity": 1
+   },
+   {
+    "imgSrc": "/images/vending_home/food.svg",
+    "heading": "Angus Burger",
+    "imgAlt": "food3",
+    "description": "Ea his sensibus eleifend, mollis iudicabit omittantur id mel. Et cum ignota euismod corpora, et saepe.",
+    "price": "AED 47.25",
+    "quantity": 1
+   }
+  ],
+  "Tuesday": [],
+  "Wednesday": [],
+  "Thursday": [],
+  "Friday": []
+ },
+ "weekMenu4": {
+  "Monday": [
+   {
+    "imgSrc": "/images/vending_home/food.svg",
+    "heading": "Angus Burger",
+    "imgAlt": "food1",
+    "description": "Ea his sensibus eleifend, mollis iudicabit omittantur id mel. Et cum ignota euismod corpora, et saepe.",
+    "price": "AED 47.25",
+    "quantity": 1
+   },
+   {
+    "imgSrc": "/images/vending_home/food.svg",
+    "heading": "Angus Burger",
+    "imgAlt": "food4",
+    "description": "Ea his sensibus eleifend, mollis iudicabit omittantur id mel. Et cum ignota euismod corpora, et saepe.",
+    "price": "AED 47.25",
+    "quantity": 1
+   }
+  ],
+  "Tuesday": [],
+  "Wednesday": [],
+  "Thursday": [],
+  "Friday": []
+ }
+}

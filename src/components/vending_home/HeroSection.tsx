@@ -1,16 +1,55 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { X } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import VendingMap from "./VendingMap"; // 👈 Import the Google Map component
+import { useSelector } from "react-redux";
 
 const HeroSection = () => {
  const navigate = useNavigate();
  const [selectedItem, setSelectedItem] = useState(false);
  const [activeView, setActiveView] = useState<"list" | "map">("list");
+ const [selectedLocation, setSelectedLocation] = useState<any>(null);
+ const vendingLocations = [
+  {
+   id: 1,
+   name: "Barsha 1",
+   position: { lat: 25.118, lng: 55.201 },
+   info: "Near Mall of the Emirates, St. 12",
+   hours: "Open - Closes at 10 PM",
+  },
+  {
+   id: 2,
+   name: "JLT Cluster D",
+   position: { lat: 25.073, lng: 55.141 },
+   info: "Beside Carrefour Market",
+   hours: "Open 24 Hours",
+  },
+  {
+   id: 3,
+   name: "Business Bay",
+   position: { lat: 25.189, lng: 55.273 },
+   info: "Close to Bay Avenue Mall",
+   hours: "Open - Closes at 9 PM",
+  },
+ ];
+ const userData = useSelector((state: any) => state?.user?.user); // Get user data
+ useEffect(() => {
+  const storedLocation = sessionStorage.getItem("selectedLocation");
+  if (storedLocation) {
+   setSelectedLocation(JSON.parse(storedLocation).location);
+  }
+ }, []);
+ const handleLocationSelect = (location: any) => {
+  setSelectedLocation(location);
+  // Save user ID and selected location to sessionStorage
+  sessionStorage.setItem(
+   "selectedLocation",
+   JSON.stringify({ userId: userData.id, location })
+  );
+ };
 
  const handleNavigate = () => {
-  
   navigate("/vending-home/order-now");
  };
  return (
@@ -186,34 +225,29 @@ const HeroSection = () => {
        {/* List View */}
        {activeView === "list" && (
         <div className="flex-1 overflow-y-auto px-8 space-y-4 py-8">
-         <div className="border border-gray-200 rounded-2xl shadow-md p-4">
-          <span className="inline-block bg-[#A7CF38] text-[#054A86] text-[12px] font-semibold px-3 py-1 rounded-full mb-2">
-           SELECTED LOCATION
-          </span>
-          <h3 className="text-[20px] font-[700] text-gray-900">Barsha 1</h3>
-          <p className="text-[14px] text-gray-600">
-           Near Mall of the Emirates, St. 12
-          </p>
-          <p className="text-[14px] text-gray-600 mt-1">
-           Open - Closes at 10 PM
-          </p>
-         </div>
-
-         {[2, 3].map((i) => (
+         {vendingLocations.map((location) => (
           <div
-           key={i}
-           className="border border-gray-200 rounded-2xl  shadow-md p-4">
+           key={location.id}
+           className={`border border-gray-200 rounded-2xl shadow-md p-4 `}>
+           {selectedLocation?.id === location.id ? (
+            <span className="inline-block bg-[#A7CF38] text-[#054A86] text-[12px] font-semibold px-3 py-1 rounded-full mb-2">
+             Selected Location
+            </span>
+           ) : (
+            ""
+           )}
+
            <h3 className="text-[20px] font-[700] text-gray-900">
-            Location {i}
+            {location.name}
            </h3>
-           <p className="text-[14px] text-gray-600">
-            Near Mall of the Emirates, St. 12
-           </p>
-           <p className="text-[14px] text-gray-600 mt-1">
-            Open - Closes at 10 PM
-           </p>
-           <button className="mt-3 px-4 py-1.5 text-sm border border-gray-400 rounded-md hover:bg-gray-50">
-            Select This Location
+           <p className="text-[14px] text-gray-600">{location.info}</p>
+           <p className="text-[14px] text-gray-600 mt-1">{location.hours}</p>
+           <button
+            onClick={() => handleLocationSelect(location)}
+            className="mt-3 px-4 py-1.5 text-sm border border-gray-400 rounded-md hover:bg-gray-50">
+            {selectedLocation?.id === location.id
+             ? "Selected"
+             : "Select This Location"}
            </button>
           </div>
          ))}
