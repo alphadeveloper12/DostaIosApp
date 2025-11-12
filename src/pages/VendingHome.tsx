@@ -1,4 +1,3 @@
-
 import Footer from "@/components/layout/Footer";
 import HeroSection from "@/components/vending_home/HeroSection";
 import SliderSection from "@/components/vending_home/SliderSection";
@@ -17,10 +16,8 @@ const VendingHome = () => {
     <SliderSection />
     <GetApp />
     <Newsletter />
-
-    
    </main>
-    <MobileFooterNav />
+   <MobileFooterNav />
    <Footer />
   </div>
  );

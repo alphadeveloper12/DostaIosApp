@@ -19,6 +19,7 @@ import CartPage from "./pages/CartPage";
 import MyOrders from "./pages/MyOrders";
 import AuthMiddleware from "./middleware/AuthMiddleware";
 import GuestMiddleware from "./middleware/GuestMiddleware";
+import ScrollToTop from "./components/home/ScrollToTop";
 
 const queryClient = new QueryClient();
 
@@ -28,6 +29,7 @@ const App = () => (
    <Toaster />
    <Sonner />
    <BrowserRouter>
+    <ScrollToTop />
     <Routes>
      {/* Public Routes */}
      <Route path="/" element={<Index />} />

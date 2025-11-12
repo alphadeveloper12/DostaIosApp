@@ -86,20 +86,20 @@ const CuisineSelection: React.FC<CuisineSelectionProps> = ({
  return (
   <LazyLoad>
    <div
-    className="bg-neutral-white border rounded-2xl md:px-6 md:py-5"
+    className="bg-neutral-white border rounded-2xl p-4 md:px-6 md:py-5"
     style={{ border: "1px solid #EDEEF2" }}>
     <div className="flex items-center mb-6 gap-4">
      <div
-      className="w-10 h-10 rounded-full flex items-center justify-center"
+      className="md:w-10 md:h-10 w-6 h-6 rounded-full flex-shrink-0 flex items-center justify-center"
       style={{ backgroundColor: "hsl(var(--primary))" }}>
       <span className="text-primary-foreground font-bold">3</span>
      </div>
-     <h2 className="text-primary-text text-2xl font-bold">
+     <h2 className="text-primary-text md:text-2xl text-xl font-bold">
       What's Type of Cuisines Would You Prefer?
      </h2>
     </div>
 
-    <div className="ml-12">
+    <div className="md:ml-12">
      {/* Heading */}
      <p
       style={{

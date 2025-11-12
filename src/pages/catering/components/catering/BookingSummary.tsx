@@ -63,7 +63,7 @@ const BookingSummary: React.FC<BookingSummaryProps> = ({
   }));
 
   return (
-    <div className="min-h-screen py-8 ">
+    <div className="min-h-screen md:py-8 ">
       <div className="max-w-6xl mx-auto">
         <div className="flex flex-col lg:flex-row gap-6">
           {/* Left side: Event details */}

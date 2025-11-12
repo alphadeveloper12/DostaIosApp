@@ -16,7 +16,7 @@ const MobileFooterNav = () => {
    label: "Services",
   },
   {
-   href: "/orders",
+   href: "/vending-home/my-orders",
    icon: "/images/icons/orders.svg",
    label: "My Orders",
   },

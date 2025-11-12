@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { X } from "lucide-react"; // 'Divide' import was unused, so I removed it
 import { Link } from "react-router-dom";
 import { MinusIcon, PlusIcon } from "@heroicons/react/24/outline";
+import Shrimmer from "../ui/Shrimmer";
 
 interface FoodItem {
  imgSrc: string;
@@ -24,69 +25,6 @@ interface MenuProps {
  orderNowMenuFunc?: any; // Added optional prop for orderNowMenuFunc
 }
 
-// --- Data defined outside component (no change) ---
-const foodData: FoodItem[] = [
- // ... (your food data remains unchanged)
- {
-  imgSrc: "/images/vending_home/food.svg",
-  heading: "Angus Burger",
-  imgAlt: "food1",
-  description:
-   "Ea his sensibus eleifend, mollis iudicabit omittantur id mel. Et cum ignota euismod corpora, et saepe.",
-  price: "AED 47.25",
- },
- {
-  imgSrc: "/images/vending_home/food.svg",
-  heading: "Angus Burger",
-  imgAlt: "food2",
-  description:
-   "Ea his sensibus eleifend, mollis iudicabit omittantur id mel. Et cum ignota euismod corpora, et saepe.",
-  price: "AED 47.25",
- },
- {
-  imgSrc: "/images/vending_home/food.svg",
-  heading: "Angus Burger",
-  imgAlt: "food3",
-  description:
-   "Ea his sensibus eleifend, mollis iudicabit omittantur id mel. Et cum ignota euismod corpora, et saepe.",
-  price: "AED 47.25",
- },
- {
-  imgSrc: "/images/vending_home/food.svg",
-  heading: "Angus Burger",
-  imgAlt: "food4",
-  description:
-   "Ea his sensibus eleifend, mollis iudicabit omittantur id mel. Et cum ignota euismod corpora, et saepe.",
-  price: "AED 47.25",
- },
- {
-  imgSrc: "/images/vending_home/food.svg",
-  heading: "Angus Burger",
-  imgAlt: "food5",
-  description:
-   "Ea his sensibus eleifend, mollis iudicabit omittantur id mel. Et cum ignota euismod corpora, et saepe.",
-  price: "AED 47.25",
- },
- {
-  imgSrc: "/images/vending_home/food.svg",
-  heading: "Angus Burger",
-  imgAlt: "food6",
-  description:
-   "Ea his sensibus eleifend, mollis iudicabit omittantur id mel. Et cum ignota euismod corpora, et saepe.",
-  price: "AED 47.25",
- },
- {
-  imgSrc: "/images/vending_home/food.svg",
-  heading: "Angus Burger",
-  imgAlt: "food7",
-  description:
-   "Ea his sensibus eleifend, mollis iudicabit omittantur id mel. Et cum ignota euismod corpora, et saepe.",
-  price: "AED 47.25",
- },
-
- // ... all other food items
-];
-
 const Menu: React.FC<MenuProps> = ({ handleConfirmStep, orderNowMenuFunc }) => {
  const [openDialouge, setOpenDialouge] = useState(false);
  const [scrolled, setScrolled] = useState(false);
@@ -100,6 +38,9 @@ const Menu: React.FC<MenuProps> = ({ handleConfirmStep, orderNowMenuFunc }) => {
 
  // --- NEW: Single state for the cart. This is your backend-ready array ---
  const [cart, setCart] = useState<SelectedFoodItem[]>([]);
+ const [foodData, setFoodData] = useState<FoodItem[]>([]);
+ const [loading, setLoading] = useState<boolean>(true);
+ const [error, setError] = useState<string | null>(null);
 
  // --- NEW: Derived state (calculated from 'cart') ---
  // This calculates the total number of meals in the cart
@@ -119,6 +60,58 @@ const Menu: React.FC<MenuProps> = ({ handleConfirmStep, orderNowMenuFunc }) => {
    setToaster(false);
   }, 2000);
  };
+ {
+  /* api fetching */
+ }
+ useEffect(() => {
+  const fetchMenu = async () => {
+   setLoading(true);
+   setError(null);
+
+   try {
+    const token = sessionStorage.getItem("authToken");
+    const res = await fetch(
+     `${import.meta.env.VITE_API_URL || ""}/api/vending/menu/ORDER_NOW/`,
+     {
+      headers: {
+       "Content-Type": "application/json",
+       Authorization: `token ${token}`,
+      },
+     }
+    );
+
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+    const data = await res.json();
+
+    // Transform items from the API structure
+    const allItems: FoodItem[] = [];
+
+    data.menus?.forEach((menu: any) => {
+     menu.items?.forEach((it: any) => {
+      allItems.push({
+       imgSrc: it.image_url,
+       heading: it.name,
+       imgAlt: `food-${it.id}`,
+       description: it.description,
+       price: `AED ${parseFloat(it.price).toFixed(2)}`,
+      });
+     });
+    });
+
+    setFoodData(allItems);
+   } catch (err: any) {
+    console.log("Menu fetch error:", err);
+    setError("Failed to load menu .");
+    // fallback to static demo items
+   } finally {
+    setLoading(false);
+   }
+  };
+
+  fetchMenu();
+ }, []);
+
  useEffect(() => {
   orderNowMenuFunc(cart);
  }, [cart]);
@@ -235,6 +228,11 @@ const Menu: React.FC<MenuProps> = ({ handleConfirmStep, orderNowMenuFunc }) => {
 
     <div className="w-full h-full pb-4">
      <div className="md:px-[30px] grid grid-cols-12 md:flex md:gap-[24px] gap-[12px] flex-wrap">
+      {loading && <Shrimmer />}
+
+      {!loading && error && (
+       <p className="text-center py-8 text-red-500">{error}</p>
+      )}
       {foodData.map((data, index) => {
        // --- NEW: Check if this item is in the cart ---
        const itemInCart = cart.find((item) => item.imgAlt === data.imgAlt);
@@ -250,7 +248,7 @@ const Menu: React.FC<MenuProps> = ({ handleConfirmStep, orderNowMenuFunc }) => {
          <img
           src={data.imgSrc}
           alt={data.imgAlt}
-          className="block w-full h-[120px] md:h-auto rounded-[12px] sm:rounded-[16px] object-cover"
+          className="block w-full h-[120px] md:h-[180px] rounded-[12px] sm:rounded-[16px] object-cover"
          />
          <h3 className="text-[16px] leading-[24px] md:text-[24px] pt-3 pb-1 md:leading-[32px] font-[700] tracking-[0.1px] text-[#2B2B43]">
           {data.heading}

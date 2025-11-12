@@ -3,36 +3,31 @@ import { X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import VendingMap from "./VendingMap"; // 👈 Import the Google Map component
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
+import {
+ fetchLocations,
+ selectAllLocations,
+ getLocationsStatus,
+ getLocationsError,
+} from "../../redux/slices/vendingLocationsSlice";
 
 const HeroSection = () => {
+ const dispatch = useDispatch();
  const navigate = useNavigate();
  const [selectedItem, setSelectedItem] = useState(false);
  const [activeView, setActiveView] = useState<"list" | "map">("list");
  const [selectedLocation, setSelectedLocation] = useState<any>(null);
- const vendingLocations = [
-  {
-   id: 1,
-   name: "Barsha 1",
-   position: { lat: 25.118, lng: 55.201 },
-   info: "Near Mall of the Emirates, St. 12",
-   hours: "Open - Closes at 10 PM",
-  },
-  {
-   id: 2,
-   name: "JLT Cluster D",
-   position: { lat: 25.073, lng: 55.141 },
-   info: "Beside Carrefour Market",
-   hours: "Open 24 Hours",
-  },
-  {
-   id: 3,
-   name: "Business Bay",
-   position: { lat: 25.189, lng: 55.273 },
-   info: "Close to Bay Avenue Mall",
-   hours: "Open - Closes at 9 PM",
-  },
- ];
+ 
+ const vendingLocations = useSelector(selectAllLocations);
+ const status = useSelector(getLocationsStatus);
+
+ useEffect(() => {
+  // Only fetch if the status is 'idle' (to prevent re-fetching)
+  if (status === "idle") {
+   dispatch(fetchLocations());
+  }
+ }, [status, dispatch]);
+
  const userData = useSelector((state: any) => state?.user?.user); // Get user data
  useEffect(() => {
   const storedLocation = sessionStorage.getItem("selectedLocation");
@@ -40,6 +35,7 @@ const HeroSection = () => {
    setSelectedLocation(JSON.parse(storedLocation).location);
   }
  }, []);
+
  const handleLocationSelect = (location: any) => {
   setSelectedLocation(location);
   // Save user ID and selected location to sessionStorage

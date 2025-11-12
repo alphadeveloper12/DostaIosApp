@@ -1,12 +1,11 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X } from "lucide-react";
 import { Link } from "react-router-dom";
 import { PlusIcon, MinusIcon } from "@heroicons/react/24/outline";
+import Shrimmer from "../ui/Shrimmer";
 
-// Original interface
 interface FoodItem {
  imgSrc: string;
  heading: string;
@@ -15,104 +14,96 @@ interface FoodItem {
  price: string;
 }
 
-// Interface for a selected item, now including quantity
 interface SelectedFoodItem extends FoodItem {
  quantity: number;
 }
 
-// Interface for our new data structure
 interface WeeklyPlan {
  [day: string]: SelectedFoodItem[];
 }
 
-// --- NEW: Interface for a plan saved in localStorage ---
 interface SavedPlan {
  id: string;
  name: string;
- isDefault: boolean;
- planData: WeeklyPlan;
+ kind: string;
+ is_default: boolean;
+ is_global: boolean;
+ items: [];
 }
 
-// --- UPDATED: Props to accept data from OrderNow ---
 interface MenuProps {
  handleConfirmStep: () => void;
  weekMenuFunc: (plan: WeeklyPlan) => void;
- savedPlanData?: WeeklyPlan; // The last-saved state for this specific week
- allSavedPlans?: SavedPlan[]; // The master list of all saved plans
+ savedPlanData?: WeeklyPlan;
+ allSavedPlans?: SavedPlan[];
+ apiMenuData?: any; // ✅ new prop for API menu data
 }
-
-// --- Data defined outside the component (no change) ---
-const foodData: FoodItem[] = [
- // ... (your food data remains unchanged)
- {
-  imgSrc: "/images/vending_home/food.svg",
-  heading: "Angus Burger",
-  imgAlt: "food1",
-  description:
-   "Ea his sensibus eleifend, mollis iudicabit omittantur id mel. Et cum ignota euismod corpora, et saepe.",
-  price: "AED 47.25",
- },
- {
-  imgSrc: "/images/vending_home/food.svg",
-  heading: "Angus Burger",
-  imgAlt: "food2",
-  description:
-   "Ea his sensibus eleifend, mollis iudicabit omittantur id mel. Et cum ignota euismod corpora, et saepe.",
-  price: "AED 47.25",
- },
- {
-  imgSrc: "/images/vending_home/food.svg",
-  heading: "Angus Burger",
-  imgAlt: "food3",
-  description:
-   "Ea his sensibus eleifend, mollis iudicabit omittantur id mel. Et cum ignota euismod corpora, et saepe.",
-  price: "AED 47.25",
- },
- {
-  imgSrc: "/images/vending_home/food.svg",
-  heading: "Angus Burger",
-  imgAlt: "food4",
-  description:
-   "Ea his sensibus eleifend, mollis iudicabit omittantur id mel. Et cum ignota euismod corpora, et saepe.",
-  price: "AED 47.25",
- },
- {
-  imgSrc: "/images/vending_home/food.svg",
-  heading: "Angus Burger",
-  imgAlt: "food5",
-  description:
-   "Ea his sensibus eleifend, mollis iudicabit omittantur id mel. Et cum ignota euismod corpora, et saepe.",
-  price: "AED 47.25",
- },
- {
-  imgSrc: "/images/vending_home/food.svg",
-  heading: "Angus Burger",
-  imgAlt: "food6",
-  description:
-   "Ea his sensibus eleifend, mollis iudicabit omittantur id mel. Et cum ignota euismod corpora, et saepe.",
-  price: "AED 47.25",
- },
- {
-  imgSrc: "/images/vending_home/food.svg",
-  heading: "Angus Burger",
-  imgAlt: "food7",
-  description:
-   "Ea his sensibus eleifend, mollis iudicabit omittantur id mel. Et cum ignota euismod corpora, et saepe.",
-  price: "AED 47.25",
- },
- {
-  imgSrc: "/images/vending_home/food.svg",
-  heading: "Angus Burger",
-  imgAlt: "food8",
-  description:
-   "Ea his sensibus eleifend, mollis iudicabit omittantur id mel. Et cum ignota euismod corpora, et saepe.",
-  price: "AED 47.25",
- },
- // ... all other food items
-];
-
-// --- REMOVED: Static savedPlansData array ---
-// const savedPlansData = [ ... ];
+// const foodData: FoodItem[] = [
+//  {
+//   imgSrc: "/images/vending_home/food.svg",
+//   heading: "Angus Burger",
+//   imgAlt: "food1",
+//   description:
+//    "Ea his sensibus eleifend, mollis iudicabit omittantur id mel. Et cum ignota euismod corpora, et saepe.",
+//   price: "AED 47.25",
+//  },
+//  {
+//   imgSrc: "/images/vending_home/food.svg",
+//   heading: "Angus Burger",
+//   imgAlt: "food2",
+//   description:
+//    "Ea his sensibus eleifend, mollis iudicabit omittantur id mel. Et cum ignota euismod corpora, et saepe.",
+//   price: "AED 47.25",
+//  },
+//  {
+//   imgSrc: "/images/vending_home/food.svg",
+//   heading: "Angus Burger",
+//   imgAlt: "food3",
+//   description:
+//    "Ea his sensibus eleifend, mollis iudicabit omittantur id mel. Et cum ignota euismod corpora, et saepe.",
+//   price: "AED 47.25",
+//  },
+//  {
+//   imgSrc: "/images/vending_home/food.svg",
+//   heading: "Angus Burger",
+//   imgAlt: "food4",
+//   description:
+//    "Ea his sensibus eleifend, mollis iudicabit omittantur id mel. Et cum ignota euismod corpora, et saepe.",
+//   price: "AED 47.25",
+//  },
+//  {
+//   imgSrc: "/images/vending_home/food.svg",
+//   heading: "Angus Burger",
+//   imgAlt: "food5",
+//   description:
+//    "Ea his sensibus eleifend, mollis iudicabit omittantur id mel. Et cum ignota euismod corpora, et saepe.",
+//   price: "AED 47.25",
+//  },
+//  {
+//   imgSrc: "/images/vending_home/food.svg",
+//   heading: "Angus Burger",
+//   imgAlt: "food6",
+//   description:
+//    "Ea his sensibus eleifend, mollis iudicabit omittantur id mel. Et cum ignota euismod corpora, et saepe.",
+//   price: "AED 47.25",
+//  },
+//  {
+//   imgSrc: "/images/vending_home/food.svg",
+//   heading: "Angus Burger",
+//   imgAlt: "food7",
+//   description:
+//    "Ea his sensibus eleifend, mollis iudicabit omittantur id mel. Et cum ignota euismod corpora, et saepe.",
+//   price: "AED 47.25",
+//  },
+//  {
+//   imgSrc: "/images/vending_home/food.svg",
+//   heading: "Angus Burger",
+//   imgAlt: "food8",
+//   description:
+//    "Ea his sensibus eleifend, mollis iudicabit omittantur id mel. Et cum ignota euismod corpora, et saepe.",
+//   price: "AED 47.25",
+//  },
+// ];
 
 const days = [
  { day: "Monday" },
@@ -123,20 +114,17 @@ const days = [
 ];
 
 const features = [
- { feature: "  Select your favorite" },
- { feature: "  Preselected For You" },
+ { feature: "  Select your favorite" },
+ { feature: "  Preselected For You" },
 ];
 
-// --- UPDATED: createInitialPlan now uses the savedPlanData prop ---
 const createInitialPlan = (savedData?: WeeklyPlan): WeeklyPlan => {
- // If we have saved data (from localStorage), use it
  if (savedData && Object.keys(savedData).length > 0) {
   return savedData;
  }
- // Otherwise, create a new empty plan
  const plan: WeeklyPlan = {};
  days.forEach((day) => {
-  plan[day.day] = []; // Initialize each day with an empty array
+  plan[day.day] = [];
  });
  return plan;
 };
@@ -144,35 +132,102 @@ const createInitialPlan = (savedData?: WeeklyPlan): WeeklyPlan => {
 const PlanWeekly: React.FC<MenuProps> = ({
  handleConfirmStep,
  weekMenuFunc,
- savedPlanData, // <-- NEW PROP
- allSavedPlans = [], // <-- NEW PROP, with default
+ savedPlanData,
+ allSavedPlans = [],
+ apiMenuData,
 }) => {
  const [openDialouge, setOpenDialouge] = useState(false);
  const [scrolled, setScrolled] = useState(false);
  const [selectedItem, setSelectedItem] = useState<FoodItem | null>(null);
  const [isSheetOpen, setIsSheetOpen] = useState(false);
- const [toaster, setToaster] = useState<boolean>(false);
+ const [toaster, setToaster] = useState(false);
  const [tab, setTab] = useState(0);
- const [tab1, setTab1] = useState(null);
+ const [tab1, setTab1] = useState<number | null>(null);
  const [savedPlans, setSavedPlans] = useState(false);
-
- // --- UPDATED: Now stores the *entire plan object* to be loaded ---
  const [selectedPlan, setSelectedPlan] = useState<SavedPlan | null>(null);
+ const [menuByDay, setMenuByDay] = useState<Record<string, FoodItem[]>>({});
+ const [loadingPlans, setLoadingPlans] = useState(false);
+ const [fetchedPlans, setFetchedPlans] = useState<SavedPlan[]>([]);
 
- // --- UPDATED: Initialize state using the savedPlanData prop ---
  const [weeklyPlan, setWeeklyPlan] = useState<WeeklyPlan>(
   createInitialPlan(savedPlanData)
  );
 
- // --- UPDATED: useEffect to send data up to parent ---
- useEffect(() => {
-  // Only send data up if the function exists
-  if (weekMenuFunc) {
-   weekMenuFunc(weeklyPlan);
+ const fetchSavedPlans = async () => {
+  try {
+   setLoadingPlans(true);
+   const token = sessionStorage.getItem("authToken");
+   const baseUrl =
+    import.meta.env.VITE_BASE_URL || "http://192.168.100.58:8000";
+   const res = await fetch(`${baseUrl}/api/vending/saved-plans/`, {
+    headers: {
+     "Content-Type": "application/json",
+     Authorization: token ? `Token ${token}` : "",
+    },
+   });
+   if (!res.ok) throw new Error(`HTTP ${res.status}`);
+   const data = await res.json();
+
+   // match backend key structure
+   setFetchedPlans(data.saved_plans || []);
+  } catch (err) {
+   console.error("Error fetching saved plans:", err);
+  } finally {
+   setLoadingPlans(false);
   }
+ };
+
+ // call this when sidebar opens
+ useEffect(() => {
+  if (savedPlans) fetchSavedPlans();
+ }, [savedPlans]);
+
+ useEffect(() => {
+  if (!apiMenuData) return;
+
+  const parsed: Record<string, FoodItem[]> = {};
+
+  // Handle WEEKLY menu
+  if (apiMenuData.Monday || apiMenuData.Tuesday) {
+   Object.entries(apiMenuData).forEach(([day, data]: [string, any]) => {
+    if (data?.items) {
+     parsed[day] = data.items.map((it: any) => ({
+      imgSrc: it.image_url,
+      heading: it.name,
+      imgAlt: `food-${it.id}`,
+      description: it.description,
+      price: `AED ${parseFloat(it.price).toFixed(2)}`,
+     }));
+    } else {
+     parsed[day] = [];
+    }
+   });
+  }
+
+  // Handle MONTHLY menu (apiMenuData for a specific week)
+  else if (apiMenuData.menu) {
+   Object.entries(apiMenuData.menu).forEach(([day, data]: [string, any]) => {
+    if (data?.items) {
+     parsed[day] = data.items.map((it: any) => ({
+      imgSrc: it.image_url,
+      heading: it.name,
+      imgAlt: `food-${it.id}`,
+      description: it.description,
+      price: `AED ${parseFloat(it.price).toFixed(2)}`,
+     }));
+    } else {
+     parsed[day] = [];
+    }
+   });
+  }
+
+  setMenuByDay(parsed);
+ }, [apiMenuData]);
+
+ useEffect(() => {
+  weekMenuFunc?.(weeklyPlan);
  }, [weeklyPlan, weekMenuFunc]);
 
- // --- (Original scroll effect, no change) ---
  useEffect(() => {
   let ticking = false;
   const onScroll = () => {
@@ -189,40 +244,39 @@ const PlanWeekly: React.FC<MenuProps> = ({
   return () => window.removeEventListener("scroll", onScroll);
  }, []);
 
- // --- Derived state (all unchanged) ---
  const currentDay = days[tab]?.day;
- const currentDayItems = weeklyPlan[currentDay] || [];
+ const currentDayItems = Array.isArray(weeklyPlan?.[currentDay])
+  ? weeklyPlan[currentDay]
+  : [];
+
  const totalMealsForDay = currentDayItems.reduce(
-  (acc, item) => acc + item.quantity,
+  (acc, item) => acc + (item?.quantity || 0),
   0
  );
- const totalMealsInPlan = Object.values(weeklyPlan).reduce(
-  (planTotal, dayItems) =>
-   planTotal + dayItems.reduce((dayTotal, item) => dayTotal + item.quantity, 0),
-  0
- );
+
+ const totalMealsInPlan = Object.values(weeklyPlan).reduce((planTotal, day) => {
+  if (Array.isArray(day)) {
+   return (
+    planTotal + day.reduce((dayTotal, i) => dayTotal + (i?.quantity || 0), 0)
+   );
+  }
+  return planTotal;
+ }, 0);
 
  const handleCardClick = (item: FoodItem) => {
   setSelectedItem(item);
   setIsSheetOpen(true);
  };
 
- // --- (confirmFunc is unchanged) ---
  const confirmFunc = () => {
   setOpenDialouge(false);
   if (currentDay) {
-   setWeeklyPlan((prevPlan) => ({
-    ...prevPlan,
-    [currentDay]: [],
-   }));
+   setWeeklyPlan((prevPlan) => ({ ...prevPlan, [currentDay]: [] }));
   }
   setToaster(true);
-  setTimeout(() => {
-   setToaster(false);
-  }, 2000);
+  setTimeout(() => setToaster(false), 2000);
  };
 
- // --- (handleQuantityChange is unchanged) ---
  const handleQuantityChange = (
   e: React.MouseEvent,
   foodItem: FoodItem,
@@ -232,11 +286,13 @@ const PlanWeekly: React.FC<MenuProps> = ({
   if (!currentDay) return;
 
   setWeeklyPlan((prevPlan) => {
-   const dayItems = prevPlan[currentDay] || [];
+   const dayItems = Array.isArray(prevPlan[currentDay])
+    ? prevPlan[currentDay]
+    : [];
    const existingItemIndex = dayItems.findIndex(
     (item) => item.imgAlt === foodItem.imgAlt
    );
-   let newDayItems = [...dayItems];
+   const newDayItems = [...dayItems];
    if (existingItemIndex > -1) {
     const newQuantity = newDayItems[existingItemIndex].quantity + change;
     if (newQuantity <= 0) {
@@ -250,25 +306,45 @@ const PlanWeekly: React.FC<MenuProps> = ({
    } else if (change > 0) {
     newDayItems.push({ ...foodItem, quantity: 1 });
    }
-   return {
-    ...prevPlan,
-    [currentDay]: newDayItems,
-   };
+   return { ...prevPlan, [currentDay]: newDayItems };
   });
  };
 
- // --- NEW: Function to load the selected plan ---
  const handleLoadPlan = () => {
-  if (selectedPlan) {
-   // This is the core logic you wanted:
-   // Overwrite the entire weeklyPlan with the data from the saved plan
-   setWeeklyPlan(selectedPlan.planData);
+  if (!selectedPlan) return;
 
-   // Close the sidebar and reset the selection
-   setSavedPlans(false);
-   setSelectedPlan(null);
-  }
- };
+  // Step 1: initialize empty plan with weekdays
+  const newPlan: WeeklyPlan = {};
+  days.forEach(({ day }) => {
+    newPlan[day] = [];
+  });
+
+  // Step 2: populate with items from API
+  selectedPlan.items.forEach((item: any) => {
+    const day = item.day_of_week || "Monday"; // fallback if null
+    const menu = item.menu_item || {};
+
+    const mappedItem: SelectedFoodItem = {
+      imgSrc: menu.image_url,
+      heading: menu.name,
+      imgAlt: `food-${menu.id}`,
+      description: menu.description,
+      price: `AED ${parseFloat(menu.price).toFixed(2)}`,
+      quantity: item.quantity || 1,
+    };
+
+    if (!newPlan[day]) newPlan[day] = [];
+    newPlan[day].push(mappedItem);
+  });
+
+  // Step 3: update weeklyPlan (this will re-render)
+  setWeeklyPlan(newPlan);
+
+  // Step 4: close sidebar + clear selection
+  setSavedPlans(false);
+  setSelectedPlan(null);
+};
+
 
  return (
   <div className="min-h-screen">
@@ -412,7 +488,7 @@ const PlanWeekly: React.FC<MenuProps> = ({
     {/* ... (Unchanged JSX for food grid) ... */}
     <div className="w-full h-full pb-4">
      <div className="md:px-[30px] grid grid-cols-12  md:flex md:gap-[24px] gap-[12px] flex-wrap">
-      {foodData.map((data, index) => {
+      {(menuByDay[currentDay] || []).map((data, index) => {
        const selectedItemData = currentDayItems.find(
         (item) => item.imgAlt === data.imgAlt
        );
@@ -683,8 +759,10 @@ const PlanWeekly: React.FC<MenuProps> = ({
          </p>
 
          {/* --- UPDATED: Map over the 'allSavedPlans' prop --- */}
-         {allSavedPlans.length > 0 ? (
-          allSavedPlans.map((plan) => {
+         {loadingPlans ? (
+          <Shrimmer />
+         ) : fetchedPlans.length > 0 ? (
+          fetchedPlans.map((plan) => {
            return (
             <div
              key={plan.id}
@@ -697,7 +775,7 @@ const PlanWeekly: React.FC<MenuProps> = ({
             >
              <p className="text-[#2B2B43] text-[16px] leading-[24px] font-[700]">
               {plan.name}
-              {plan.isDefault && (
+              {plan.is_default && (
                <span className="text-xs font-normal text-gray-500">
                 {" "}
                 (Default)

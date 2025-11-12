@@ -20,6 +20,7 @@ import BookingSummary from "../components/catering/BookingSummary"; // Import Bo
 import Footer from "@/components/layout/Footer";
 import BreadCrumb from "@/components/home/BreadCrumb";
 import LazyLoad from "@/components/ui/LazyLoad";
+import MobileFooterNav from "@/components/home/MobileFooterNav";
 
 const Catering = () => {
  const navigate = useNavigate();
@@ -196,19 +197,17 @@ const Catering = () => {
       {/* Show the steps */}
 
       {step === 1 && (
- 
-        <EventTypeSelection
-         selectedEvent={selectedEvent}
-         setSelectedEvent={setSelectedEvent}
-         guestCount={guestCount}
-         setGuestCount={setGuestCount}
-         selectedDateTime={selectedDateTime}
-         setIsDateTimePickerVisible={setIsDateTimePickerVisible}
-         handleSelectDateTime={handleSelectDateTime}
-         handleContinue={handleContinue}
-         handleGuestCountChange={handleGuestCountChange}
-        />
-    
+       <EventTypeSelection
+        selectedEvent={selectedEvent}
+        setSelectedEvent={setSelectedEvent}
+        guestCount={guestCount}
+        setGuestCount={setGuestCount}
+        selectedDateTime={selectedDateTime}
+        setIsDateTimePickerVisible={setIsDateTimePickerVisible}
+        handleSelectDateTime={handleSelectDateTime}
+        handleContinue={handleContinue}
+        handleGuestCountChange={handleGuestCountChange}
+       />
       )}
       {step === 2 && (
        <LazyLoad>
@@ -290,8 +289,8 @@ const Catering = () => {
      </div>
     </LazyLoad>
    </main>
-
-   <Footer />
+   <MobileFooterNav />
+   {/* <Footer /> */}
 
    {isDateTimePickerVisible && (
     <DateTimePicker

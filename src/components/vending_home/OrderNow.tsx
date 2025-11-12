@@ -1,4 +1,6 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
+import axios from "axios";
+
 import { Check } from "lucide-react";
 import { Button } from "../ui/button";
 import BreadCrumb from "../home/BreadCrumb";
@@ -126,9 +128,21 @@ const OrderNow = () => {
  const [weekMenu2, setWeekMenu2] = useState(initialState.weekMenu2);
  const [weekMenu3, setWeekMenu3] = useState(initialState.weekMenu3);
  const [weekMenu4, setWeekMenu4] = useState(initialState.weekMenu4);
+ // --- API states ---
+ const [planTypeOptions, setPlanTypeOptions] = useState([]);
+ const [pickupOptions, setPickupOptions] = useState([]);
+ const [timeSlots, setTimeSlots] = useState([]);
+ const [planSubTypes, setPlanSubTypes] = useState([]);
+ const [apiWeeklyMenu, setApiWeeklyMenu] = useState<any>(null);
+ const [apiMonthlyMenu, setApiMonthlyMenu] = useState<any>(null);
 
  // --- REMOVED: Old static summary logic (week, days, totalMeals, lines) ---
-
+ const token = sessionStorage.getItem("authToken");
+ const authHeaders = {
+  headers: {
+   Authorization: `token ${token}`,
+  },
+ };
  {
   /*****week menu funcs****************************/
  }
@@ -153,9 +167,108 @@ const OrderNow = () => {
  const smartGrabMenuFunc = (n: any) => {
   setSmartGrabMenu(n);
  };
+ const baseUrl = import.meta.env.VITE_API_URL;
+ {
+  /* use effect to load monthly and weekly menu  */
+ }
+ useEffect(() => {
+  const fetchMenuData = async () => {
+   try {
+    if (planType === "weekly") {
+     const res = await axios.get(
+      `${baseUrl}/api/vending/menu/plan/WEEKLY/`,
+      authHeaders
+     );
+     setApiWeeklyMenu(res.data.week_menu);
+    } else if (planType === "monthly") {
+     const res = await axios.get(
+      `${baseUrl}/api/vending/menu/plan/MONTHLY/`,
+      authHeaders
+     );
+     setApiMonthlyMenu(res.data.month_menu);
+    }
+   } catch (error) {
+    console.error("Error fetching menu:", error);
+   }
+  };
+
+  if (orderType === "Start a Plan") {
+   fetchMenuData();
+  }
+ }, [planType, orderType]);
+
+ {
+  /* use effect for plan sub types */
+ }
+ useEffect(() => {
+  const fetchPlanOptions = async () => {
+   if (orderType !== "Start a Plan") return;
+
+   const token = sessionStorage.getItem("authToken");
+   const authHeaders = {
+    headers: { Authorization: `Token ${token}` },
+   };
+
+   try {
+    const res = await axios.get(
+     `${baseUrl}/api/vending/plan-options/`,
+     authHeaders
+    );
+    if (res.data?.plan_subtypes) {
+     setPlanSubTypes(res.data.plan_subtypes);
+    }
+   } catch (error) {
+    console.error("Error fetching plan options:", error);
+   }
+  };
+
+  fetchPlanOptions();
+ }, [orderType]);
+
+ {
+  /* use effect for order now / pickup in 24 */
+ }
+ useEffect(() => {
+  const fetchPickupOptions = async () => {
+   try {
+    const res = await axios.get(
+     `${baseUrl}/api/vending/pickup-options/?location_id=1`,
+     authHeaders
+    );
+    if (res.data?.pickup_types) {
+     setPickupOptions(res.data.pickup_types);
+    }
+    if (res.data?.time_slots) {
+     setTimeSlots(res.data.time_slots);
+    }
+   } catch (error) {
+    console.error("Error fetching pickup options:", error);
+   }
+  };
+  fetchPickupOptions();
+ }, []);
+
+ {
+  /* use effect for fetching the smart grab , start plan and order now */
+ }
+ useEffect(() => {
+  const fetchPlanTypes = async () => {
+   try {
+    const res = await axios.get(
+     `${baseUrl}/api/vending/plan-types/`,
+     authHeaders
+    );
+    if (res.data?.options) {
+     setPlanTypeOptions(res.data.options);
+    }
+   } catch (error) {
+    console.error("Error fetching plan types:", error);
+   }
+  };
+  fetchPlanTypes();
+ }, []);
 
  // --- LOCALSTORAGE LOGIC (Saving) ---
- // --- (This logic is correct and unchanged from your version) ---
  useEffect(() => {
   const stateToSave = {
    activeStep,
@@ -420,7 +533,20 @@ const OrderNow = () => {
            {/* ... Step 2 Content ... */}
            <div className="mt-6 space-y-6">
             <div className="md:flex gap-4 md:flex-row grid grid-cols-12">
-             <Button
+             {/* {allPlanTypes} */}
+             {planTypeOptions.map((opt) => (
+              <Button
+               key={opt.key}
+               onClick={() => handleOrderTypeSelect(opt.label)}
+               className={` ${
+                orderType === opt.label
+                 ? "bg-[#EAF5FF] hover:bg-[#EAF5FF] border border-[#054A86] text-[#2B2B43]"
+                 : "bg-neutral-white hover:bg-neutral-white border border-[#C7C8D2] text-[#2B2B43]"
+               } px-6 py-3 md:rounded-[16px] rounded-[10px] font-bold col-span-4`}>
+               {opt.label}
+              </Button>
+             ))}
+             {/* <Button
               onClick={() => handleOrderTypeSelect("Order Now")}
               className={` ${
                orderType === "Order Now"
@@ -446,7 +572,7 @@ const OrderNow = () => {
                 : "bg-neutral-white hover:bg-neutral-white border border-[#C7C8D2] text-[#2B2B43]"
               } px-6 py-3  md:rounded-[16px] rounded-[10px] font-bold col-span-4`}>
               Smart Grab
-             </Button>
+             </Button> */}
             </div>
 
             <div className="flex md:flex-row flex-col items-start gap-8">
@@ -470,7 +596,19 @@ const OrderNow = () => {
                  Select a plan to get started{" "}
                 </p>
                 <div className="flex gap-4 pb-6">
-                 <Button
+                 {planSubTypes.map((opt) => (
+                  <Button
+                   key={opt.key}
+                   onClick={() => setPlanType(opt.key.toLowerCase())}
+                   className={` ${
+                    planType === opt.key.toLowerCase()
+                     ? "bg-[#EAF5FF] hover:bg-[#EAF5FF] border border-[#054A86] text-[#2B2B43]"
+                     : "bg-neutral-white hover:bg-neutral-white border border-[#C7C8D2] text-[#2B2B43]"
+                   } px-6 py-3 md:rounded-[16px] rounded-[10px] font-bold`}>
+                   {opt.label}
+                  </Button>
+                 ))}
+                 {/* <Button
                   onClick={() => setPlanType("weekly")}
                   className={` ${
                    planType === "weekly"
@@ -487,7 +625,7 @@ const OrderNow = () => {
                     : "bg-neutral-white hover:bg-neutral-white border border-[#C7C8D2] text-[#2B2B43]"
                   } px-6 py-3  md:rounded-[16px] rounded-[10px] font-bold`}>
                   Monthly
-                 </Button>
+                 </Button> */}
                 </div>
                </>
               )}
@@ -574,7 +712,19 @@ const OrderNow = () => {
            {/* ... Step 3 Content ... */}
            <div className="mt-6 space-y-6">
             <div className="flex gap-4 flex-row ">
-             <Button
+             {pickupOptions.map((opt) => (
+              <Button
+               key={opt.key}
+               onClick={() => SetPickOrder(opt.label)}
+               className={` ${
+                pickOrder === opt.label
+                 ? "bg-[#EAF5FF] hover:bg-[#EAF5FF] border border-[#054A86] text-[#2B2B43]"
+                 : "bg-neutral-white hover:bg-neutral-white border border-[#C7C8D2] text-[#2B2B43]"
+               } px-6 py-3 md:rounded-[16px] rounded-[10px] font-bold`}>
+               {opt.label}
+              </Button>
+             ))}
+             {/* <Button
               onClick={() => SetPickOrder("Pickup Today")}
               className={` ${
                pickOrder === "Pickup Today"
@@ -591,7 +741,7 @@ const OrderNow = () => {
                 : "bg-neutral-white hover:bg-neutral-white border border-[#C7C8D2] text-[#2B2B43]"
               } px-6 py-3  md:rounded-[16px] rounded-[10px] font-bold`}>
               Pickup in 24
-             </Button>
+             </Button> */}
             </div>
 
             <div className="flex md:flex-row flex-col items-start gap-8">
@@ -681,7 +831,6 @@ const OrderNow = () => {
            <Menu
             handleConfirmStep={handleConfirmStep}
             orderNowMenuFunc={orderNowMenuFunc}
-            // savedMenuData={orderNowMenu}
            />
           </div>
          )}
@@ -868,6 +1017,7 @@ const OrderNow = () => {
              weekMenuFunc={weekMenuFunc}
              savedPlanData={weekMenu}
              allSavedPlans={allSavedPlans}
+             apiMenuData={apiWeeklyMenu}
             />
            </div>
           )}
@@ -969,6 +1119,7 @@ const OrderNow = () => {
               weekMenuFunc={weekMenuFunc1}
               savedPlanData={weekMenu1}
               allSavedPlans={allSavedPlans}
+              apiMenuData={apiMonthlyMenu?.[0]?.menu}
              />
             </div>
            )}
@@ -1049,6 +1200,7 @@ const OrderNow = () => {
               weekMenuFunc={weekMenuFunc2}
               savedPlanData={weekMenu2}
               allSavedPlans={allSavedPlans}
+              apiMenuData={apiMonthlyMenu?.[1]?.menu}
              />
             </div>
            )}
@@ -1129,6 +1281,7 @@ const OrderNow = () => {
               weekMenuFunc={weekMenuFunc3}
               savedPlanData={weekMenu3}
               allSavedPlans={allSavedPlans}
+              apiMenuData={apiMonthlyMenu?.[2]?.menu}
              />
             </div>
            )}
@@ -1209,6 +1362,7 @@ const OrderNow = () => {
               weekMenuFunc={weekMenuFunc4}
               savedPlanData={weekMenu4}
               allSavedPlans={allSavedPlans}
+              apiMenuData={apiMonthlyMenu?.[3]?.menu}
              />
             </div>
            )}
@@ -1269,18 +1423,18 @@ const OrderNow = () => {
           industry. Lorem Ipsum has been the industry's standard dummy text ever
           since:
          </p>
-         {timeFrame.map((frame, index) => {
+         {timeSlots.map((frame, index) => {
           return (
            <div
-            key={index}
+            key={frame.id}
             className={` ${
-             time === frame.time
-              ? "bg-[#EAF5FF]  border border-[#054A86]"
+             time === frame.label
+              ? "bg-[#EAF5FF] border border-[#054A86]"
               : "border border-[#EDEEF2]"
-            } py-[10px] cursor-pointer  px-4 my-8  rounded-[8px]`}
-            onClick={() => setTime(frame.time)}>
+            } py-[10px] cursor-pointer px-4 my-8 rounded-[8px]`}
+            onClick={() => setTime(frame.label)}>
             <p className="text-[#2B2B43] text-[16px] leading-[24px] font-[700]">
-             {frame.time}
+             {frame.label}
             </p>
            </div>
           );

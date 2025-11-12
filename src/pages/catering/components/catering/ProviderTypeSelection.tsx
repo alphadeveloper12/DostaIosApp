@@ -78,8 +78,7 @@ const ProviderTypeSelection: React.FC<ProviderTypeSelectionProps> = ({
 
   const fetchServiceStyles = async () => {
    try {
-    const baseUrl =
-     import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";
+    const baseUrl = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";
     const authToken = sessionStorage.getItem("authToken");
 
     const response = await axios.get(
@@ -113,21 +112,21 @@ const ProviderTypeSelection: React.FC<ProviderTypeSelectionProps> = ({
  return (
   <LazyLoad>
    <div
-    className="bg-neutral-white border rounded-2xl p-6 md:px-6 md:py-5"
+    className="bg-neutral-white border rounded-2xl md:p-6 p-4 md:px-6 md:py-5"
     style={{ border: "1px solid #EDEEF2" }}>
-    <div className="flex items-center mb-6 gap-4">
+    <div className="flex md:items-center items-start mb-6 gap-4">
      <div
-      className="w-10 h-10 rounded-full flex items-center justify-center"
+      className="md:w-10 md:h-10 w-6 h-6 rounded-full flex items-center flex-shrink-0 justify-center"
       style={{ backgroundColor: "hsl(var(--primary))" }}>
       <span className="text-primary-foreground font-bold">2</span>
      </div>
-     <h2 className="text-primary-text text-2xl font-bold">
+     <h2 className="text-primary-text md:text-2xl text-xl font-bold">
       What Type of Provider Do You Prefer?
      </h2>
     </div>
 
     {/* Provider Type Cards */}
-    <div className="grid md:grid-cols-2 gap-6 max-w-3xl ml-12">
+    <div className="grid md:grid-cols-2 gap-6 md:max-w-3xl max-md:w-full md:ml-12">
      {providerTypes.map((provider) => (
       <EventTypeCard
        key={provider.id}
@@ -143,9 +142,11 @@ const ProviderTypeSelection: React.FC<ProviderTypeSelectionProps> = ({
 
     {/* Show provider details and service styles only if selected */}
     {selectedProvider?.id && ( // Only render if selectedProvider exists and has an id
-     <div style={{ marginTop: "24px", paddingLeft: "45px" }}>
+     <div style={{ marginTop: "24px" }}>
       {/* Provider Description */}
-      <h3 style={{ fontSize: "16px", fontWeight: "700", color: "#2B2B43" }}>
+      <h3
+       style={{ fontSize: "16px", fontWeight: "700", color: "#2B2B43" }}
+       className="max-md:pb-3 md:pl-[45px]">
        Expert Catering, Your Way
       </h3>
       <p
@@ -179,7 +180,7 @@ const ProviderTypeSelection: React.FC<ProviderTypeSelectionProps> = ({
         (You can select multiple options)
        </p>
 
-       <div className="flex flex-wrap gap-4 mt-4">
+       <div className="flex flex-wrap md:gap-4 gap-2 mt-4">
         {serviceStyles.map((style) => (
          <Button
           key={style.id}
@@ -193,11 +194,12 @@ const ProviderTypeSelection: React.FC<ProviderTypeSelectionProps> = ({
            fontWeight: "400",
            borderRadius: "16px",
            padding: "18px 16px",
-           minWidth: "200px",
+
            border: selectedServiceStyles.includes(style.name)
             ? "1px solid #054A86"
             : "1px solid #C7C8D2",
-          }}>
+          }}
+          className="md:min-w-[200px] max-md:m-w-[120px]">
           {style.name}
          </Button>
         ))}

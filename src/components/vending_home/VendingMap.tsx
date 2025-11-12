@@ -5,7 +5,12 @@ import {
  InfoWindow,
 } from "@react-google-maps/api";
 import { useState, useCallback, useEffect } from "react";
-import { useSelector } from "react-redux"; // To get user data
+import { useDispatch, useSelector } from "react-redux"; // To get user data
+import {
+ fetchLocations,
+ selectAllLocations,
+ getLocationsStatus,
+} from "../../redux/slices/vendingLocationsSlice";
 
 const containerStyle = {
  width: "100%",
@@ -39,6 +44,7 @@ const vendingLocations = [
 const center = { lat: 25.118, lng: 55.201 };
 
 const VendingMap = () => {
+ const dispatch = useDispatch();
  const { isLoaded, loadError } = useJsApiLoader({
   id: "google-map-script",
   googleMapsApiKey: "AIzaSyCYAsBPyik1DZcOH3jcR-awecFjyYXr5Qw", // 🟥 Replace with your valid key
@@ -47,6 +53,16 @@ const VendingMap = () => {
  const [selected, setSelected] = useState<any>(null); // State for selected location
  const [map, setMap] = useState<google.maps.Map | null>(null);
  const [selectedLocation, setSelectedLocation] = useState<any>(null);
+ /* loading vending locations */
+ const vendingLocations = useSelector(selectAllLocations);
+ const status = useSelector(getLocationsStatus);
+ /* use effect for vending locations */
+ useEffect(() => {
+  // Only fetch if the status is 'idle' (to prevent re-fetching)
+  if (status === "idle") {
+   dispatch(fetchLocations());
+  }
+ }, [status, dispatch]);
 
  const userData = useSelector((state: any) => state?.user?.user); // Get user data
 
