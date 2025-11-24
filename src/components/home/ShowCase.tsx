@@ -67,9 +67,9 @@ const ShowCase = () => {
 
  return (
   <section className="pb-[24px] pt-[48px]  lg:h-[844px] h-[2800px]  bg-[#F7F7F9] w-full ">
-   <div className="main-container relative flex justify-center items-center">
+   <div className="main-container  relative flex justify-center items-center">
     {/* Steps */}
-    <div className="absolute lg:px-[30px] px-[15px] -top-[145px] grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 my-[24px] justify-items-center ">
+    <div className="absolute lg:px-0 px-[15px] -top-[145px] grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 my-[24px] justify-items-center ">
      {steps.map((step, index) => {
       return (
        <div

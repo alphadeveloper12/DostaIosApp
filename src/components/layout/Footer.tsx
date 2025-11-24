@@ -5,15 +5,19 @@ import {
  Linkedin,
  MessageCircle,
 } from "lucide-react";
+import { Link } from "react-router-dom";
 
 const Footer = () => {
  const footerSections = [
   {
    title: "Our Company",
    links: [
-    { label: "About us", to: "/about" },
-    { label: "Blog", to: "/blog" },
-    { label: "Contact us", to: "/contact" },
+    { label: "About us", to: "/about-us" },
+    { label: "Contact us", to: "/contact-us" },
+    { label: "Privacy Policy", to: "/privacy-policy" },
+    { label: "Cookies Policy", to: "/cookies-policy" },
+    { label: "Refund Policy", to: "/refund-policy" },
+    { label: "Terms & Conditions", to: "/terms" },
     { label: "Catering", to: "/catering" },
    ],
   },
@@ -59,11 +63,11 @@ const Footer = () => {
         <ul className="space-y-2">
          {section.links.map((link, i) => (
           <li key={i}>
-           <a
-            href={link.to}
+           <Link
+            to={link.to}
             className="text-sm text-gray-400 hover:text-white transition-colors">
             {link.label}
-           </a>
+           </Link>
           </li>
          ))}
         </ul>

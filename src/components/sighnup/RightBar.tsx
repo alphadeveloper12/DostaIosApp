@@ -166,7 +166,7 @@ const RightBar = () => {
         placeholder="name@example.com"
         value={email}
         onChange={(e) => setEmail(e.target.value)}
-        className="w-full max-w-[21.875rem] py-2 px-3 border border-gray-300 rounded-md"
+        className="w-full max-w-[21.875rem] py-[10px] px-3 border border-gray-300 rounded-md"
        />
       </div>
       {/* Password */}
@@ -179,7 +179,7 @@ const RightBar = () => {
         placeholder="min. 8 characters"
         value={password}
         onChange={(e) => setPassword(e.target.value)}
-        className="w-full max-w-[21.875rem] py-2 px-3 border border-gray-300 rounded-md"
+        className="w-full max-w-[21.875rem] py-[10px] px-3 border border-gray-300 rounded-md"
        />
       </div>
       {/* Confirm password */}
@@ -192,7 +192,7 @@ const RightBar = () => {
         placeholder="min. 8 characters"
         value={confirmPassword}
         onChange={(e) => setConfirmPassword(e.target.value)}
-        className="w-full max-w-[21.875rem] py-2 px-3 border border-gray-300 rounded-md"
+        className="w-full max-w-[21.875rem] py-[10px] px-3 border border-gray-300 rounded-md"
        />
        {passwordError && (
         <p className="text-red-500 text-sm mt-1">{passwordError}</p>
@@ -221,7 +221,7 @@ const RightBar = () => {
         placeholder="(217) 555-0113"
         value={phoneNumber}
         onChange={(e) => setPhoneNumber(e.target.value)}
-        className="w-full max-w-[21.875rem] py-2 px-3 border border-gray-300 rounded-md"
+        className="w-full max-w-[21.875rem] py-[10px] px-3 border border-gray-300 rounded-md"
        />
       </div>
 
@@ -350,7 +350,7 @@ const RightBar = () => {
       {RenderStep()}
       <div className="flex flex-col gap-3 mt-6">
        <button
-        className="w-full bg-[#054A86] text-white py-2 rounded-md font-[700]"
+        className="w-full bg-[#054A86] text-white py-3 rounded-md font-[700]"
         onClick={handleNext}
         disabled={loading}>
         {loading ? "Processing..." : "Continue"}

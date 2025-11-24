@@ -10,6 +10,7 @@ import {
  getLocationsStatus,
  getLocationsError,
 } from "../../redux/slices/vendingLocationsSlice";
+import Shrimmer from "../ui/Shrimmer";
 
 const HeroSection = () => {
  const dispatch = useDispatch();
@@ -17,7 +18,7 @@ const HeroSection = () => {
  const [selectedItem, setSelectedItem] = useState(false);
  const [activeView, setActiveView] = useState<"list" | "map">("list");
  const [selectedLocation, setSelectedLocation] = useState<any>(null);
- 
+
  const vendingLocations = useSelector(selectAllLocations);
  const status = useSelector(getLocationsStatus);
 
@@ -74,12 +75,12 @@ const HeroSection = () => {
       {/* Search input mock (opens sidebar) */}
       <div className="mt-6 flex justify-center w-full sm:w-[80%] mx-auto">
        <input
-        className="w-full max-w-md rounded-xl px-5 py-3 text-sm outline-none bg-[#EDEEF2] placeholder:text-[#545563]"
+        className="w-full max-w-md rounded-xl px-5 py-3 md:px-3 md:py-[10px] text-[16px] leading-[24px] font-[400] outline-none bg-[#EDEEF2] placeholder:text-[#545563]"
         placeholder="Find nearby vending locations…"
         onClick={() => setSelectedItem(true)}
        />
        <svg
-        className="-ml-8 mt-3"
+        className="md:-ml-7 -ml-8 md:mt-[13px] mt-4 "
         width="17"
         height="16"
         viewBox="0 0 17 16"
@@ -219,6 +220,7 @@ const HeroSection = () => {
        </div>
 
        {/* List View */}
+
        {activeView === "list" && (
         <div className="flex-1 overflow-y-auto px-8 space-y-4 py-8">
          {vendingLocations.map((location) => (

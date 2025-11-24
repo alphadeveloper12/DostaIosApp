@@ -20,6 +20,12 @@ import MyOrders from "./pages/MyOrders";
 import AuthMiddleware from "./middleware/AuthMiddleware";
 import GuestMiddleware from "./middleware/GuestMiddleware";
 import ScrollToTop from "./components/home/ScrollToTop";
+import AboutUs from "./pages/AboutUs";
+import ContactUs from "./pages/ContactUs";
+import CookiesPolicy from "./pages/CookiesPolicy";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
+import RefundPolicy from "./pages/RefundPolicy";
+import Terms from "./pages/Terms";
 
 const queryClient = new QueryClient();
 
@@ -34,6 +40,12 @@ const App = () => (
      {/* Public Routes */}
      <Route path="/" element={<Index />} />
      <Route path="/vending-home" element={<VendingHome />} />
+     <Route path="/about-us" element={<AboutUs />} />
+     <Route path="/contact-us" element={<ContactUs />} />
+     <Route path="/cookies-policy" element={<CookiesPolicy />} />
+     <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+     <Route path="/refund-policy" element={<RefundPolicy />} />
+     <Route path="/terms" element={<Terms />} />
      <Route path="/vending-home/menu" element={<VendingMenu />} />
      <Route path="/vending-home/order-now" element={<OrderNow />} />
      <Route path="/vending-home/cart" element={<CartPage />} />

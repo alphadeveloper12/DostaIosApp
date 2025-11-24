@@ -122,7 +122,7 @@ const CateringConfirmation = () => {
           <div className="flex justify-between w-full gap-2 items-center">
            {/* Step 1 Circle */}
            <span
-            className={`flex h-[32px] w-[32px] items-center justify-center rounded-full ${
+            className={`flex h-[32px] w-[32px] flex-shrink-0 items-center justify-center rounded-full ${
              step >= 1 ? "bg-[#1ABF70]" : "bg-[#EDEEF2]"
             } text-white ring-[#1ABF70]`}>
             <svg
@@ -283,7 +283,7 @@ const CateringConfirmation = () => {
 
          {/* Actions */}
 
-         <div className="flex flex-col md:flex-row justify-center items-center gap-3 md:py-4 py-6">
+         <div className="flex flex-col md:flex-row max-md:justify-center items-center gap-3 md:py-4 py-6">
           <Button
            onClick={() => navigate("/catering/request-custom-quote")}
            variant="outline"

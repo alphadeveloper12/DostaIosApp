@@ -90,7 +90,7 @@ const CuisineSelection: React.FC<CuisineSelectionProps> = ({
     style={{ border: "1px solid #EDEEF2" }}>
     <div className="flex items-center mb-6 gap-4">
      <div
-      className="md:w-10 md:h-10 w-6 h-6 rounded-full flex-shrink-0 flex items-center justify-center"
+      className="md:w-8 md:h-8 w-6 h-6 rounded-full flex-shrink-0 flex items-center justify-center"
       style={{ backgroundColor: "hsl(var(--primary))" }}>
       <span className="text-primary-foreground font-bold">3</span>
      </div>
@@ -178,7 +178,7 @@ const CuisineSelection: React.FC<CuisineSelectionProps> = ({
        selectedCuisines.length === 0 ? "cursor-not-allowed" : ""
       }`}
       style={{
-       padding: "12px 24px",
+       padding: "12px 16px",
        borderRadius: "8px",
        fontSize: "16px",
        fontWeight: "600",

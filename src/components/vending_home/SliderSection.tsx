@@ -49,10 +49,10 @@ const Arrow: React.FC<{ dir: "left" | "right"; onClick: () => void }> = ({
   type="button"
   onClick={onClick}
   aria-label={dir === "left" ? "Previous" : "Next"}
-  className={`absolute top-[60%] -translate-y-1/2 z-20 rounded-full p-2 border border-[#2B2B43] ${
+  className={`absolute top-[65%] hidden md:block -translate-y-1/2 z-20 rounded-full p-2 border border-[#2B2B43] ${
    dir === "left"
-    ? "left-[7px] md:-left-4 sm:-left-2"
-    : "right-[7px] md:right-1 sm:-right-3"
+    ? "left-[7px] md:-left-0 sm:-left-2"
+    : "right-[7px] md:right-0 sm:-right-3"
   }`}>
   {dir === "right" ? (
    <svg
@@ -171,9 +171,8 @@ const SliderSection: React.FC = () => {
     <div className="flex" onClick={() => navigate("/vending-home/menu")}>
      {RENDERED_SLIDES.map((s, idx) => (
       <div
-       
        key={`${s.day}-${idx}`}
-       className="relative shrink-0 cursor-pointer min-w-0 basis-[100%] pr-unset sm:pr-4 sm:basis-1/2 lg:basis-1/4">
+       className="relative shrink-0 cursor-pointer min-w-0 basis-[100%] pr-unset sm:px-2 sm:basis-1/2 lg:basis-1/4">
        <div className="group relative h-64 w-full overflow-hidden rounded-2xl shadow hover:shadow-lg transition-shadow">
         <img
          src={s.img}

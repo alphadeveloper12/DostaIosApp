@@ -12,8 +12,11 @@ interface FoodItem {
  imgAlt: string;
  description: string;
  price: string;
-}
 
+ id: number; // ⭐ REQUIRED
+ day_of_week?: string; // optional
+ week_number?: number; // optional
+}
 interface SelectedFoodItem extends FoodItem {
  quantity: number;
 }
@@ -38,72 +41,6 @@ interface MenuProps {
  allSavedPlans?: SavedPlan[];
  apiMenuData?: any; // ✅ new prop for API menu data
 }
-// const foodData: FoodItem[] = [
-//  {
-//   imgSrc: "/images/vending_home/food.svg",
-//   heading: "Angus Burger",
-//   imgAlt: "food1",
-//   description:
-//    "Ea his sensibus eleifend, mollis iudicabit omittantur id mel. Et cum ignota euismod corpora, et saepe.",
-//   price: "AED 47.25",
-//  },
-//  {
-//   imgSrc: "/images/vending_home/food.svg",
-//   heading: "Angus Burger",
-//   imgAlt: "food2",
-//   description:
-//    "Ea his sensibus eleifend, mollis iudicabit omittantur id mel. Et cum ignota euismod corpora, et saepe.",
-//   price: "AED 47.25",
-//  },
-//  {
-//   imgSrc: "/images/vending_home/food.svg",
-//   heading: "Angus Burger",
-//   imgAlt: "food3",
-//   description:
-//    "Ea his sensibus eleifend, mollis iudicabit omittantur id mel. Et cum ignota euismod corpora, et saepe.",
-//   price: "AED 47.25",
-//  },
-//  {
-//   imgSrc: "/images/vending_home/food.svg",
-//   heading: "Angus Burger",
-//   imgAlt: "food4",
-//   description:
-//    "Ea his sensibus eleifend, mollis iudicabit omittantur id mel. Et cum ignota euismod corpora, et saepe.",
-//   price: "AED 47.25",
-//  },
-//  {
-//   imgSrc: "/images/vending_home/food.svg",
-//   heading: "Angus Burger",
-//   imgAlt: "food5",
-//   description:
-//    "Ea his sensibus eleifend, mollis iudicabit omittantur id mel. Et cum ignota euismod corpora, et saepe.",
-//   price: "AED 47.25",
-//  },
-//  {
-//   imgSrc: "/images/vending_home/food.svg",
-//   heading: "Angus Burger",
-//   imgAlt: "food6",
-//   description:
-//    "Ea his sensibus eleifend, mollis iudicabit omittantur id mel. Et cum ignota euismod corpora, et saepe.",
-//   price: "AED 47.25",
-//  },
-//  {
-//   imgSrc: "/images/vending_home/food.svg",
-//   heading: "Angus Burger",
-//   imgAlt: "food7",
-//   description:
-//    "Ea his sensibus eleifend, mollis iudicabit omittantur id mel. Et cum ignota euismod corpora, et saepe.",
-//   price: "AED 47.25",
-//  },
-//  {
-//   imgSrc: "/images/vending_home/food.svg",
-//   heading: "Angus Burger",
-//   imgAlt: "food8",
-//   description:
-//    "Ea his sensibus eleifend, mollis iudicabit omittantur id mel. Et cum ignota euismod corpora, et saepe.",
-//   price: "AED 47.25",
-//  },
-// ];
 
 const days = [
  { day: "Monday" },
@@ -197,6 +134,10 @@ const PlanWeekly: React.FC<MenuProps> = ({
       imgAlt: `food-${it.id}`,
       description: it.description,
       price: `AED ${parseFloat(it.price).toFixed(2)}`,
+
+      id: it.id, // ⭐ add this
+      day_of_week: day,
+      week_number: apiMenuData.week_no ?? 1,
      }));
     } else {
      parsed[day] = [];
@@ -300,11 +241,18 @@ const PlanWeekly: React.FC<MenuProps> = ({
     } else {
      newDayItems[existingItemIndex] = {
       ...newDayItems[existingItemIndex],
+      id: newDayItems[existingItemIndex].id,
       quantity: newQuantity,
      };
     }
    } else if (change > 0) {
-    newDayItems.push({ ...foodItem, quantity: 1 });
+    newDayItems.push({
+     ...foodItem,
+     id: foodItem.id, // ⭐ PRESERVE ID
+     day_of_week: currentDay, // ⭐ ADD CORRECT DAY
+     week_number: 1, // ⭐ For weekly plans
+     quantity: 1,
+    });
    }
    return { ...prevPlan, [currentDay]: newDayItems };
   });
@@ -316,25 +264,25 @@ const PlanWeekly: React.FC<MenuProps> = ({
   // Step 1: initialize empty plan with weekdays
   const newPlan: WeeklyPlan = {};
   days.forEach(({ day }) => {
-    newPlan[day] = [];
+   newPlan[day] = [];
   });
 
   // Step 2: populate with items from API
   selectedPlan.items.forEach((item: any) => {
-    const day = item.day_of_week || "Monday"; // fallback if null
-    const menu = item.menu_item || {};
+   const day = item.day_of_week || "Monday"; // fallback if null
+   const menu = item.menu_item || {};
 
-    const mappedItem: SelectedFoodItem = {
-      imgSrc: menu.image_url,
-      heading: menu.name,
-      imgAlt: `food-${menu.id}`,
-      description: menu.description,
-      price: `AED ${parseFloat(menu.price).toFixed(2)}`,
-      quantity: item.quantity || 1,
-    };
+   const mappedItem: SelectedFoodItem = {
+    imgSrc: menu.image_url,
+    heading: menu.name,
+    imgAlt: `food-${menu.id}`,
+    description: menu.description,
+    price: `AED ${parseFloat(menu.price).toFixed(2)}`,
+    quantity: item.quantity || 1,
+   };
 
-    if (!newPlan[day]) newPlan[day] = [];
-    newPlan[day].push(mappedItem);
+   if (!newPlan[day]) newPlan[day] = [];
+   newPlan[day].push(mappedItem);
   });
 
   // Step 3: update weeklyPlan (this will re-render)
@@ -343,8 +291,7 @@ const PlanWeekly: React.FC<MenuProps> = ({
   // Step 4: close sidebar + clear selection
   setSavedPlans(false);
   setSelectedPlan(null);
-};
-
+ };
 
  return (
   <div className="min-h-screen">

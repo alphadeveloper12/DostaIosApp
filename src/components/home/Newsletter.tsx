@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Link } from "react-router-dom";
 
 const Newsletter = () => {
  return (
@@ -32,13 +33,13 @@ const Newsletter = () => {
     <p className="text-[14px] sm:text-[16px] leading-[20px] sm:leading-[24px] font-[400] tracking-[0.1px] text-neutral-black py-[16px] px-2">
      By providing your email you are agreeing to receive email marketing from
      Dosta Plazi. You can opt-out at any time. See{" "}
-     <a href="/terms" className="text-[#8C3EEE] hover:underline">
+     <Link to="/terms" className="text-[#8C3EEE] hover:underline">
       Terms & Conditions
-     </a>{" "}
+     </Link>{" "}
      and{" "}
-     <a href="/privacy" className="text-[#8C3EEE] hover:underline">
+     <Link to="/privacy-policy" className="text-[#8C3EEE] hover:underline">
       Privacy Policy
-     </a>
+     </Link>
      .
     </p>
    </div>

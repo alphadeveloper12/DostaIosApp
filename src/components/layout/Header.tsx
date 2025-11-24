@@ -31,6 +31,7 @@ const Header = () => {
   sessionStorage.removeItem("authToken");
   localStorage.removeItem("user");
   sessionStorage.removeItem("user");
+  localStorage.removeItem("orderProgress");
   setIsLoggedIn(false);
   navigate("/signin");
  };
@@ -56,7 +57,7 @@ const Header = () => {
        <Link to="/" className="text-[16px] font-[700]">
         Portfolio
        </Link>
-       <Link to="/" className="text-[16px] font-[700]">
+       <Link to="/about-us" className="text-[16px] font-[700]">
         About us
        </Link>
        <Link to="/" className="text-[16px] font-[700]">

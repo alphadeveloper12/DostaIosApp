@@ -50,7 +50,7 @@ const SignInFormComponent = ({
       value={email}
       onChange={(e) => setEmail(e.target.value)}
       placeholder="name@example.com"
-      className="w-full rounded-lg border h-11 border-[#C7C8D2] px-3 py-2 text-sm shadow-sm focus:outline-none"
+      className="w-full rounded-lg border h-11 border-[#C7C8D2] px-3 py-[10px] text-sm shadow-sm focus:outline-none"
       required // Optional: Add HTML validation
      />
     </div>
@@ -67,7 +67,7 @@ const SignInFormComponent = ({
        value={password}
        onChange={(e) => setPassword(e.target.value)}
        placeholder="min. 8 characters"
-       className="w-full rounded-lg border h-11 border-[#C7C8D2] px-3 py-2 pr-10 text-sm shadow-sm focus:outline-none"
+       className="w-full rounded-lg border h-11 border-[#C7C8D2] px-3 py-[10px] pr-10 text-sm shadow-sm focus:outline-none"
        required // Optional: Add HTML validation
        minLength={8} // Optional: Add HTML validation
       />
@@ -108,7 +108,7 @@ const SignInFormComponent = ({
      variant="default"
      type="submit" // ✅ Use type="submit" for the button within a form
      disabled={loading}
-     className="mt-10 w-full h-11 font-bold"
+     className="mt-10 w-full h-11 py-3 font-bold"
      style={{ boxShadow: "0px 8px 20px 0px #4E60FF29" }}>
      {loading ? "Logging in..." : "Login"}
     </Button>

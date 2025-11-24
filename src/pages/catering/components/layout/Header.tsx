@@ -4,11 +4,45 @@ import { Menu, X } from "lucide-react";
 import { useLocation } from "react-router-dom";
 const Header = () => {
  const path = useLocation();
+ const [profile, setProfile] = useState<any>(null);
  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
  const [isLoggedIn, setIsLoggedIn] = useState(false); // Add login state
  const navigate = useNavigate(); // Initialize navigate function
  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
  const slug = "/" + path.pathname.split("/")[1]; // → "/vending-home"
+ // ✅ Base API URL
+ const baseUrl = import.meta.env.VITE_API_URL;
+
+ // ✅ Get Auth Token (checks both storages)
+ const getAuthToken = () =>
+  sessionStorage.getItem("authToken") || localStorage.getItem("authToken");
+ useEffect(() => {
+  const token = getAuthToken();
+  if (!token) {
+   navigate("/signin");
+   return;
+  }
+
+  const fetchProfile = async () => {
+   try {
+    const response = await fetch(`${baseUrl}/api/profile/`, {
+     headers: {
+      Authorization: `Token ${token}`,
+     },
+    });
+
+    if (!response.ok) throw new Error("Failed to fetch profile");
+    const data = await response.json();
+    setProfile(data);
+   } catch (error) {
+    console.error("Error fetching profile:", error);
+   } finally {
+   }
+  };
+
+  fetchProfile();
+ }, [navigate, baseUrl]);
+
  {
   /* authentication user login or not  */
  }
@@ -39,6 +73,12 @@ const Header = () => {
  const handleLoginClick = () => {
   navigate("/signin"); // Navigate to /signin when login is clicked
  };
+ const capitalizeName = (name) => {
+  return name.split(" ").map(
+   (part) => part.charAt(0).toUpperCase() // Capitalize the first letter and make the rest lowercase
+  );
+ };
+
  return (
   <header className="bg-neutral-white border-b border-neutral-gray-lightest sticky top-0 z-50">
    <div className="main-container mx-auto ">
@@ -77,11 +117,21 @@ const Header = () => {
 
       {/* Login Button or User Icon */}
       {isLoggedIn ? (
-       <button
-        className="w-[40px] h-[40px] relative lg:w-[48px] lg:h-[48px] bg-neutral-gray rounded-[12px] lg:rounded-[16px] text-white flex items-center justify-center text-[12px] lg:text-[14px] font-[600] flex-shrink-0"
-        onClick={() => setIsDropdownOpen(!isDropdownOpen)}>
-        <img src="/images/nav/user.svg" alt="user" />
-       </button>
+       <div className="flex items-center gap-2">
+        <div className="flex items-center gap-4">
+         <span className="text-neutral-black font-bold">My Order</span>
+         <button className="w-[40px] h-[40px] relative lg:w-[48px] lg:h-[48px]   rounded-[12px] lg:rounded-[16px] text-white flex items-center justify-center text-[12px] lg:text-[14px] font-[600] flex-shrink-0">
+          <img src="images/nav/cart.svg" alt="cart" />
+         </button>
+        </div>
+        <span className="p-[0.7px] border-neutral-gray-lightest border-2 rounded-[12px] lg:rounded-[16px]">
+         <button
+          className="w-[40px] h-[40px] relative lg:w-[48px] lg:h-[48px] bg-primary  rounded-[12px] lg:rounded-[16px] text-white flex items-center justify-center text-[12px] lg:text-[14px] font-[600] flex-shrink-0"
+          onClick={() => setIsDropdownOpen(!isDropdownOpen)}>
+          {profile ? capitalizeName(profile.full_name) : <img src="/images/nav/user.svg" alt="user" /> }
+         </button>
+        </span>
+       </div>
       ) : (
        <button
         onClick={handleLoginClick} // Trigger navigation on click

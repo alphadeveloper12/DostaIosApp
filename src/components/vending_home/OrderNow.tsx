@@ -16,15 +16,14 @@ import MobileFooterNav from "../home/MobileFooterNav";
 
 type StepStatus = "completed" | "active" | "pending";
 
-// --- LOCALSTORAGE LOGIC START (Loading) ---
 // 1. Define a default state for ALL properties we want to save
 const defaultProgress = {
  activeStep: 2,
  maxCompleted: 1,
  time: "",
- pickOrder: "Pickup Today",
- orderType: "Order Now",
- planType: "weekly",
+ pickOrder: "",
+ orderType: "",
+ planType: "",
  orderNowMenu: [],
  smartGrabMenu: [],
  weekMenu: {},
@@ -33,6 +32,7 @@ const defaultProgress = {
  weekMenu3: {},
  weekMenu4: {},
  allSavedPlans: [], // --- NEW: To store all saved plans
+ orderId: 1,
 };
 
 // 2. This function runs ONCE on component load
@@ -143,6 +143,114 @@ const OrderNow = () => {
    Authorization: `token ${token}`,
   },
  };
+
+ /* helper function for formating api payload data  */
+ const buildConfirmPayload = ({
+  location,
+  orderType,
+  planType,
+  pickOrder,
+  time,
+  pickupOptions,
+  timeSlots,
+  menuData,
+ }) => {
+  // ---- MAP ORDER TYPE ----
+  const plan_type_map = {
+   "Order Now": "ORDER_NOW",
+   "Smart Grab": "SMART_GRAB",
+   "Start a Plan": planType === "weekly" ? "WEEKLY" : "MONTHLY",
+  };
+
+  // ---- MAP PICKUP TYPE ----
+  const pickup_type_map = {
+   "Pickup Today": "TODAY",
+   "Pickup in 24 hours": "NEXT_DAY",
+  };
+
+  const pickup_type = pickup_type_map[pickOrder] ?? "TODAY";
+
+  // ---- FIND PICKUP SLOT ID ----
+  const selectedSlot = timeSlots.find((slot) => slot.label === time);
+
+  // ---- FORMAT ITEMS ----
+  const formatItems = (menuData, planType) => {
+   if (!menuData) return [];
+
+   // WEEKLY
+   if (planType === "weekly") {
+    const days = Object.keys(menuData);
+    let allItems = [];
+
+    days.forEach((day) => {
+     menuData[day]?.forEach((item) => {
+      allItems.push({
+       menu_item_id: item.id,
+       quantity: item.quantity || 1,
+       day_of_week: day,
+       week_number: 1, // Always 1 for weekly plans
+      });
+     });
+    });
+
+    return allItems;
+   }
+
+   // MONTHLY
+   if (planType === "monthly") {
+    // Determine week number based on the step
+    const _weekNumber =
+     activeStep === 4
+      ? 1
+      : activeStep === 5
+      ? 2
+      : activeStep === 6
+      ? 3
+      : activeStep === 7
+      ? 4
+      : null;
+
+    const items = [];
+    Object.keys(menuData).forEach((day) => {
+     menuData[day]?.forEach((item) => {
+      items.push({
+       menu_item_id: item.id,
+       quantity: item.quantity || 1,
+       day_of_week: day,
+       week_number: _weekNumber, // FIXED
+      });
+     });
+    });
+    return items;
+   }
+
+   return [];
+  };
+
+  return {
+   location_id: location,
+   plan_type: plan_type_map[orderType],
+   plan_subtype: orderType === "Start a Plan" ? planType.toUpperCase() : "NONE",
+   pickup_type,
+   pickup_date: new Date().toISOString().split("T")[0], // today's date
+   pickup_slot_id: selectedSlot?.id || null,
+   items: formatItems(menuData, planType),
+  };
+ };
+ /* post api call function */
+ const postConfirm = async (payload) => {
+  try {
+   await axios.post(
+    `${baseUrl}/api/vending/order/confirm/`,
+    payload,
+    authHeaders
+   );
+   console.log("✅ Confirm saved:", payload);
+  } catch (err) {
+   console.error("❌ Confirm error:", err);
+  }
+ };
+
  {
   /*****week menu funcs****************************/
  }
@@ -168,6 +276,30 @@ const OrderNow = () => {
   setSmartGrabMenu(n);
  };
  const baseUrl = import.meta.env.VITE_API_URL;
+ // 🟢 PATCH ORDER PROGRESS WHEN STEP CHANGES
+ useEffect(() => {
+  console.log(activeStep);
+
+  const saveProgressToBackend = async () => {
+   try {
+    await axios.patch(
+     `${baseUrl}/api/vending/order/progress/`,
+     {
+      order_id: 1,
+      current_step: activeStep,
+     },
+     authHeaders
+    );
+
+    console.log("🟢 Progress synced:", activeStep);
+   } catch (err) {
+    console.error("❌ Progress sync failed:", err);
+   }
+  };
+
+  saveProgressToBackend();
+ }, [activeStep]);
+
  {
   /* use effect to load monthly and weekly menu  */
  }
@@ -390,6 +522,47 @@ const OrderNow = () => {
  };
 
  const handleConfirmStep = () => {
+  let menuDataToSend = [];
+
+  if (activeStep === 2) {
+   menuDataToSend = [];
+  }
+
+  if (activeStep === 4 && orderType === "Order Now") {
+   menuDataToSend = orderNowMenu;
+  }
+
+  if (activeStep === 4 && orderType === "Smart Grab") {
+   menuDataToSend = smartGrabMenu;
+  }
+
+  // WEEKLY FIX
+  if (
+   activeStep === 4 &&
+   orderType === "Start a Plan" &&
+   planType === "weekly"
+  ) {
+   menuDataToSend = weekMenu; // FIX
+  }
+
+  // MONTHLY FIX
+  if (activeStep === 4 && planType === "monthly") menuDataToSend = weekMenu1;
+  if (activeStep === 5 && planType === "monthly") menuDataToSend = weekMenu2;
+  if (activeStep === 6 && planType === "monthly") menuDataToSend = weekMenu3;
+  if (activeStep === 7 && planType === "monthly") menuDataToSend = weekMenu4;
+
+  const payload = buildConfirmPayload({
+   location: 1,
+   orderType,
+   planType,
+   pickOrder,
+   time,
+   pickupOptions,
+   timeSlots,
+   menuData: menuDataToSend,
+  });
+
+  postConfirm(payload);
   if (activeStep === maxCompleted + 1) {
    setMaxCompleted(activeStep);
    setActiveStep(activeStep + 1);
@@ -399,6 +572,11 @@ const OrderNow = () => {
   if (isOpen) {
    setIsOpen(false);
   }
+
+  console.log("STEP:", activeStep);
+  console.log("ORDER TYPE:", orderType);
+  console.log("PLAN TYPE:", planType);
+  console.log("RAW MENU DATA TO SEND:", menuDataToSend);
  };
 
  const handleEditStep = (stepId: number) => {

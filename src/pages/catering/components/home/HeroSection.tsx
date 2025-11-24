@@ -31,7 +31,7 @@ const HeroSection = () => {
      {/* CTA Button */}
      <button
       onClick={() => navigate("/catering/plan")}
-      className="bg-primary text-primary-foreground font-[700] text-[14px] sm:text-[14px] mb-[20px] sm:mb-6 leading-[20px] tracking-[0.3px] py-[12px] px-[16px] sm:px-[20px] rounded-[8px] hover:opacity-90 transition-opacity w-full sm:w-auto">
+      className="bg-primary text-primary-foreground font-[700] text-[14px] sm:text-[14px] mb-[20px] sm:mb-6 leading-[20px] tracking-[0.3px] py-[12px] px-[16px] sm:px-[16px] rounded-[8px] hover:opacity-90 transition-opacity w-full sm:w-auto">
       Start planning your event
      </button>
 
