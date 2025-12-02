@@ -121,14 +121,18 @@ const Header = () => {
         <div className="flex items-center gap-4">
          <span className="text-neutral-black font-bold">My Order</span>
          <button className="w-[40px] h-[40px] relative lg:w-[48px] lg:h-[48px]   rounded-[12px] lg:rounded-[16px] text-white flex items-center justify-center text-[12px] lg:text-[14px] font-[600] flex-shrink-0">
-          <img src="images/nav/cart.svg" alt="cart" />
+          <img src="/images/nav/cart.svg" alt="cart" />
          </button>
         </div>
         <span className="p-[0.7px] border-neutral-gray-lightest border-2 rounded-[12px] lg:rounded-[16px]">
          <button
           className="w-[40px] h-[40px] relative lg:w-[48px] lg:h-[48px] bg-primary  rounded-[12px] lg:rounded-[16px] text-white flex items-center justify-center text-[12px] lg:text-[14px] font-[600] flex-shrink-0"
           onClick={() => setIsDropdownOpen(!isDropdownOpen)}>
-          {profile ? capitalizeName(profile.full_name) : <img src="/images/nav/user.svg" alt="user" /> }
+          {profile ? (
+           capitalizeName(profile.full_name)
+          ) : (
+           <img src="/images/nav/user.svg" alt="user" />
+          )}
          </button>
         </span>
        </div>

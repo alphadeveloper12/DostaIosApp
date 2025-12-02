@@ -2,6 +2,7 @@ import { Check } from "lucide-react";
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
+import { Eye, EyeOff } from "lucide-react";
 
 const RightBar = () => {
  const steps = [1, 2, 3];
@@ -13,6 +14,8 @@ const RightBar = () => {
  const [confirmPassword, setConfirmPassword] = useState<string>("");
  const [phoneNumber, setPhoneNumber] = useState<string>("");
  const [otp, setOtp] = useState<string>("");
+ const [showPassword, setShowPassword] = useState(false);
+ const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
  // Flags and error states
  const [is2FAEnabled, setIs2FAEnabled] = useState<boolean>(false);
@@ -174,26 +177,43 @@ const RightBar = () => {
        <label className="text-[12px] text-neutral-gray-dark leading-[16px] font-[600] mb-1">
         Password
        </label>
-       <input
-        type="password"
-        placeholder="min. 8 characters"
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
-        className="w-full max-w-[21.875rem] py-[10px] px-3 border border-gray-300 rounded-md"
-       />
+       <div className="relative w-full max-w-[21.875rem]">
+        <input
+         type={showPassword ? "text" : "password"}
+         placeholder="min. 8 characters"
+         value={password}
+         onChange={(e) => setPassword(e.target.value)}
+         className="w-full py-[10px] px-3 border border-gray-300 rounded-md pr-10"
+        />
+        <button
+         type="button"
+         onClick={() => setShowPassword((prev) => !prev)}
+         className="absolute inset-y-0 right-3 flex items-center text-gray-500">
+         {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+        </button>
+       </div>
       </div>
+
       {/* Confirm password */}
       <div className="flex flex-col pb-7">
        <label className="text-[12px] text-neutral-gray-dark leading-[16px] font-[600] mb-1">
         Confirm Password
        </label>
-       <input
-        type="password"
-        placeholder="min. 8 characters"
-        value={confirmPassword}
-        onChange={(e) => setConfirmPassword(e.target.value)}
-        className="w-full max-w-[21.875rem] py-[10px] px-3 border border-gray-300 rounded-md"
-       />
+       <div className="relative w-full max-w-[21.875rem]">
+        <input
+         type={showConfirmPassword ? "text" : "password"}
+         placeholder="min. 8 characters"
+         value={confirmPassword}
+         onChange={(e) => setConfirmPassword(e.target.value)}
+         className="w-full py-[10px] px-3 border border-gray-300 rounded-md pr-10"
+        />
+        <button
+         type="button"
+         onClick={() => setShowConfirmPassword((prev) => !prev)}
+         className="absolute inset-y-0 right-3 flex items-center text-gray-500">
+         {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+        </button>
+       </div>
        {passwordError && (
         <p className="text-red-500 text-sm mt-1">{passwordError}</p>
        )}

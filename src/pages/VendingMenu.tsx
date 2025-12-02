@@ -200,33 +200,37 @@ const VendingMenu = () => {
 
     {/* Display menu items for the selected day */}
     <div className="w-full h-full pb-[100px] pt-6">
-     <div className="main-container flex gap-[24px] flex-wrap">
-      {isLoading
-       ? "loading ..."
-       : foodData.map((data: any, index: number) => (
-          <LazyLoad>
-           <div
-            key={index}
-            onClick={() => handleCardClick(data)}
-            className="w-full border border-[#EDEEF2] max-w-[354px] bg-neutral-white rounded-[16px] px-3 pt-3 pb-5 sm:px-4 sm:pt-4 sm:pb-6 overflow-hidden cursor-pointer hover:shadow-lg transition-shadow">
-            <img
-             src={data.image_url}
-             alt={data?.imgAlt || "Food Item"}
-             className="block w-full h-auto rounded-[12px] sm:rounded-[16px] object-cover"
-            />
-            <h3 className="text-[24px] pt-3 pb-1 leading-[32px] font-[700] tracking-[0.1px] text-[#2B2B43]">
-             {data.name}
-            </h3>
-            <p className="text-[14px] line-clamp-2 leading-[20px] font-[400] tracking-[0.2px] text-[#83859C]">
-             {data.description}
-            </p>
-            <h4 className="text-[16px] pt-2 leading-[24px] font-[700] tracking-[0.1px] text-[#2B2B43]">
-             AED {data.price}
-            </h4>
-           </div>
-          </LazyLoad>
-         ))}
-     </div>
+     <LazyLoad>
+      <div className="main-container flex gap-[24px] flex-wrap">
+       {isLoading ? (
+        <div className="w-full">
+         <Shrimmer />
+        </div>
+       ) : (
+        foodData?.map((data: any, index: number) => (
+         <div
+          key={index}
+          onClick={() => handleCardClick(data)}
+          className="w-full border border-[#EDEEF2] max-w-[354px] bg-neutral-white rounded-[16px] px-3 pt-3 pb-5 sm:px-4 sm:pt-4 sm:pb-6 overflow-hidden cursor-pointer hover:shadow-lg transition-shadow">
+          <img
+           src={data.image_url}
+           alt={data?.imgAlt || "Food Item"}
+           className="block w-full md:max-h-[180px] h-full rounded-[12px] sm:rounded-[16px] object-cover"
+          />
+          <h3 className="text-[24px] pt-3 pb-1 leading-[32px] font-[700] tracking-[0.1px] text-[#2B2B43]">
+           {data.name}
+          </h3>
+          <p className="text-[14px] line-clamp-2 leading-[20px] font-[400] tracking-[0.2px] text-[#83859C]">
+           {data.description}
+          </p>
+          <h4 className="text-[16px] pt-2 leading-[24px] font-[700] tracking-[0.1px] text-[#2B2B43]">
+           AED {data.price}
+          </h4>
+         </div>
+        ))
+       )}
+      </div>
+     </LazyLoad>
     </div>
 
     {/* Sidebar Sheet (Details of selected item) */}
