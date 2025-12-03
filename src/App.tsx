@@ -26,6 +26,8 @@ import CookiesPolicy from "./pages/CookiesPolicy";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import RefundPolicy from "./pages/RefundPolicy";
 import Terms from "./pages/Terms";
+import Services from "./pages/Services";
+import Portfolio from "./pages/Portfolio";
 
 const queryClient = new QueryClient();
 
@@ -41,6 +43,8 @@ const App = () => (
      <Route path="/" element={<Index />} />
      <Route path="/vending-home" element={<VendingHome />} />
      <Route path="/about-us" element={<AboutUs />} />
+     <Route path="/services" element={<Services />} />
+     <Route path="/portfolio" element={<Portfolio />} />
      <Route path="/contact-us" element={<ContactUs />} />
      <Route path="/cookies-policy" element={<CookiesPolicy />} />
      <Route path="/privacy-policy" element={<PrivacyPolicy />} />

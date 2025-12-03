@@ -51,16 +51,18 @@ const Header = () => {
       </Link>
 
       <div className="hidden lg:flex items-center text-neutral-gray-lightest gap-[24px]">
-       <Link to="/" className="text-[16px] font-[700]">
+       <Link to="/services" className="text-[16px] font-[700]">
         Services
        </Link>
-       <Link to="/" className="text-[16px] font-[700]">
+       <Link to="/portfolio" className="text-[16px] font-[700]">
         Portfolio
        </Link>
        <Link to="/about-us" className="text-[16px] font-[700]">
         About us
        </Link>
-       <Link to="/" className="text-[16px] font-[700]">
+       <Link
+        to="/catering/request-custom-quote"
+        className="text-[16px] font-[700]">
         Request a quote
        </Link>
       </div>

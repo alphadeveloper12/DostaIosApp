@@ -377,8 +377,11 @@ const RightBar = () => {
        </button>
 
        <button
-        className="w-full border border-gray-300 py-2 rounded-md font-[700] text-gray-700"
-        onClick={handlePrevious}>
+        className={`w-full border ${
+         currentStep === 1 ? "opacity-20 cursor-not-allowed" : ""
+        } py-2 rounded-md font-[700] text-gray-700`}
+        onClick={handlePrevious}
+        disabled={currentStep === 1}>
         Back
        </button>
       </div>
