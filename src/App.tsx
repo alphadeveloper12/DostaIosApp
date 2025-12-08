@@ -28,6 +28,10 @@ import RefundPolicy from "./pages/RefundPolicy";
 import Terms from "./pages/Terms";
 import Services from "./pages/Services";
 import Portfolio from "./pages/Portfolio";
+import HowItWorks from "./pages/HowItWorks";
+import HelpCenter from "./pages/HelpCenter";
+import ReportBug from "./pages/ReportBug";
+import Faqs from "./pages/Faqs";
 
 const queryClient = new QueryClient();
 
@@ -50,6 +54,10 @@ const App = () => (
      <Route path="/privacy-policy" element={<PrivacyPolicy />} />
      <Route path="/refund-policy" element={<RefundPolicy />} />
      <Route path="/terms" element={<Terms />} />
+     <Route path="/how-it-works" element={<HowItWorks />} />
+     <Route path="/help-center" element={<HelpCenter />} />
+     <Route path="/report-bug" element={<ReportBug />} />
+     <Route path="/faqs" element={<Faqs />} />
      <Route path="/vending-home/menu" element={<VendingMenu />} />
      <Route path="/vending-home/order-now" element={<OrderNow />} />
      <Route path="/vending-home/cart" element={<CartPage />} />

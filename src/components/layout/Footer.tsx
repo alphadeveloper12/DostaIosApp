@@ -25,9 +25,9 @@ const Footer = () => {
    title: "Help Center",
    links: [
     { label: "How it works", to: "/how-it-works" },
-    { label: "Help center", to: "/help" },
-    { label: "FAQ", to: "/faq" },
-    { label: "Report a bug", to: "/blog" },
+    { label: "Help center", to: "/help-center" },
+    { label: "FAQ", to: "/faqs" },
+    { label: "Report a bug", to: "/report-bug" },
    ],
   },
  ];
