@@ -21,6 +21,7 @@ import Footer from "@/components/layout/Footer";
 import BreadCrumb from "@/components/home/BreadCrumb";
 import LazyLoad from "@/components/ui/LazyLoad";
 import MobileFooterNav from "@/components/home/MobileFooterNav";
+import CoursesMenu from "../components/catering/CoursesMenu";
 
 const Catering = () => {
  const navigate = useNavigate();
@@ -37,6 +38,9 @@ const Catering = () => {
  const [selectedCourses, setSelectedCourses] = useState<string[]>([]);
  const [selectedLocation, setSelectedLocation] = useState<string | null>(null);
  const [selectedBudget, setSelectedBudget] = useState<string | null>(null);
+ const [selectedMenuItems, setSelectedMenuItems] = useState<
+  { id: string; name: string; course: string; price: string }[]
+ >([]);
 
  // Event and provider data
  const eventTypes = [
@@ -133,16 +137,18 @@ const Catering = () => {
    setStep(5); // Move to location selection
   else if (step === 5 && selectedLocation)
    setStep(6); // Move to budget selection
-  else if (step === 6 && selectedBudget) setStep(7); // Move to booking summary
+  else if (step === 6 && selectedBudget) setStep(7);
+  else if (step === 7 && selectedBudget) setStep(8);
+  // Move to booking summary
  };
-
  const handleGoBack = () => {
   if (step === 2) setStep(1);
   else if (step === 3) setStep(2);
   else if (step === 4) setStep(3);
   else if (step === 5) setStep(4);
   else if (step === 6) setStep(5);
-  else if (step === 7) setStep(6); // Go back to budget selection
+  else if (step === 7) setStep(6);
+  else if (step === 8) setStep(7); // Go back to budget selection
  };
 
  // Toggle selection functions
@@ -167,6 +173,19 @@ const Catering = () => {
    prevState.includes(course)
     ? prevState.filter((item) => item !== course)
     : [...prevState, course]
+  );
+ };
+
+ const toggleMenuItem = (item: {
+  id: string;
+  name: string;
+  course: string;
+  price: string;
+ }) => {
+  setSelectedMenuItems((prevState) =>
+   prevState.some((i) => i.id === item.id)
+    ? prevState.filter((i) => i.id !== item.id)
+    : [...prevState, item]
   );
  };
 
@@ -268,9 +287,18 @@ const Catering = () => {
         />
        </LazyLoad>
       )}
-
-      {/* Show the Booking Summary after step 6 */}
       {step === 7 && (
+       <LazyLoad>
+        <CoursesMenu
+         selectedMenuItems={selectedMenuItems}
+         toggleMenuItem={toggleMenuItem}
+         handleGoBack={handleGoBack}
+         handleContinue={handleContinue}
+        />
+       </LazyLoad>
+      )}
+      {/* Show the Booking Summary after step 6 */}
+      {step === 8 && (
        <LazyLoad>
         <BookingSummary
          eventType={selectedEvent}
@@ -282,6 +310,7 @@ const Catering = () => {
          selectedCourses={selectedCourses}
          selectedLocation={selectedLocation}
          selectedBudget={selectedBudget}
+         selectedMenuItems={selectedMenuItems}
          handleGoBack={handleGoBack} // Pass the handleGoBack function
         />
        </LazyLoad>
