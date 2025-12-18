@@ -118,7 +118,7 @@ const ProviderTypeSelection: React.FC<ProviderTypeSelectionProps> = ({
      <div
       className="md:w-8 md:h-8 w-6 h-6 rounded-full flex items-center flex-shrink-0 justify-center"
       style={{ backgroundColor: "hsl(var(--primary))" }}>
-      <span className="text-primary-foreground font-bold">2</span>
+      <span className="text-primary-foreground font-bold">3</span>
      </div>
      <h2 className="text-primary-text md:text-2xl text-xl font-bold">
       What Type of Provider Do You Prefer?

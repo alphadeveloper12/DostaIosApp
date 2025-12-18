@@ -17,6 +17,7 @@ interface EventTypeSelectionProps {
  handleSelectDateTime: () => void;
  handleContinue: () => void;
  handleGuestCountChange: (amount: number) => void;
+ handleGoBack: () => void;
 }
 
 const EventTypeSelection: React.FC<EventTypeSelectionProps> = ({
@@ -27,6 +28,7 @@ const EventTypeSelection: React.FC<EventTypeSelectionProps> = ({
  handleSelectDateTime,
  handleContinue,
  handleGuestCountChange,
+ handleGoBack,
 }) => {
  const [eventTypes, setEventTypes] = useState<
   { id: number; name: string; image_url: string }[]
@@ -73,7 +75,7 @@ const EventTypeSelection: React.FC<EventTypeSelectionProps> = ({
      <div
       className="md:w-8 md:h-8 w-6 h-6 rounded-full flex items-center flex-shrink-0 justify-center"
       style={{ backgroundColor: "hsl(var(--primary))" }}>
-      <span className="text-primary-foreground font-bold ">1</span>
+      <span className="text-primary-foreground font-bold ">2</span>
      </div>
      <h2 className="text-primary-text md:text-2xl text-xl font-bold">
       What Type Of Event Are you Planning?
@@ -166,15 +168,14 @@ const EventTypeSelection: React.FC<EventTypeSelectionProps> = ({
          className="flex justify-between mt-8"
          style={{ paddingRight: "45px" }}>
          <Button
-          disabled
-          className="cursor-not-allowed"
+          onClick={handleGoBack}
           style={{
            padding: "12px 16px",
            borderRadius: "8px",
            fontSize: "14px",
            fontWeight: "700",
-           color: "#C7C8D2",
-           border: "1px solid #EDEEF2",
+           color: "#054A86",
+           border: "1px solid #054A86",
            backgroundColor: "#fff",
           }}>
           Go Back

@@ -75,7 +75,7 @@ const LocationSelection: React.FC<LocationSelectionProps> = ({
      <div
       className="md:w-8 md:h-8 w-6 h-6 rounded-full flex items-center justify-center"
       style={{ backgroundColor: "hsl(var(--primary))" }}>
-      <span className="text-primary-foreground font-bold">5</span>
+      <span className="text-primary-foreground font-bold">6</span>
      </div>
      <h2 className="text-primary-text md:text-2xl text-xl font-bold">
       Where is your Event?

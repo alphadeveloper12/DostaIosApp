@@ -3,6 +3,7 @@ import axios from "axios";
 import { Button } from "../ui/button";
 import Shrimmer from "@/components/ui/Shrimmer";
 import LazyLoad from "@/components/ui/LazyLoad";
+import { steps } from "framer-motion";
 
 interface BudgetSelectionProps {
  selectedBudget: {
@@ -89,7 +90,7 @@ const BudgetSelection: React.FC<BudgetSelectionProps> = ({
      <div
       className="md:w-8 md:h-8 w-6 h-6 flex-shrink-0 rounded-full flex items-center justify-center"
       style={{ backgroundColor: "hsl(var(--primary))" }}>
-      <span className="text-primary-foreground font-bold">6</span>
+      <span className="text-primary-foreground font-bold">1</span>
      </div>
      <h2 className="text-primary-text md:text-2xl text-xl font-bold">
       What's the Budget you have in Mind?
@@ -140,6 +141,7 @@ const BudgetSelection: React.FC<BudgetSelectionProps> = ({
 
     <div className="flex justify-between mt-8">
      <Button
+      disabled={true}
       onClick={handleGoBack}
       style={{
        padding: "12px 16px",

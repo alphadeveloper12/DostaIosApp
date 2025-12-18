@@ -92,7 +92,7 @@ const CourseSelection: React.FC<CourseSelectionProps> = ({
      <div
       className="md:w-8 md:h-8 w-6 h-6 rounded-full flex items-center flex-shrink-0 justify-center"
       style={{ backgroundColor: "hsl(var(--primary))" }}>
-      <span className="text-primary-foreground font-bold">4</span>
+      <span className="text-primary-foreground font-bold">5</span>
      </div>
      <h2 className="text-primary-text md:text-2xl text-xl font-bold">
       What Courses Would You Like?

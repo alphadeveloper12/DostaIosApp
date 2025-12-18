@@ -4,10 +4,7 @@ import { useState } from "react";
 import Header from "../components/layout/Header";
 
 import EventTypeCard from "../components/catering/EventTypeCard";
-import corporateEventImage from "@/assets/corporate-event.jpg";
-import Caterers from "@/assets/Caterers.svg";
-import privateChef from "@/assets/Private_Chefs.svg";
-import privateEventImage from "@/assets/private-event.jpg";
+
 import { Button } from "../components/ui/button";
 import DateTimePicker from "@/components/ui/calendar";
 import EventTypeSelection from "../components/catering/EventTypeSelection";
@@ -25,93 +22,39 @@ import CoursesMenu from "../components/catering/CoursesMenu";
 
 const Catering = () => {
  const navigate = useNavigate();
- const [selectedEvent, setSelectedEvent] = useState<string | null>(null);
+ const [selectedEvent, setSelectedEvent] = useState<{
+  id: string | null;
+  name: string | null;
+ } | null>(null);
  const [guestCount, setGuestCount] = useState<number>(1);
  const [isDateTimePickerVisible, setIsDateTimePickerVisible] = useState(false);
  const [selectedDateTime, setSelectedDateTime] = useState<string | null>(null);
  const [step, setStep] = useState<number>(1); // Step states to manage visibility
- const [selectedProvider, setSelectedProvider] = useState<string | null>(null);
+ const [selectedProvider, setSelectedProvider] = useState<{
+  id: string | null;
+  name: string | null;
+ } | null>(null);
  const [selectedServiceStyles, setSelectedServiceStyles] = useState<string[]>(
   []
  );
- const [selectedCuisines, setSelectedCuisines] = useState<string[]>([]);
- const [selectedCourses, setSelectedCourses] = useState<string[]>([]);
- const [selectedLocation, setSelectedLocation] = useState<string | null>(null);
- const [selectedBudget, setSelectedBudget] = useState<string | null>(null);
+ const [selectedCuisines, setSelectedCuisines] = useState<
+  { id: number; name: string }[]
+ >([]);
+ const [selectedCourses, setSelectedCourses] = useState<
+  { id: number; name: string }[]
+ >([]);
+ const [selectedLocation, setSelectedLocation] = useState<{
+  id: number | null;
+  name: string | null;
+ } | null>(null);
+ const [selectedBudget, setSelectedBudget] = useState<{
+  id: string | null;
+  label: string | null;
+  price_range: string | null;
+ }>({ id: null, label: null, price_range: null });
  const [selectedMenuItems, setSelectedMenuItems] = useState<
   { id: string; name: string; course: string; price: string }[]
  >([]);
-
- // Event and provider data
- const eventTypes = [
-  { id: "corporate", title: "Corporate Event", image: corporateEventImage },
-  { id: "private", title: "Private Event", image: privateEventImage },
- ];
-
- const providerTypes = [
-  {
-   id: "caterer",
-   title: "Caterer",
-   image: Caterers,
-   description:
-    "Enjoy a traditional catering experience with flexible service options tailored to your needs.",
-   serviceStyles: [
-    "Boxed Meal",
-    "Pass-Around",
-    "Sharing Table",
-    "Buffet",
-    "Plated Meal",
-   ],
-  },
-  {
-   id: "Private_Chefs",
-   title: "Private Chefs",
-   image: privateChef,
-   description:
-    "Experience a personalized fine-dining meal prepared and served by a professional chef.",
-   serviceStyles: [
-    "Boxed Meal",
-    "Pass-Around",
-    "Sharing Table",
-    "Buffet",
-    "Plated Meal",
-   ],
-  },
- ];
-
- const cuisineTypes = [
-  { name: "American", image: "/images/icons/american.svg" },
-  { name: "Asian", image: "/images/icons/asian.svg" },
-  { name: "Dessert", image: "/images/icons/dessert.svg" },
-  { name: "French", image: "/images/icons/french.svg" },
-  { name: "Indian", image: "/images/icons/indian.svg" },
-  { name: "Italian", image: "/images/icons/italian.svg" },
-  { name: "Mediterranean", image: "/images/icons/Mediterranean.svg" },
-  { name: "Middle-Eastern", image: "/images/icons/Middle-Eastern.svg" },
-  { name: "Japanese", image: "/images/icons/japanese.svg" },
-  { name: "Latin American", image: "/images/icons/latin-american.png" },
- ];
-
- const courseTypes = [
-  { name: "Canapes", image: "/images/icons/Canapes.svg" },
-  { name: "Starters", image: "/images/icons/Starters.svg" },
-  { name: "Mains", image: "/images/icons/mains.svg" },
-  { name: "Sides", image: "/images/icons/sides.svg" },
-  { name: "Desserts", image: "/images/icons/dessert.svg" },
-  { name: "Cold Beverages", image: "/images/icons/Cold_Beverages.svg" },
-  { name: "Hot Beverages", image: "/images/icons/Hot_Beverages.svg" },
-  { name: "Snacks", image: "/images/icons/snacks.svg" },
-  { name: "Ice Cream Station", image: "/images/icons/ice_cream_station.svg" },
-  { name: "Coffee Station", image: "/images/icons/coffee_station.svg" },
- ];
-
- const locations = ["Ajman", "Dubai", "Sharjah"];
- const budgetOptions = [
-  { id: "basic", title: "Basic", price: "AED70" },
-  { id: "premium", title: "Premium", price: "AED350" },
-  { id: "luxury", title: "Luxury", price: "AED550" },
-  { id: "elite", title: "Elite", price: "AED700" },
- ];
 
  // Handler functions
  const handleGuestCountChange = (amount: number) => {
@@ -128,27 +71,28 @@ const Catering = () => {
  };
 
  const handleContinue = () => {
-  if (step === 1 && selectedEvent) setStep(2); // Move to provider selection
-  else if (step === 2 && selectedProvider)
-   setStep(3); // Move to cuisines selection
-  else if (step === 3 && selectedCuisines.length > 0)
-   setStep(4); // Move to courses selection
-  else if (step === 4 && selectedCourses.length > 0)
-   setStep(5); // Move to location selection
-  else if (step === 5 && selectedLocation)
-   setStep(6); // Move to budget selection
-  else if (step === 6 && selectedBudget) setStep(7);
-  else if (step === 7 && selectedBudget) setStep(8);
-  // Move to booking summary
+  if (step === 1 && selectedBudget.id)
+   setStep(2); // Budget (Step 1) -> Event (Step 2)
+  else if (step === 2 && selectedEvent)
+   setStep(3); // Event (Step 2) -> Provider (Step 3)
+  else if (step === 3 && selectedProvider)
+   setStep(4); // Provider (Step 3) -> Cuisine (Step 4)
+  else if (step === 4 && selectedCuisines.length > 0)
+   setStep(5); // Cuisine (Step 4) -> Course (Step 5)
+  else if (step === 5 && selectedCourses.length > 0)
+   setStep(6); // Course (Step 5) -> Location (Step 6)
+  else if (step === 6 && selectedLocation?.id)
+   setStep(7); // Location (Step 6) -> Menu (Step 7)
+  else if (step === 7) setStep(8); // Menu (Step 7) -> Summary (Step 8)
  };
  const handleGoBack = () => {
-  if (step === 2) setStep(1);
-  else if (step === 3) setStep(2);
-  else if (step === 4) setStep(3);
-  else if (step === 5) setStep(4);
-  else if (step === 6) setStep(5);
-  else if (step === 7) setStep(6);
-  else if (step === 8) setStep(7); // Go back to budget selection
+  if (step === 2) setStep(1); // Go back to Budget
+  else if (step === 3) setStep(2); // Go back to Event
+  else if (step === 4) setStep(3); // Go back to Provider
+  else if (step === 5) setStep(4); // Go back to Cuisine
+  else if (step === 6) setStep(5); // Go back to Course
+  else if (step === 7) setStep(6); // Go back to Location
+  else if (step === 8) setStep(7); // Go back to Menu
  };
 
  // Toggle selection functions
@@ -160,18 +104,18 @@ const Catering = () => {
   );
  };
 
- const toggleCuisine = (cuisine: string) => {
+ const toggleCuisine = (cuisine: { id: number; name: string }) => {
   setSelectedCuisines((prevState) =>
-   prevState.includes(cuisine)
-    ? prevState.filter((item) => item !== cuisine)
+   prevState.some((item) => item.id === cuisine.id)
+    ? prevState.filter((item) => item.id !== cuisine.id)
     : [...prevState, cuisine]
   );
  };
 
- const toggleCourse = (course: string) => {
+ const toggleCourse = (course: { id: number; name: string }) => {
   setSelectedCourses((prevState) =>
-   prevState.includes(course)
-    ? prevState.filter((item) => item !== course)
+   prevState.some((item) => item.id === course.id)
+    ? prevState.filter((item) => item.id !== course.id)
     : [...prevState, course]
   );
  };
@@ -216,6 +160,16 @@ const Catering = () => {
       {/* Show the steps */}
 
       {step === 1 && (
+       <LazyLoad>
+        <BudgetSelection
+         selectedBudget={selectedBudget}
+         setSelectedBudget={setSelectedBudget}
+         handleGoBack={handleGoBack}
+         handleContinue={handleContinue}
+        />
+       </LazyLoad>
+      )}
+      {step === 2 && (
        <EventTypeSelection
         selectedEvent={selectedEvent}
         setSelectedEvent={setSelectedEvent}
@@ -226,14 +180,14 @@ const Catering = () => {
         handleSelectDateTime={handleSelectDateTime}
         handleContinue={handleContinue}
         handleGuestCountChange={handleGuestCountChange}
+        handleGoBack={handleGoBack}
        />
       )}
-      {step === 2 && (
+      {step === 3 && (
        <LazyLoad>
         <ProviderTypeSelection
          selectedProvider={selectedProvider}
          setSelectedProvider={setSelectedProvider}
-         providerTypes={providerTypes}
          toggleServiceStyle={toggleServiceStyle}
          handleGoBack={handleGoBack}
          handleContinue={handleContinue}
@@ -241,47 +195,33 @@ const Catering = () => {
         />
        </LazyLoad>
       )}
-      {step === 3 && (
+      {step === 4 && (
        <LazyLoad>
         <CuisineSelection
          selectedCuisines={selectedCuisines}
          setSelectedCuisines={setSelectedCuisines}
-         cuisineTypes={cuisineTypes}
          handleGoBack={handleGoBack}
          handleContinue={handleContinue}
          toggleCuisine={toggleCuisine}
         />
        </LazyLoad>
       )}
-      {step === 4 && (
+      {step === 5 && (
        <LazyLoad>
         <CourseSelection
          selectedCourses={selectedCourses}
          setSelectedCourses={setSelectedCourses}
-         courseTypes={courseTypes}
          handleGoBack={handleGoBack}
          handleContinue={handleContinue}
          toggleCourse={toggleCourse}
         />
        </LazyLoad>
       )}
-      {step === 5 && (
+      {step === 6 && (
        <LazyLoad>
         <LocationSelection
          selectedLocation={selectedLocation}
          setSelectedLocation={setSelectedLocation}
-         locations={locations}
-         handleGoBack={handleGoBack}
-         handleContinue={handleContinue}
-        />
-       </LazyLoad>
-      )}
-      {step === 6 && (
-       <LazyLoad>
-        <BudgetSelection
-         selectedBudget={selectedBudget}
-         setSelectedBudget={setSelectedBudget}
-         budgetOptions={budgetOptions}
          handleGoBack={handleGoBack}
          handleContinue={handleContinue}
         />
