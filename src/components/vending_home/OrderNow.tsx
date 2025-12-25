@@ -224,6 +224,16 @@ const OrderNow = () => {
     return items;
    }
 
+   // ORDER NOW & SMART GRAB (Array based)
+   if (Array.isArray(menuData)) {
+    return menuData.map((item) => ({
+     menu_item_id: item.id,
+     quantity: item.quantity || 1,
+     day_of_week: null,
+     week_number: null,
+    }));
+   }
+
    return [];
   };
 
@@ -238,6 +248,7 @@ const OrderNow = () => {
   };
  };
  /* post api call function */
+ /* post api call function (DISABLED FOR REFACTOR)
  const postConfirm = async (payload) => {
   try {
    await axios.post(
@@ -250,6 +261,7 @@ const OrderNow = () => {
    console.error("❌ Confirm error:", err);
   }
  };
+ */
 
  {
   /*****week menu funcs****************************/
@@ -522,47 +534,23 @@ const OrderNow = () => {
  };
 
  const handleConfirmStep = () => {
-  let menuDataToSend = [];
+  // We NO LONGER send data to backend here.
+  // We just advance steps, and at the end, go to Cart.
 
-  if (activeStep === 2) {
-   menuDataToSend = [];
+  const isLastStep =
+   activeStep ===
+   (orderType === "Start a Plan" && planType === "monthly"
+    ? 7
+    : orderType === "Start a Plan"
+    ? 4
+    : 4);
+
+  // If it's the last step, navigate to Cart
+  if (isLastStep) {
+   navigate("/vending-home/cart");
+   return;
   }
 
-  if (activeStep === 4 && orderType === "Order Now") {
-   menuDataToSend = orderNowMenu;
-  }
-
-  if (activeStep === 4 && orderType === "Smart Grab") {
-   menuDataToSend = smartGrabMenu;
-  }
-
-  // WEEKLY FIX
-  if (
-   activeStep === 4 &&
-   orderType === "Start a Plan" &&
-   planType === "weekly"
-  ) {
-   menuDataToSend = weekMenu; // FIX
-  }
-
-  // MONTHLY FIX
-  if (activeStep === 4 && planType === "monthly") menuDataToSend = weekMenu1;
-  if (activeStep === 5 && planType === "monthly") menuDataToSend = weekMenu2;
-  if (activeStep === 6 && planType === "monthly") menuDataToSend = weekMenu3;
-  if (activeStep === 7 && planType === "monthly") menuDataToSend = weekMenu4;
-
-  const payload = buildConfirmPayload({
-   location: 1,
-   orderType,
-   planType,
-   pickOrder,
-   time,
-   pickupOptions,
-   timeSlots,
-   menuData: menuDataToSend,
-  });
-
-  postConfirm(payload);
   if (activeStep === maxCompleted + 1) {
    setMaxCompleted(activeStep);
    setActiveStep(activeStep + 1);
@@ -572,11 +560,6 @@ const OrderNow = () => {
   if (isOpen) {
    setIsOpen(false);
   }
-
-  console.log("STEP:", activeStep);
-  console.log("ORDER TYPE:", orderType);
-  console.log("PLAN TYPE:", planType);
-  console.log("RAW MENU DATA TO SEND:", menuDataToSend);
  };
 
  const handleEditStep = (stepId: number) => {

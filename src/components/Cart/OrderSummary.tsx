@@ -9,8 +9,9 @@ interface OrderSummaryProps {
  vat: number;
  discount: number;
  total: number;
- coupon: string;
- setCoupon: (coupon: string) => void;
+ coupon?: string; // Optional if not always passed
+ setCoupon?: (coupon: string) => void;
+ onCheckout?: () => void; // New prop
 }
 
 const OrderSummary: React.FC<OrderSummaryProps> = ({
@@ -20,6 +21,7 @@ const OrderSummary: React.FC<OrderSummaryProps> = ({
  total,
  coupon,
  setCoupon,
+ onCheckout,
 }) => {
  const navigate = useNavigate();
  const [input, setInput] = useState("");
@@ -30,6 +32,8 @@ const OrderSummary: React.FC<OrderSummaryProps> = ({
    <h2 className="text-[28px] leading-[36px] font-[700] text-[#2B2B43] mb-4">
     Order Summary
    </h2>
+
+   {/* ... (Coupon section omitted for brevity if unchanged, but need to be careful with replace) ... */}
 
    {/* Coupon Code */}
    <div className="mb-6">
@@ -48,7 +52,6 @@ const OrderSummary: React.FC<OrderSummaryProps> = ({
       className="w-full border border-gray-300 rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
      />
      {isCouponApplied && (
-      // <CheckCircleIcon className="w-6 h-6 text-blue-600 absolute right-3 top-1/2 -translate-y-1/2" />
       <img
        src="/images/icons/round_tick.svg"
        alt="tick"
@@ -86,7 +89,8 @@ const OrderSummary: React.FC<OrderSummaryProps> = ({
 
    <Button
     className="w-full bg-[#054A86] hover:bg-[#054A86] text-neutral-white font-bold py-3 rounded-md mt-5 "
-    onClick={() => navigate("/vending-home/my-orders")}>
+    onClick={onCheckout} /* Use the prop */
+   >
     Proceed to checkout
    </Button>
   </div>
