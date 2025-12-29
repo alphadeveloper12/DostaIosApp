@@ -31,7 +31,7 @@ const HeroSection = () => {
 
  const userData = useSelector((state: any) => state?.user?.user); // Get user data
  useEffect(() => {
-  const storedLocation = sessionStorage.getItem("selectedLocation");
+  const storedLocation = localStorage.getItem("selectedLocation");
   if (storedLocation) {
    setSelectedLocation(JSON.parse(storedLocation).location);
   }
@@ -39,8 +39,8 @@ const HeroSection = () => {
 
  const handleLocationSelect = (location: any) => {
   setSelectedLocation(location);
-  // Save user ID and selected location to sessionStorage
-  sessionStorage.setItem(
+  // Save user ID and selected location to localStorage
+  localStorage.setItem(
    "selectedLocation",
    JSON.stringify({ userId: userData.id, location })
   );

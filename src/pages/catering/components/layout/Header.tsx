@@ -2,7 +2,13 @@ import { Link, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { Menu, X } from "lucide-react";
 import { useLocation } from "react-router-dom";
+import { useSelector } from "react-redux";
+import { selectTotalCartItems } from "@/redux/slices/cartSlice";
+
 const Header = () => {
+ const totalCartItems = useSelector(selectTotalCartItems);
+ console.log("total cart items ; ", totalCartItems);
+
  const path = useLocation();
  const [profile, setProfile] = useState<any>(null);
  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -119,10 +125,25 @@ const Header = () => {
       {isLoggedIn ? (
        <div className="flex items-center gap-2">
         <div className="flex items-center gap-4">
-         <span className="text-neutral-black font-bold">My Order</span>
-         <button className="w-[40px] h-[40px] relative lg:w-[48px] lg:h-[48px]   rounded-[12px] lg:rounded-[16px] text-white flex items-center justify-center text-[12px] lg:text-[14px] font-[600] flex-shrink-0">
-          <img src="/images/nav/cart.svg" alt="cart" />
-         </button>
+         <Link
+          to="/vending-home/my-orders"
+          className="text-neutral-black font-bold">
+          My Order
+         </Link>
+         <Link
+          to="/vending-home/cart"
+          className="w-[40px] h-[40px] relative lg:w-[48px] lg:h-[48px]   rounded-[12px] lg:rounded-[16px] text-white flex items-center justify-center text-[12px] lg:text-[14px] font-[600] flex-shrink-0">
+          <img
+           src="/images/icons/inbox.svg"
+           className="bg-neutral-gray-lightest p-3 rounded-xl w-12 h-12"
+           alt="inbox"
+          />
+          {totalCartItems > 0 && (
+           <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+            {totalCartItems}
+           </span>
+          )}
+         </Link>
         </div>
         <span className="p-[0.7px] border-neutral-gray-lightest border-2 rounded-[12px] lg:rounded-[16px]">
          <button
@@ -146,7 +167,7 @@ const Header = () => {
       {isDropdownOpen && isLoggedIn && (
        <div className="absolute top-16 right-0 w-[256px] bg-white rounded-[16px] shadow-lg py-[10px]">
         <div className="hover:bg-primary-light py-[8px] px-[16px] rounded-t-[4px]">
-         <Link to="/orders">My Orders</Link>
+         <Link to="/vending-home/my-orders">My Orders</Link>
         </div>
         <div className="hover:bg-primary-light py-[8px] px-[16px]">
          <Link to="/settings">Account Settings</Link>
@@ -169,9 +190,11 @@ const Header = () => {
         className="bg-neutral-gray-lightest p-3 rounded-xl w-12 h-12"
         alt="inbox"
        />
-       <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] rounded-full w-4 h-4 flex items-center justify-center">
-        4
-       </span>
+       {totalCartItems > 0 && (
+        <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+         {totalCartItems}
+        </span>
+       )}
       </div>
       <span className="h-8 md:hidden w-[1px] bg-neutral-gray-lightest"></span>
       <button

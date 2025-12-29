@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import locationimg from "@/assets/../../public/images/icons/locaion-icon.svg";
 import calendar from "@/assets/../../public/images/icons/calendar.svg";
 import { Button } from "./catering/components/ui/button";
@@ -6,51 +6,226 @@ import { useNavigate } from "react-router-dom";
 import VendingHeader from "@/components/vending_home/VendingHeader";
 import Footer from "@/components/layout/Footer";
 import BreadCrumb from "@/components/home/BreadCrumb";
-import OrderList from "@/components/Cart/OrderList";
-import TotalOrders from "@/components/checkout/TotalOrders";
-import VendingMap from "@/components/vending_home/VendingMap";
-import { useState } from "react";
+import OrderedItem from "@/components/Cart/OrderedItem"; // Use new OrderedItem
 import MobileFooterNav from "@/components/home/MobileFooterNav";
 import Header from "./catering/components/layout/Header";
+import VendingMap from "@/components/vending_home/VendingMap";
+import axios from "axios";
+import { CartItemType } from "@/pages/CartPage";
+import { Loader2 } from "lucide-react";
+import Shrimmer from "@/components/ui/Shrimmer";
+
+// Types corresponding to Backend Order Serializer
+interface OrderItemAPI {
+ id: number;
+ menu_item: {
+  id: number;
+  name: string;
+  price: string;
+  image_url: string | null;
+  description: string;
+ };
+ quantity: number;
+ day_of_week: string | null;
+ week_number: number | null;
+}
+
+interface OrderAPI {
+ id: number;
+ status: string; // PENDING, CONFIRMED, etc.
+ created_at: string;
+ total_amount: string;
+ location: {
+  id: number;
+  name: string;
+  info: string;
+  position: { lat: number; lng: number };
+ };
+ plan_type: string;
+ plan_subtype: string;
+ pickup_date: string | null;
+ pickup_slot: {
+  id: number;
+  start_time: string;
+  end_time: string;
+  label: string;
+ } | null;
+ items: OrderItemAPI[];
+}
+
 const MyOrders = () => {
  const navigate = useNavigate();
- const [step, setStep] = useState(1); // Step state to track progress
+ const baseUrl = import.meta.env.VITE_API_URL;
+ const [orders, setOrders] = useState<OrderAPI[]>([]);
+ const [loading, setLoading] = useState(true);
+ const [selectedOrder, setSelectedOrder] = useState<OrderAPI | null>(null);
 
- // Function to handle changing the step
- const changeStep = (newStep) => {
-  if (newStep >= 1 && newStep <= 2) {
-   setStep(newStep);
-  }
+ // Derive step from selected order status
+ const getStepFromStatus = (status: string) => {
+  if (["READY", "COMPLETED", "PICKED_UP"].includes(status)) return 2;
+  return 1;
  };
- const items = [
-  {
-   id: 1,
-   name: "Angus Burger",
-   notes: "Other notes or copy here",
-   pickupLocation: " Barsha 1, Near Mall of the Emirates.",
-   imageUrl: "/images/vending_home/food.svg", // Placeholder image
-   quantity: 2,
-   price: 12.4,
-  },
-  {
-   id: 2,
-   name: "Angus Burger",
-   notes: "Other notes or copy here",
-   pickupLocation: " Barsha 1, Near Mall of the Emirates.",
-   imageUrl: "/images/vending_home/food.svg", // Placeholder image
-   quantity: 2,
-   price: 53.0,
-  },
-  {
-   id: 3,
-   name: "Angus Burger",
-   notes: "Other notes or copy here",
-   pickupLocation: " Barsha 1, Near Mall of the Emirates.",
-   imageUrl: "/images/vending_home/food.svg", // Placeholder image
-   quantity: 1,
-   price: 35.0,
-  },
- ];
+
+ const currentStep = selectedOrder
+  ? getStepFromStatus(selectedOrder.status)
+  : 1;
+ const [timeRemaining, setTimeRemaining] = useState<string>("10:00");
+ const [notificationsEnabled, setNotificationsEnabled] = useState(() => {
+  return localStorage.getItem("notificationsEnabled") === "true";
+ });
+
+ // Fetch Orders with Polling
+ useEffect(() => {
+  const fetchOrders = async () => {
+   try {
+    const token = sessionStorage.getItem("authToken");
+    const res = await axios.get(`${baseUrl}/api/vending/orders/`, {
+     headers: { Authorization: `Token ${token}` },
+    });
+
+    // Filter out historical orders (Completed/Cancelled)
+    const activeOrders = res.data.filter(
+     (o: OrderAPI) => o.status !== "COMPLETED" && o.status !== "CANCELLED"
+    );
+
+    setOrders(activeOrders);
+
+    if (activeOrders.length > 0) {
+     // If we have a selected order, try to keep it selected (update it)
+     if (selectedOrder) {
+      const updated = activeOrders.find(
+       (o: OrderAPI) => o.id === selectedOrder.id
+      );
+      if (updated) setSelectedOrder(updated);
+      else setSelectedOrder(activeOrders[0]); // Fallback if selected was completed
+     } else {
+      setSelectedOrder(activeOrders[0]);
+     }
+    } else {
+     setSelectedOrder(null);
+    }
+   } catch (error) {
+    console.error("Error fetching orders:", error);
+   } finally {
+    setLoading(false);
+   }
+  };
+
+  fetchOrders();
+  const interval = setInterval(fetchOrders, 5000); // Poll every 5s
+  return () => clearInterval(interval);
+ }, [baseUrl, selectedOrder?.id]); // Keeping dependency simple
+
+ // Timer Logic
+ useEffect(() => {
+  if (!selectedOrder || currentStep !== 1 || !selectedOrder.created_at) return;
+
+  const createdTime = new Date(selectedOrder.created_at).getTime();
+  if (isNaN(createdTime)) return;
+
+  const targetTime = createdTime + 10 * 60 * 1000; // 10 minutes
+
+  const updateTimer = () => {
+   const now = Date.now();
+   const diff = targetTime - now;
+
+   if (diff <= 0) {
+    setTimeRemaining("00:00");
+   } else {
+    const minutes = Math.floor(diff / 60000);
+    const seconds = Math.floor((diff % 60000) / 1000);
+    setTimeRemaining(
+     `${minutes.toString().padStart(2, "0")}:${seconds
+      .toString()
+      .padStart(2, "0")}`
+    );
+   }
+  };
+
+  updateTimer();
+  const timerInterval = setInterval(updateTimer, 1000);
+  return () => clearInterval(timerInterval);
+ }, [selectedOrder, currentStep]);
+
+ // Helper to format date
+ const formatDate = (dateString: string) => {
+  if (!dateString) return "";
+  const date = new Date(dateString);
+  return date.toLocaleDateString("en-US", {
+   day: "2-digit",
+   month: "long",
+   year: "numeric",
+   hour: "2-digit",
+   minute: "2-digit",
+  });
+ };
+
+ // Helper to Map Order Items to UI format
+ const getMappedItems = (order: OrderAPI): CartItemType[] => {
+  const locationName = order.location?.name || "Unknown Location";
+  return order.items.map((apiItem) => {
+   let notes = "";
+   if (order.plan_subtype === "WEEKLY" || order.plan_subtype === "MONTHLY") {
+    if (apiItem.day_of_week) {
+     notes = `Meal for ${apiItem.day_of_week}`;
+    }
+   }
+
+   return {
+    id: apiItem.id,
+    menuItemId: apiItem.menu_item.id,
+    name: apiItem.menu_item.name,
+    notes: notes,
+    pickupLocation: locationName,
+    imageUrl: apiItem.menu_item.image_url || "/images/vending_home/food.svg",
+    quantity: apiItem.quantity,
+    price: parseFloat(apiItem.menu_item.price),
+    weekNumber: apiItem.week_number,
+   };
+  });
+ };
+
+ // Group items logic (Same as CartPage)
+ const getGroupedItems = (order: OrderAPI) => {
+  const items = getMappedItems(order);
+  const isMonthly = order.plan_subtype === "MONTHLY";
+
+  if (!isMonthly) {
+   // Flat list for regular orders
+   return [{ title: "Order Details", items }];
+  }
+
+  // Monthly Grouping
+  const weeks = [1, 2, 3, 4];
+  const groups = [];
+
+  for (const week of weeks) {
+   const weekItems = items.filter((i) => i.weekNumber === week);
+   if (weekItems.length > 0) {
+    groups.push({
+     title: `Week ${week}`,
+     items: weekItems,
+    });
+   }
+  }
+
+  // Extras
+  const extras = items.filter((i) => !i.weekNumber);
+  if (extras.length > 0) {
+   groups.push({ title: "Other Items", items: extras });
+  }
+
+  return groups;
+ };
+
+ if (loading) {
+  return (
+   <div className="w-full">
+    <Shrimmer />
+   </div>
+  );
+ }
+
  return (
   <div className="min-h-screen flex flex-col">
    <Header />
@@ -59,167 +234,95 @@ const MyOrders = () => {
     <div className="main-container">
      <BreadCrumb />
      <h2 className="text-[28px] text-[#054A86] leading-[36px] font-[700] tracking-[0.1px]">
-      Cart
+      My Orders
      </h2>
     </div>
    </div>
    <main className="flex-1 bg-background max-md:pb-24">
     <div className="main-container !py-6 ">
-     <div className="grid gap-4 md:gap-[30px] md:grid-cols-[1fr_320px]">
-      {/* LEFT: Booking Card + Details */}
-      <div className="space-y-4">
-       {/* Booking Header Card */}
-       <div
-        className="rounded-2xl border border-[#EDEEF2] bg-white"
-        onClick={() => setStep(2)}
-        onDoubleClick={() => setStep(1)}>
-        {/* Header */}
-        <div className="flex items-start justify-between gap-3 p-4">
-         <div className="flex w-full flex-col md:flex-row gap-1">
-          <div className="flex flex-col justify-between gap-3 w-full">
-           <p className="text-[24px] font-bold leading-8 text-#2B2B43">
-            Order ID 67352427
-           </p>
-           <div className="mt-1 flex items-center gap-2">
-            {step === 1 && (
-             <span className="h-1.5 w-1.5 rounded-full bg-[#054A86]" />
-            )}
-            {step === 2 && (
-             <span className="h-1.5 w-1.5 rounded-full bg-[#1ABF70]" />
-            )}
-
-            {step === 1 && (
-             <span className="text-sm font-semibold leading-5">
-              In progress
-             </span>
-            )}
-            {step === 2 && (
-             <span className="text-sm font-semibold leading-5">Completed</span>
-            )}
-           </div>
-          </div>
-          <div className="flex md:items-end items-start max-md:pt-4 flex-col  gap-3 w-full">
-           <div className="flex max-md:flex-row-reverse gap-2 items-center">
-            <p className="text-xs font-semibold leading-[16px] text-[#83859C]">
-             Location at Barsha 1, near Mall of the Emirates
+     {!selectedOrder ? (
+      <div className="flex flex-col items-center justify-center py-20">
+       <div className="text-center">
+        <h3 className="text-xl font-semibold text-[#2B2B43]">
+         No Active Orders Found
+        </h3>
+        <p className="text-[#83859C] mt-2 mb-6">
+         Looks like you don't have any orders in progress.
+        </p>
+        <Button onClick={() => navigate("/vending-home")} className="px-8">
+         Start Ordering
+        </Button>
+       </div>
+      </div>
+     ) : (
+      <div className="grid gap-4 md:gap-[30px] md:grid-cols-[1fr_320px]">
+       {/* LEFT: Booking Card + Details */}
+       <div className="space-y-4">
+        {/* Booking Header Card (ORIGINAL UI RESTORED, BOUND TO LATEST ORDER) */}
+        <div className="rounded-2xl border border-[#EDEEF2] bg-white">
+         {/* Header */}
+         <div className="flex items-start justify-between gap-3 p-4">
+          <div className="flex w-full flex-col md:flex-row gap-1">
+           <div className="flex flex-col justify-between gap-3 w-full">
+            <p className="text-[24px] font-bold leading-8 text-#2B2B43">
+             Order ID {selectedOrder.id}
             </p>
-            <img
-             src={locationimg}
-             alt="location Icon"
-             className="w-[16px] h-[16px]"
-            />
-           </div>
-           <div className="flex gap-2 items-center max-md:flex-row-reverse">
-            <p className="text-xs font-semibold leading-[16px] text-[#83859C]">
-             06 November 2025, 08:00 PM
-            </p>
-            <img
-             src={calendar}
-             alt="calendar Icon"
-             className="w-[16px] h-[16px]"
-            />
-           </div>
-          </div>
-         </div>
-        </div>
+            <div className="mt-1 flex items-center gap-2">
+             {currentStep === 1 && (
+              <span className="h-1.5 w-1.5 rounded-full bg-[#054A86]" />
+             )}
+             {currentStep === 2 && (
+              <span className="h-1.5 w-1.5 rounded-full bg-[#1ABF70]" />
+             )}
 
-        {/* Progress */}
-        <div className="px-4 pt-3">
-         {/* ==================================================================== */}
-         {/* 1. DESKTOP / TABLET LAYOUT (Horizontal) - Original Code - Visible SM+ */}
-         {/* ==================================================================== */}
-         <div className="hidden sm:block">
-          {/* Progress Circles and Horizontal Bar (Original Structure) */}
-          <div className="flex justify-between w-full gap-2 items-center">
-           {/* Step 1 Circle */}
-           <span
-            className={`flex h-[32px] w-[32px] items-center justify-center rounded-full ${
-             step >= 1 ? "bg-[#1ABF70]" : "bg-[#EDEEF2]"
-            } text-white ring-[#1ABF70]`}>
-            <svg
-             width="20"
-             height="20"
-             viewBox="0 0 20 20"
-             fill="none"
-             xmlns="http://www.w3.org/2000/svg">
-             <path
-              d="M16.6673 5.83398L7.50065 15.0007L3.33398 10.834"
-              stroke="white"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
+             {currentStep === 1 && (
+              <span className="text-sm font-semibold leading-5 text-[#054A86]">
+               In progress{" "}
+               <span className="text-[#83859C] font-normal ml-1">
+                ({timeRemaining})
+               </span>
+              </span>
+             )}
+             {currentStep === 2 && (
+              <span className="text-sm font-semibold leading-5 text-[#1ABF70]">
+               Ready for Pickup
+              </span>
+             )}
+            </div>
+           </div>
+           <div className="flex md:items-end items-start max-md:pt-4 flex-col  gap-3 w-full">
+            <div className="flex max-md:flex-row-reverse gap-2 items-center">
+             <p className="text-xs font-semibold leading-[16px] text-[#83859C]">
+              Location at {selectedOrder.location?.name}
+             </p>
+             <img
+              src={locationimg}
+              alt="location Icon"
+              className="w-[16px] h-[16px]"
              />
-            </svg>
-           </span>
-
-           {/* Progress Bar (Horizontal) */}
-           <div className="relative h-0.5 w-full overflow-hidden rounded-full bg-gray-100">
-            <div
-             className={`absolute left-0 top-0 h-full ${
-              step === 1 ? "w-1/2" : step === 2 ? "w-full" : "w-0"
-             } rounded-full bg-emerald-500`}
-             aria-hidden
-            />
+            </div>
+            <div className="flex gap-2 items-center max-md:flex-row-reverse">
+             <p className="text-xs font-semibold leading-[16px] text-[#83859C]">
+              {formatDate(selectedOrder.created_at)}
+             </p>
+             <img
+              src={calendar}
+              alt="calendar Icon"
+              className="w-[16px] h-[16px]"
+             />
+            </div>
            </div>
-
-           {/* Step 2 Circle */}
-           <span
-            className={`flex h-[32px] w-[32px] items-center justify-center rounded-full ${
-             step >= 2
-              ? "bg-[#1ABF70]"
-              : "bg-[#EDEEF2] text-[#2B2B43] font-semibold"
-            } text-white ring-[#1ABF70]`}
-            style={{
-             // Ensure the circle doesn't get squished by flex
-             flexShrink: 0,
-            }}>
-            {step >= 2 ? (
-             <svg
-              width="20"
-              height="20"
-              viewBox="0 0 20 20"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg">
-              <path
-               d="M16.6673 5.83398L7.50065 15.0007L3.33398 10.834"
-               stroke="white"
-               strokeWidth="2"
-               strokeLinecap="round"
-               strokeLinejoin="round"
-              />
-             </svg>
-            ) : (
-             "2"
-            )}
-           </span>
           </div>
-
-          {/* Labels (Original Structure) */}
-          <div className="mt-3 flex items-center justify-between">
-           <div className="flex items-center gap-2">
-            <span className="text-base font-bold text-[#2B2B43]">
-             Order Placed
-            </span>
-           </div>
-           <span className="text-base font-bold text-[#2B2B43]">
-            Ready for Pickup
-           </span>
-          </div>
-          <p className="text-sm text-gray-500">09:51</p>
          </div>
 
-         {/* ==================================================================== */}
-         {/* 2. MOBILE LAYOUT (Vertical) - Visible up to SM (block sm:hidden) */}
-         {/* ==================================================================== */}
-         <div className=" sm:hidden flex flex-col">
-          {/* Step 1: Order Placed (Done) */}
-          <div className="flex items-start">
-           {/* Left Column: Circle & Progress Line */}
-           <div className="flex flex-col items-center mr-4">
-            {/* Step 1 Circle */}
+         {/* Progress (ORIGINAL UI) */}
+         <div className="px-4 pt-3">
+          {/* Desktop Layout */}
+          <div className="hidden sm:block">
+           <div className="flex justify-between w-full gap-2 items-center">
             <span
              className={`flex h-[32px] w-[32px] items-center justify-center rounded-full ${
-              step >= 1 ? "bg-[#1ABF70]" : "bg-[#EDEEF2]"
+              currentStep >= 1 ? "bg-[#1ABF70]" : "bg-[#EDEEF2]"
              } text-white ring-[#1ABF70]`}>
              <svg
               width="20"
@@ -236,36 +339,25 @@ const MyOrders = () => {
               />
              </svg>
             </span>
-            {/* Vertical Line */}
-            <div
-             className={`w-0.5 h-12 transition-colors duration-500 ${
-              step >= 2 ? "bg-[#1ABF70]" : "bg-gray-200"
-             }`}
-            />
-           </div>
-
-           {/* Right Column: Content */}
-           <div className="flex flex-col pt-0.5 pb-4">
-            <span className="text-base font-bold text-[#2B2B43]">
-             Order Placed
-            </span>
-            <p className="text-sm text-gray-500">09:51</p>
-           </div>
-          </div>
-
-          {/* Step 2: Ready for Pickup */}
-          <div className="flex items-start">
-           {/* Left Column: Circle */}
-           <div className="flex flex-col items-center mr-4">
-            {/* Step 2 Circle */}
+            <div className="relative h-0.5 w-full overflow-hidden rounded-full bg-gray-100">
+             <div
+              className={`absolute left-0 top-0 h-full ${
+               currentStep === 1
+                ? "w-1/2"
+                : currentStep === 2
+                ? "w-full"
+                : "w-0"
+              } rounded-full bg-emerald-500`}
+             />
+            </div>
             <span
              className={`flex h-[32px] w-[32px] items-center justify-center rounded-full ${
-              step >= 2
+              currentStep >= 2
                ? "bg-[#1ABF70]"
                : "bg-[#EDEEF2] text-[#2B2B43] font-semibold"
              } text-white ring-[#1ABF70]`}
              style={{ flexShrink: 0 }}>
-             {step >= 2 ? (
+             {currentStep >= 2 ? (
               <svg
                width="20"
                height="20"
@@ -285,126 +377,263 @@ const MyOrders = () => {
              )}
             </span>
            </div>
-
-           {/* Right Column: Content */}
-           <div className="flex flex-col pt-0.5">
+           <div className="mt-3 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+             <span className="text-base font-bold text-[#2B2B43]">
+              Order Placed
+             </span>
+            </div>
             <span className="text-base font-bold text-[#2B2B43]">
              Ready for Pickup
             </span>
            </div>
           </div>
-         </div>
-         {/* ==================================================================== */}
 
-         {/* Actions */}
+          {/* Mobile Layout */}
+          <div className=" sm:hidden flex flex-col">
+           <div className="flex items-start">
+            <div className="flex flex-col items-center mr-4">
+             <span
+              className={`flex h-[32px] w-[32px] items-center justify-center rounded-full ${
+               currentStep >= 1 ? "bg-[#1ABF70]" : "bg-[#EDEEF2]"
+              } text-white ring-[#1ABF70]`}>
+              <svg
+               width="20"
+               height="20"
+               viewBox="0 0 20 20"
+               fill="none"
+               xmlns="http://www.w3.org/2000/svg">
+               <path
+                d="M16.6673 5.83398L7.50065 15.0007L3.33398 10.834"
+                stroke="white"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+               />
+              </svg>
+             </span>
+             <div
+              className={`w-0.5 h-12 transition-colors duration-500 ${
+               currentStep >= 2 ? "bg-[#1ABF70]" : "bg-gray-200"
+              }`}
+             />
+            </div>
+            <div className="flex flex-col pt-0.5 pb-4">
+             <span className="text-base font-bold text-[#2B2B43]">
+              Order Placed
+             </span>
+            </div>
+           </div>
+           <div className="flex items-start">
+            <div className="flex flex-col items-center mr-4">
+             <span
+              className={`flex h-[32px] w-[32px] items-center justify-center rounded-full ${
+               currentStep >= 2
+                ? "bg-[#1ABF70]"
+                : "bg-[#EDEEF2] text-[#2B2B43] font-semibold"
+              } text-white ring-[#1ABF70]`}
+              style={{ flexShrink: 0 }}>
+              {currentStep >= 2 ? (
+               <svg
+                width="20"
+                height="20"
+                viewBox="0 0 20 20"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg">
+                <path
+                 d="M16.6673 5.83398L7.50065 15.0007L3.33398 10.834"
+                 stroke="white"
+                 strokeWidth="2"
+                 strokeLinecap="round"
+                 strokeLinejoin="round"
+                />
+               </svg>
+              ) : (
+               "2"
+              )}
+             </span>
+            </div>
+            <div className="flex flex-col pt-0.5">
+             <span className="text-base font-bold text-[#2B2B43]">
+              Ready for Pickup
+             </span>
+            </div>
+           </div>
+          </div>
 
-         <div className="flex items-center gap-3 md:py-4 py-6">
-          <Button
-           onClick={() => navigate("/catering/request-custom-quote")}
-           variant="default"
-           size="lg">
-           Reschedule Booking
-          </Button>
+          {/* Actions */}
+          <div className="flex items-center gap-3 md:py-4 py-6">
+           <Button
+            onClick={() => navigate("/catering/request-custom-quote")}
+            variant="default"
+            size="lg">
+            Reschedule Booking
+           </Button>
+
+           <Button
+            onClick={() => {
+             const newState = !notificationsEnabled;
+             setNotificationsEnabled(newState);
+             localStorage.setItem("notificationsEnabled", String(newState));
+            }}
+            variant="outline"
+            size="lg"
+            className={`${
+             notificationsEnabled
+              ? "bg-green-50 border-green-500 text-green-700"
+              : ""
+            }`}>
+            {notificationsEnabled
+             ? "Notifications Enabled"
+             : "Enable Notifications"}
+           </Button>
+          </div>
          </div>
+
+         {/* Info note */}
+         {currentStep === 1 && (
+          <div className="md:p-4 px-4 pb-4 text-xsm font-normal leading-5 text-[#2B2B43">
+           You can edit or cancel your order right in the kitchen view (for
+           demo).
+          </div>
+         )}
+         {/* print qr code */}
+         {currentStep === 2 && (
+          <div className="flex flex-col justify-center items-center md:py-[40px] py-[16px]">
+           <p className="text-[16px] leading-[24px] font-[700] tracking-[0.1px]">
+            Woohoo! Your order is ready for pickup!
+           </p>
+           <div className="mt-[24px] mb-[20px] rounded-[16px] border border-[#83859C] max-w-[158px] max-h-[158px] p-5">
+            <img src="/images/icons/barcode.svg" alt="barcode" />
+           </div>
+           <Button className="border w-[158px] border-[#545563] bg-transparent hover:bg-transparent text-[14px] leading-[16px] text-[#545563]">
+            Print
+           </Button>
+          </div>
+         )}
         </div>
 
-        {/* Info note */}
-        {step === 1 && (
-         <div className="md:p-4 px-4 pb-4 text-xsm font-normal leading-5 text-[#2B2B43">
-          You can edit or cancel your order before 23 September 2025, 09:50 am
+        {/* Booking Details (REPLACED TotalOrders WITH NEW LOGIC) */}
+        <div className="bg-white rounded-[16px] md:p-6 p-4 border border-[#EDEEF2]">
+         <div className="justify-between items-center mb-6">
+          <h2 className="md:text-xl flex text-[18px] leading-6 font-[700] md:font-semibold text-gray-800">
+           {selectedOrder.plan_subtype === "MONTHLY"
+            ? "Monthly Plan Details"
+            : selectedOrder.plan_subtype === "WEEKLY"
+            ? "Weekly Plan Details"
+            : "Order Details"}
+           <span className="text-gray-500 hidden md:block font-normal pl-2">
+            ({selectedOrder.items.length} items)
+           </span>
+          </h2>
          </div>
-        )}
-        {/* print qr code */}
-        {step === 2 && (
-         <div className="flex flex-col justify-center items-center md:py-[40px] py-[16px]">
-          <p className="text-[16px] leading-[24px] font-[700] tracking-[0.1px]">
-           Woohoo! Your order is ready for pickup!
-          </p>
-          <div className="mt-[24px] mb-[20px] rounded-[16px] border border-[#83859C] max-w-[158px] max-h-[158px] p-5">
-           <img src="/images/icons/barcode.svg" alt="barcode" />
-          </div>
-          <Button className="border w-[158px] border-[#545563] bg-transparent hover:bg-transparent text-[14px] leading-[16px] text-[#545563]">
-           Print
-          </Button>
+
+         <div className="space-y-4">
+          {getGroupedItems(selectedOrder).map((group, idx) => (
+           <div key={idx} className="mb-6 last:mb-0">
+            {group.title !== "Order Details" && (
+             <h5 className="text-[14px] font-semibold text-[#83859C] mb-3 uppercase tracking-wider">
+              {group.title}
+             </h5>
+            )}
+            <div className="space-y-0 divide-y divide-dashed divide-gray-100">
+             {group.items.map((item) => (
+              <OrderedItem key={item.id} item={item} />
+             ))}
+            </div>
+           </div>
+          ))}
          </div>
-        )}
+        </div>
        </div>
 
-       {/* Booking Details */}
-       <TotalOrders items={items} />
+       {/* RIGHT: Summary (ORIGINAL UI RESTORED, BOUND TO LATEST ORDER) */}
+       <aside className="">
+        <div className="rounded-2xl border border-[#EDEEF2] bg-white h-fit p-4">
+         <h1 className="text-[24px] leading-[32px] font-[700] text-[#2B2B43] ">
+          Pickup Location
+         </h1>
+         {/* map view */}
+         <div className="rounded-[12px] py-4 w-full max-h-[220px]">
+          <div className="flex-1 overflow-y-auto h-full space-y-4 pb-28">
+           <div className="w-full h-[220px] rounded-2xl overflow-hidden">
+            <VendingMap
+             readOnlyLocation={
+              selectedOrder.location?.position && selectedOrder.location
+               ? {
+                  lat: selectedOrder.location.position.lat,
+                  lng: selectedOrder.location.position.lng,
+                  name: selectedOrder.location.name,
+                  info: selectedOrder.location.info,
+                 }
+               : undefined
+             }
+            />
+           </div>
+          </div>
+         </div>
+         {/* content */}
+         <div className="pt-6 ">
+          <h4 className="text-[16px] leading-[24px] font-[700] tracking-[0.1px] text-[#2B2B43]">
+           {selectedOrder.location?.name}
+          </h4>
+          <p className="text-[12px] leading-[16px] font-[600] tracking-[0.1px] text-[#83859C]">
+           Dubai , UAE
+          </p>
+          <p className="text-[14px] leading-[20px] font-[400] tracking-[0.2px] text-[#545563] pt-2">
+           {selectedOrder.location?.info}
+          </p>
+         </div>
+        </div>
+        <div className="rounded-2xl border border-[#EDEEF2] bg-white h-fit p-4 mt-[24px]">
+         <h1 className="text-[24px] leading-[32px] font-[700] text-[#2B2B43] pb-4">
+          Payment Details
+         </h1>
+         {/* card detail */}
+         <div className="h-[88px] w-full border border-[#C7C8D2] bg-[#F6FBFF] rounded-[8px] p-[12px]">
+          <h3 className="text-[16px] leading-[24px] font-[700] tracking-[0.1px] text-neutral-black pb-[2px]">
+           **** **** **** 4629
+          </h3>
+          <p className="text-neutral-gray text-[12px] font-[400] leading-[16px] pb-2">
+           12/25
+          </p>
+          <div className="flex justify-between items-center">
+           <p className="text-[14px] font-[400] leading-[20px] text-neutral-gray-dark">
+            Mohammad Esam
+           </p>
+           <img src={"/images/icons/visa.svg"} alt="card icon" />
+          </div>
+         </div>
+         {/* content */}
+         <div className="space-y-3 pt-6">
+          <div className="flex justify-between">
+           <span className="text-[#545563]">Subtotal</span>
+           <span className="font-medium">
+            AED {parseFloat(selectedOrder.total_amount).toFixed(2)}
+           </span>
+          </div>
+          <div className="flex justify-between">
+           <span className="text-[#545563]">VAT</span>
+           <span className="font-medium">Included</span>
+          </div>
+
+          <div className="flex justify-between text-[#056AC1]">
+           <span>Discount (coupon)</span>
+           <span className="font-medium">- AED 0</span>
+          </div>
+         </div>
+         <div className="flex justify-between items-center text-lg font-bold text-gray-900 pt-2">
+          <span className="text-[16px] leading-[24px] text-[#2B2B43] font-[400]">
+           Total <span className="">(VAT incl.)</span>
+          </span>
+          <span className="text-[#054A86]">
+           AED {parseFloat(selectedOrder.total_amount).toFixed(2)}
+          </span>
+         </div>
+        </div>
+       </aside>
       </div>
-
-      {/* RIGHT: Summary */}
-      <aside className="">
-       <div className="rounded-2xl border border-[#EDEEF2] bg-white h-fit p-4">
-        <h1 className="text-[24px] leading-[32px] font-[700] text-[#2B2B43] ">
-         Pickup Location
-        </h1>
-        {/* map view */}
-        <div className="rounded-[12px] py-4 w-full max-h-[220px]">
-         <div className="flex-1 overflow-y-auto h-full space-y-4 pb-28">
-          <div className="w-full h-[220px] rounded-2xl overflow-hidden">
-           <VendingMap />
-          </div>
-         </div>
-        </div>
-        {/* content */}
-        <div className="pt-6 ">
-         <h4 className="text-[16px] leading-[24px] font-[700] tracking-[0.1px] text-[#2B2B43]">
-          Work
-         </h4>
-         <p className="text-[12px] leading-[16px] font-[600] tracking-[0.1px] text-[#83859C]">
-          Dubai , UAE
-         </p>
-         <p className="text-[14px] leading-[20px] font-[400] tracking-[0.2px] text-[#545563] pt-2">
-          Barsha 1, near Mall of the Emirates. St 12.
-         </p>
-        </div>
-       </div>
-       <div className="rounded-2xl border border-[#EDEEF2] bg-white h-fit p-4 mt-[24px]">
-        <h1 className="text-[24px] leading-[32px] font-[700] text-[#2B2B43] pb-4">
-         Payment Details
-        </h1>
-        {/* card detail */}
-        <div className="h-[88px] w-full border border-[#C7C8D2] bg-[#F6FBFF] rounded-[8px] p-[12px]">
-         <h3 className="text-[16px] leading-[24px] font-[700] tracking-[0.1px] text-neutral-black pb-[2px]">
-          **** **** **** 4629
-         </h3>
-         <p className="text-neutral-gray text-[12px] font-[400] leading-[16px] pb-2">
-          12/25
-         </p>
-         <div className="flex justify-between items-center">
-          <p className="text-[14px] font-[400] leading-[20px] text-neutral-gray-dark">
-           Mohammad Esam
-          </p>
-          <img src={"/images/icons/visa.svg"} alt="card icon" />
-         </div>
-        </div>
-        {/* content */}
-        <div className="space-y-3 pt-6">
-         <div className="flex justify-between">
-          <span className="text-[#545563]">Subtotal</span>
-          <span className="font-medium">AED 165.80</span>
-         </div>
-         <div className="flex justify-between">
-          <span className="text-[#545563]">VAT</span>
-          <span className="font-medium">AED5.00</span>
-         </div>
-
-         <div className="flex justify-between text-[#056AC1]">
-          <span>Discount (coupon)</span>
-          <span className="font-medium">- AED 5</span>
-         </div>
-        </div>
-        <div className="flex justify-between items-center text-lg font-bold text-gray-900 pt-2">
-         <span className="text-[16px] leading-[24px] text-[#2B2B43] font-[400]">
-          Total <span className="">(VAT incl.)</span>
-         </span>
-         <span className="text-[#054A86]">AED 165</span>
-        </div>
-       </div>
-      </aside>
-     </div>
+     )}
     </div>
    </main>
    <MobileFooterNav />

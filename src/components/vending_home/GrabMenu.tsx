@@ -12,6 +12,7 @@ interface FoodItem {
  imgAlt: string;
  description: string;
  price: string;
+ id: number; // Added ID field
 }
 
 // --- NEW: Interface for items in our cart, now with quantity ---
@@ -23,6 +24,7 @@ interface SelectedFoodItem extends FoodItem {
 interface GrabMenuProps {
  handleConfirmStep: () => void;
  smartGrabMenuFunc?: any; // Added optional prop for smartGrabMenuFunc
+ initialCart?: SelectedFoodItem[]; // NEW: Accept initial state
 }
 
 // --- Data defined outside component (no change) ---
@@ -35,6 +37,7 @@ const foodData: FoodItem[] = [
   description:
    "Ea his sensibus eleifend, mollis iudicabit omittantur id mel. Et cum ignota euismod corpora, et saepe.",
   price: "AED 47.25",
+  id: 1,
  },
  // ... all other food items
 ];
@@ -42,6 +45,7 @@ const foodData: FoodItem[] = [
 const GrabMenu: React.FC<GrabMenuProps> = ({
  handleConfirmStep,
  smartGrabMenuFunc,
+ initialCart = [],
 }) => {
  const [openDialouge, setOpenDialouge] = useState(false);
  const [scrolled, setScrolled] = useState(false);
@@ -54,7 +58,7 @@ const GrabMenu: React.FC<GrabMenuProps> = ({
  // const [quantity, setQuantity] = useState(1);
 
  // --- NEW: Single state for the cart. This is your backend-ready array ---
- const [cart, setCart] = useState<SelectedFoodItem[]>([]);
+ const [cart, setCart] = useState<SelectedFoodItem[]>(initialCart);
 
  // --- NEW: Derived state (calculated from 'cart') ---
  // This calculates the total number of meals in the cart

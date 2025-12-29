@@ -15,18 +15,28 @@ const CartItem: React.FC<CartItemProps> = ({
  onDeleteItem,
 }) => {
  return (
-  <div className="flex flex-row md:items-center  gap-4 py-4">
+  <div className="flex flex-row md:items-end gap-3 ">
    <img
     src={item.imageUrl}
     alt={item.name}
-    className="md:w-20 md:h-20 h-10 w-10 md:rounded-md rounded-xl object-cover"
+    className="md:w-[72px] md:h-[72px] h-10 w-10 md:rounded-md rounded-xl object-cover"
    />
 
-   <div className="">
+   <div className=" flex flex-col lg:flex-row lg:items-center lg:justify-between w-full">
     <div className="flex-grow">
-     <h3 className="font-semibold text-gray-800">{item.name}</h3>
-     <p className="text-sm text-gray-500">{item.notes}</p>
-     <p className="text-sm text-gray-500 mt-1">{item.pickupLocation}</p>
+     <h3 className="text-[16px] leading-[24px] font-[700]">{item.name}</h3>
+     <p className="text-[12px] leading-[16px] font-[600] text-neutral-gray-dark">
+      {item.notes}
+     </p>
+     <div className="">
+      {" "}
+      <span className="text-[12px] leading-[16px] font-[600] text-neutral-gray-dark">
+       pick up at:{" "}
+      </span>
+      <span className="text-[12px] leading-[16px] font-[600] text-neutral-black">
+       {item.pickupLocation}
+      </span>
+     </div>
     </div>
 
     <div className="flex items-center max-md:justify-between gap-4 pt-[13px]">
@@ -34,20 +44,20 @@ const CartItem: React.FC<CartItemProps> = ({
      <div className="flex items-center  ">
       <button
        onClick={() => onQuantityChange(item.id, -1)}
-       className="p-1 text-black bg-[#EDEEF2] rounded-[8px]">
-       <MinusIcon className="w-3 h-3" />
+       className="p-[3px] text-black bg-[#EDEEF2] rounded-[4px]">
+       <MinusIcon className="w-[10px] h-[10px]" />
       </button>
-      <span className="px-3 text-lg font-medium">{item.quantity}</span>
+      <span className="px-2 text-[16px] leading-[24px] font-[600]">{item.quantity}</span>
       <button
        onClick={() => onQuantityChange(item.id, 1)}
-       className="p-1 text-black bg-[#EDEEF2] rounded-[8px]">
-       <PlusIcon className="w-3 h-3" />
+       className="p-[3px] text-black bg-[#EDEEF2] rounded-[4px]">
+       <PlusIcon className="w-[10px] h-[10px]" />
       </button>
      </div>
 
      {/* Price */}
      <div className="w-24 text-right">
-      <p className="text-lg md:font-semibold font-[700] text-gray-900">
+      <p className="text-lg md:font-semibold font-[700] text-neutral-black">
        AED{item.price.toFixed(2)}
       </p>
      </div>

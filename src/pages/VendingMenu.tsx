@@ -11,6 +11,7 @@ import LazyLoad from "@/components/ui/LazyLoad";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchMenuByDay } from "../redux/slices/menuSlice";
 import MobileFooterNav from "@/components/home/MobileFooterNav";
+import { fetchCartData } from "../redux/slices/cartSlice";
 
 // Define the interface for the food item
 interface FoodItem {
@@ -49,7 +50,6 @@ const VendingMenu = () => {
    try {
     const parsed = JSON.parse(storedOrder);
     setOrderData(parsed);
-    console.log("🛒 Restored orderData:", parsed);
    } catch (err) {
     console.error("Error parsing orderData:", err);
    }
@@ -63,9 +63,36 @@ const VendingMenu = () => {
   { day: "Thursday" },
   { day: "Friday" },
  ];
+ // Function to handle card click and open the item details in the sidebar
+ const handleCardClick = (item: FoodItem) => {
+  setSelectedItem(item);
+  setIsSheetOpen(true);
+ };
+
+ // Modified startOrder to dispatch to Redux
  const startOrder = () => {
   if (selectedItem && days?.[tab]?.day) {
    const dayKey = days[tab].day.toLowerCase(); // e.g. "monday"
+
+   // Dispatch to Redux
+   // Dispatch to Redux - REMOVED for API sync transition
+   // dispatch(
+   //  addItemToCart({
+   //   day: dayKey,
+   //   item: selectedItem,
+   //   userId: userData?.id,
+   //  })
+   // );
+   console.log(
+    "Add to cart clicked in VendingMenu (Logic pending API integration)"
+   );
+
+   // Local state update (legacy, keeping for safety or removing if fully migrated)
+   // We will keep setOrderData for now to avoid breaking local component logic if any rely on it,
+   // but primarily relying on Redux sync.
+   // Actually, let's keep the existing local logic as a backup or just rely on the effect sync?
+   // Better to just replicate the logic locally to update UI immediately without waiting for a re-render from selector if we were using it.
+   // But we aren't using useSelector for orderData here yet.
 
    setOrderData((prev: any) => {
     const existingDayItems = prev[dayKey] || [];
@@ -82,21 +109,15 @@ const VendingMenu = () => {
       [dayKey]: updatedDayItems,
      };
 
-     console.log("✅ Updated Order Data:", JSON.stringify(updatedOrder));
-     sessionStorage.setItem("orderData", JSON.stringify(updatedOrder)); // optional persistence
+     // console.log("✅ Updated Order Data:", JSON.stringify(updatedOrder));
+     // sessionStorage.setItem("orderData", JSON.stringify(updatedOrder)); // Redux handles this now?
+     // Actually, let's let Redux handle the session storage update to avoid race conditions.
+     // But wait, our reducer does it. So we don't need to do it here.
      return updatedOrder;
     }
-
-    console.log("⚠️ Item already added for", dayKey, ":", selectedItem.name);
     return prev;
    });
   }
- };
-
- // Function to handle card click and open the item details in the sidebar
- const handleCardClick = (item: FoodItem) => {
-  setSelectedItem(item);
-  setIsSheetOpen(true);
  };
 
  // Handle scroll to change sticky header visibility

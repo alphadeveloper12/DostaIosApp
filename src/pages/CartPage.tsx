@@ -5,134 +5,144 @@ import OrderSummary from "@/components/Cart/OrderSummary";
 import Footer from "@/components/layout/Footer";
 import BreadCrumb from "@/components/home/BreadCrumb";
 import Header from "./catering/components/layout/Header";
-import { formatItems, buildConfirmPayload } from "@/utils/orderUtils";
+import { buildConfirmPayload } from "@/utils/orderUtils";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 
-// Define the type for a single cart item for type safety
-export interface CartItemType {
+// Types matching Backend API
+interface MenuItemAPI {
  id: number;
+ name: string;
+ price: string; // Decimal often returns as string
+ image_url: string | null;
+ description: string;
+}
+
+interface CartItemAPI {
+ id: number;
+ menu_item: MenuItemAPI;
+ quantity: number;
+ day_of_week: string | null; // "Monday"
+ week_number: number | null; // 1-4
+ subtotal: number;
+}
+
+interface CartAPI {
+ id: number;
+ location: {
+  id: number;
+  name: string;
+  info: string;
+ };
+ plan_type: "ORDER_NOW" | "START_PLAN" | "SMART_GRAB";
+ plan_subtype: "NONE" | "WEEKLY" | "MONTHLY";
+ pickup_type: "TODAY" | "IN_24_HOURS" | null;
+ pickup_date: string | null;
+ pickup_slot: number | null; // ID
+ total_price: string;
+ items: CartItemAPI[];
+}
+
+export interface CartItemType {
+ id: number; // Cart Item ID (not menu item id)
+ menuItemId: number; // For checkout reconstruction
  name: string;
  notes: string;
  pickupLocation: string;
  imageUrl: string;
  quantity: number;
  price: number;
+ weekNumber: number | null; // For grouping
 }
 
 const CartPage: React.FC = () => {
+ const [cartData, setCartData] = useState<CartAPI | null>(null);
  const [items, setItems] = useState<CartItemType[]>([]);
  const [coupon, setCoupon] = useState<string>("DOSTA25");
- const [orderState, setOrderState] = useState<any>(null);
- const [pickupOptionsState, setPickupOptions] = useState<any>([]);
- const [timeSlotsState, setTimeSlots] = useState<any>([]);
+ const [loading, setLoading] = useState<boolean>(true);
  const navigate = useNavigate();
  const baseUrl = import.meta.env.VITE_API_URL;
 
- useEffect(() => {
-  const savedState = localStorage.getItem("orderProgress");
-  if (savedState) {
-   const parsedState = JSON.parse(savedState);
-   setOrderState(parsedState);
-   fetchPickupOptions();
-
-   // Convert saved state to cart items for display
-   const cartItems: CartItemType[] = [];
-   const locationInfo = "Selected Location";
-
-   const addItems = () => {
-    if (parsedState.planType === "weekly") {
-     if (parsedState.weekMenu) {
-      Object.keys(parsedState.weekMenu).forEach((day) => {
-       parsedState.weekMenu[day]?.forEach((mItem: any) => {
-        cartItems.push({
-         id: mItem.id,
-         name: mItem.name || mItem.heading, // Handle API vs internal naming
-         notes: day,
-         pickupLocation: locationInfo,
-         imageUrl: mItem.image || "/images/vending_home/food.svg",
-         quantity: mItem.quantity || 1,
-         price: parseFloat(mItem.price) || 0,
-        });
-       });
-      });
-     }
-    } else if (parsedState.planType === "monthly") {
-     [
-      parsedState.weekMenu1,
-      parsedState.weekMenu2,
-      parsedState.weekMenu3,
-      parsedState.weekMenu4,
-     ].forEach((menuObj, index) => {
-      if (menuObj) {
-       Object.keys(menuObj).forEach((day) => {
-        menuObj[day]?.forEach((mItem: any) => {
-         cartItems.push({
-          id: mItem.id,
-          name: mItem.name || mItem.heading,
-          notes: `Week ${index + 1} - ${day}`,
-          pickupLocation: locationInfo,
-          imageUrl: mItem.image || "/images/vending_home/food.svg",
-          quantity: mItem.quantity || 1,
-          price: parseFloat(mItem.price) || 0,
-         });
-        });
-       });
-      }
-     });
-    } else {
-     const list = parsedState.orderNowMenu?.length
-      ? parsedState.orderNowMenu
-      : parsedState.smartGrabMenu;
-     if (Array.isArray(list)) {
-      list.forEach((mItem: any) => {
-       cartItems.push({
-        id: mItem.id,
-        name: mItem.name || mItem.heading,
-        notes: parsedState.orderType,
-        pickupLocation: locationInfo,
-        imageUrl: mItem.image || "/images/vending_home/food.svg",
-        quantity: mItem.quantity || 1,
-        price: parseFloat(mItem.price) || 0,
-       });
-      });
-     }
-    }
-   };
-
-   addItems();
-   setItems(cartItems);
-  }
- }, []);
-
- const fetchPickupOptions = async () => {
+ const fetchCart = async () => {
   try {
+   setLoading(true);
    const token = sessionStorage.getItem("authToken");
-   const res = await axios.get(
-    `${baseUrl}/api/vending/pickup-options/?location_id=1`,
-    { headers: { Authorization: `Token ${token}` } }
-   );
-   if (res.data?.pickup_types) setPickupOptions(res.data.pickup_types);
-   if (res.data?.time_slots) setTimeSlots(res.data.time_slots);
+   // GET /api/vending/cart/
+   const res = await axios.get(`${baseUrl}/api/vending/cart/`, {
+    headers: { Authorization: `Token ${token}` },
+   });
+
+   if (res.data) {
+    setCartData(res.data);
+    mapCartToUI(res.data);
+   }
   } catch (error) {
-   console.error("Error fetching pickup options:", error);
+   console.error("Error fetching cart:", error);
+   // setItem([]) if 404 or empty? API returns { message: "Cart is empty" } usually or 200 with empty items
+   setItems([]);
+  } finally {
+   setLoading(false);
   }
  };
 
+ useEffect(() => {
+  fetchCart();
+ }, []);
+
+ const mapCartToUI = (cart: CartAPI) => {
+  // Use location name from API
+  const locationName = cart.location?.name || "Unknown Location";
+
+  const mapped: CartItemType[] = (cart.items || []).map((apiItem) => {
+   let notes = "Other notes or copy here";
+
+   // Customize notes based on plan type
+   if (cart.plan_subtype === "WEEKLY" || cart.plan_subtype === "MONTHLY") {
+    if (apiItem.day_of_week) {
+     notes = `Meal for ${apiItem.day_of_week}`;
+    }
+   }
+
+   return {
+    id: apiItem.id, // CartItem ID
+    menuItemId: apiItem.menu_item.id,
+    name: apiItem.menu_item.name,
+    notes: notes,
+    pickupLocation: `${locationName}`,
+    imageUrl: apiItem.menu_item.image_url || "/images/vending_home/food.svg",
+    quantity: apiItem.quantity,
+    price: parseFloat(apiItem.menu_item.price),
+    weekNumber: apiItem.week_number,
+   };
+  });
+
+  setItems(mapped);
+ };
+
+ // derived title
+ const getMainTitle = () => {
+  if (!cartData) return "Order Now";
+  if (cartData.plan_type === "SMART_GRAB") return "Smart Grab";
+  if (cartData.plan_subtype === "WEEKLY") return "Weekly Plan";
+  if (cartData.plan_subtype === "MONTHLY") return "Monthly Plan";
+  if (cartData.pickup_type === "IN_24_HOURS") return "Pickup in 24";
+  return "Order Now";
+ };
+
  const handleQuantityChange = (id: number, delta: number) => {
-  setItems(
-   items
-    .map((item) =>
-     item.id === id
-      ? { ...item, quantity: Math.max(1, item.quantity + delta) }
-      : item
-    )
-    .filter((item) => item.quantity > 0)
+  setItems((prev) =>
+   prev.map((item) => {
+    if (item.id === id) {
+     const newQ = Math.max(1, item.quantity + delta);
+     return { ...item, quantity: newQ };
+    }
+    return item;
+   })
   );
  };
 
  const handleDeleteItem = (id: number) => {
-  setItems(items.filter((item) => item.id !== id));
+  setItems((prev) => prev.filter((i) => i.id !== id));
  };
 
  const summary = useMemo(() => {
@@ -142,88 +152,36 @@ const CartPage: React.FC = () => {
   );
   const vat = subtotal * 0.05;
   const discount = coupon === "DOSTA25" ? 25.0 : 0;
-  const total = subtotal + vat - discount;
+  const total = Math.max(0, subtotal + vat - discount); // Prevent negative
   return { subtotal, vat, discount, total };
  }, [items, coupon]);
 
- const handleCheckout = async () => {
-  console.log("Checkout clicked, orderState:", orderState);
-  if (!orderState) {
-   alert("No order found to place.");
-   return;
+ const activePlanSubtype = cartData?.plan_subtype || "NONE";
+
+ // Prepare grouped items for Monthly Plan
+ const getMonthlyGroupedItems = () => {
+  const weeks = [1, 2, 3, 4];
+  const groups = [];
+
+  for (const week of weeks) {
+   const weekItems = items.filter((i) => i.weekNumber === week);
+   if (weekItems.length > 0) {
+    groups.push({
+     title: `Week ${week}`,
+     items: weekItems,
+    });
+   }
   }
 
-  let menuDataToSend: any = [];
-  const {
-   orderType,
-   planType,
-   weekMenu,
-   weekMenu1,
-   weekMenu2,
-   weekMenu3,
-   weekMenu4,
-   orderNowMenu,
-   smartGrabMenu,
-  } = orderState;
-
-  if (orderType === "Order Now") menuDataToSend = orderNowMenu;
-  if (orderType === "Smart Grab") menuDataToSend = smartGrabMenu;
-  if (orderType === "Start a Plan" && planType === "weekly")
-   menuDataToSend = weekMenu;
-
-  // Build base payload
-  const payload = buildConfirmPayload({
-   location: 1,
-   orderType,
-   planType,
-   pickOrder: orderState.pickOrder,
-   time: orderState.time,
-   pickupOptions: pickupOptionsState,
-   timeSlots: timeSlotsState,
-   menuData: menuDataToSend,
-   activeStep: 4,
-  });
-
-  // Monthly special handling: aggregate all weeks
-  if (planType === "monthly") {
-   const allItems: any[] = [];
-   const processWeek = (wMenu: any, wNum: number) => {
-    if (wMenu)
-     Object.keys(wMenu).forEach((day) => {
-      wMenu[day]?.forEach((i: any) =>
-       allItems.push({
-        menu_item_id: i.id,
-        quantity: i.quantity || 1,
-        day_of_week: day,
-        week_number: wNum,
-       })
-      );
-     });
-   };
-   processWeek(weekMenu1, 1);
-   processWeek(weekMenu2, 2);
-   processWeek(weekMenu3, 3);
-   processWeek(weekMenu4, 4);
-   payload.items = allItems;
+  // Catch-all for items without week number in a monthly plan context
+  const extras = items.filter(
+   (i) => !i.weekNumber && activePlanSubtype === "MONTHLY"
+  );
+  if (extras.length > 0) {
+   groups.push({ title: "Other Items", items: extras });
   }
 
-  console.log("Payload sending:", payload);
-
-  try {
-   const token = sessionStorage.getItem("authToken");
-   await axios.post(`${baseUrl}/api/vending/order/confirm/`, payload, {
-    headers: { Authorization: `Token ${token}` },
-   });
-   console.log("Order placed successfully");
-   localStorage.removeItem("orderProgress");
-   // alert("Order Placed Successfully!");
-
-   // Navigate to my orders as requested
-   navigate("/vending-home/my-orders");
-  } catch (err) {
-   console.error("Checkout Failed:", err);
-   alert("Checkout Failed. See console.");
-  }
+  return groups;
  };
 
  return (
@@ -238,26 +196,79 @@ const CartPage: React.FC = () => {
     </div>
    </div>
    <div className="main-container">
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start py-6">
-     <div className="lg:col-span-2">
-      <OrderList
-       items={items}
-       onQuantityChange={handleQuantityChange}
-       onDelete={handleDeleteItem} // Ensure prop name matches OrderList component interface if updated
-      />
+    {loading ? (
+     <div className="py-10 text-center">Loading cart...</div>
+    ) : (
+     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start py-6">
+      <div className="lg:col-span-2 space-y-6">
+       {activePlanSubtype === "MONTHLY" ? (
+        /* Grouped Monthly Plan */
+        <OrderList
+         title="Monthly Plan"
+         groupedItems={getMonthlyGroupedItems()}
+         onQuantityChange={handleQuantityChange}
+         onDeleteItem={handleDeleteItem}
+        />
+       ) : (
+        /* Default Single List (Pickup, Weekly, Smart Grab) */
+        <OrderList
+         title={getMainTitle()}
+         items={items}
+         onQuantityChange={handleQuantityChange}
+         onDeleteItem={handleDeleteItem}
+        />
+       )}
+      </div>
+      <div className="lg:col-span-1">
+       <OrderSummary
+        subtotal={summary.subtotal}
+        vat={summary.vat}
+        discount={summary.discount}
+        total={summary.total}
+        coupon={coupon}
+        setCoupon={setCoupon}
+        onCheckout={async () => {
+         if (!cartData) return;
+
+         // Helper to find day from original if needed, or add to interface
+         // Re-map items
+         const checkoutItems = items.map((uiItem) => {
+          // Try to find matching original item to preserve metadata like day_of_week
+          const original = cartData.items.find((api) => api.id === uiItem.id);
+          return {
+           menu_item_id: uiItem.menuItemId,
+           quantity: uiItem.quantity,
+           day_of_week: original?.day_of_week || null,
+           week_number: uiItem.weekNumber,
+          };
+         });
+
+         const payload = {
+          location_id: cartData.location.id,
+          plan_type: cartData.plan_type,
+          plan_subtype: cartData.plan_subtype,
+          pickup_type: cartData.pickup_type,
+          pickup_date: cartData.pickup_date,
+          pickup_slot_id: cartData.pickup_slot,
+          items: checkoutItems,
+         };
+
+         console.log("Checkout Payload:", payload);
+         try {
+          const token = sessionStorage.getItem("authToken");
+          await axios.post(`${baseUrl}/api/vending/order/confirm/`, payload, {
+           headers: { Authorization: `Token ${token}` },
+          });
+          navigate("/vending-home/my-orders");
+         } catch (err) {
+          console.error("Checkout failed", err);
+          alert("Failed to place order.");
+         }
+        }}
+       />
+      </div>
      </div>
-     <div className="lg:col-span-1">
-      <OrderSummary
-       subtotal={summary.subtotal}
-       vat={summary.vat}
-       discount={summary.discount}
-       total={summary.total}
-       coupon={coupon}
-       setCoupon={setCoupon}
-       onCheckout={handleCheckout}
-      />
-     </div>
-    </div>
+    )}
    </div>
    <Footer />
   </div>

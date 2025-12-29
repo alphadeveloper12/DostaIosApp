@@ -96,7 +96,7 @@ const Header = () => {
       {isDropdownOpen && isLoggedIn && (
        <div className="absolute top-16 right-0 w-[256px] bg-white rounded-[16px] shadow-lg py-[10px]">
         <div className="hover:bg-primary-light py-[8px] px-[16px] rounded-t-[4px]">
-         <Link to="/orders">My Orders</Link>
+         <Link to="/vending-home/my-orders">My Orders</Link>
         </div>
         <div className="hover:bg-primary-light py-[8px] px-[16px]">
          <Link to="/settings">Account Settings</Link>

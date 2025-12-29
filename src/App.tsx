@@ -32,8 +32,22 @@ import HowItWorks from "./pages/HowItWorks";
 import HelpCenter from "./pages/HelpCenter";
 import ReportBug from "./pages/ReportBug";
 import Faqs from "./pages/Faqs";
+import { useDispatch } from "react-redux";
+import { useEffect } from "react";
+import { fetchCartData } from "./redux/slices/cartSlice";
 
 const queryClient = new QueryClient();
+
+// Helper component to sync cart globally from API
+const GlobalCartSync = () => {
+ const dispatch = useDispatch();
+ useEffect(() => {
+  // Fetch latest cart state from API on mount
+  // @ts-ignore
+  dispatch(fetchCartData());
+ }, [dispatch]);
+ return null;
+};
 
 const App = () => (
  <QueryClientProvider client={queryClient}>
@@ -86,6 +100,7 @@ const App = () => (
      {/* Fallback Route */}
      <Route path="*" element={<NotFound />} />
     </Routes>
+    <GlobalCartSync />
    </BrowserRouter>
   </TooltipProvider>
  </QueryClientProvider>

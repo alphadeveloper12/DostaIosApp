@@ -6,23 +6,39 @@ import { PlusIcon } from "@heroicons/react/24/outline";
 import { Link } from "react-router-dom";
 import { Button } from "@/pages/catering/components/ui/button";
 
-interface OrderListProps {
+interface Section {
+ title: string;
  items: CartItemType[];
+}
+
+interface OrderListProps {
+ items?: CartItemType[];
+ groupedItems?: Section[];
+ title?: string;
  onQuantityChange: (id: number, delta: number) => void;
  onDeleteItem: (id: number) => void;
 }
 
 const OrderList: React.FC<OrderListProps> = ({
- items,
+ items = [],
+ groupedItems,
+ title = "Order Now",
  onQuantityChange,
  onDeleteItem,
 }) => {
+ const totalItems = groupedItems
+  ? groupedItems.reduce((acc, group) => acc + group.items.length, 0)
+  : items.length;
+
  return (
   <div className="bg-white rounded-lg shadow-md md:p-6 p-4">
    <div className="flex justify-between items-center mb-6">
-    <h2 className="text-xl font-semibold text-gray-800">
-     Order Now{" "}
-     <span className="text-gray-500 font-normal">({items.length} meals)</span>
+    <h2 className="text-[24px] leading-[32px] font-[700] text-[#2B2B43]">
+     {title}
+     <span className="text-[#83859C] text-[12px] leading-[16px] font-[600] pl-3">
+      {" "}
+      {totalItems} meals
+     </span>
     </h2>
     <Button className="text-sm bg-transparent hover:bg-transparent border border-[#545563] font-medium text-[#545563]  transition-colors">
      Edit
@@ -30,16 +46,41 @@ const OrderList: React.FC<OrderListProps> = ({
    </div>
 
    <div className="space-y-4">
-    {items.map((item, index) => (
-     <React.Fragment key={item.id}>
-      <CartItem
-       item={item}
-       onQuantityChange={onQuantityChange}
-       onDeleteItem={onDeleteItem}
-      />
-      {index < items.length - 1 && <hr />}
-     </React.Fragment>
-    ))}
+    {groupedItems
+     ? groupedItems.map((group, groupIndex) => (
+        <div key={groupIndex} className="mb-6">
+         <h3 className="text-[#2B2B43] text-[18px] font-semibold mb-4">
+          {group.title}
+         </h3>
+         <div className="space-y-4">
+          {group.items.map((item, index) => (
+           <React.Fragment key={item.id}>
+            <CartItem
+             item={item}
+             onQuantityChange={onQuantityChange}
+             onDeleteItem={onDeleteItem}
+            />
+            {/* Show separator unless it's the last item of the last group? Or just separate items within group? 
+              Design shows simple list. Let's keep separator between items in a group. 
+          */}
+            {index < group.items.length - 1 && (
+             <hr className="border-gray-100" />
+            )}
+           </React.Fragment>
+          ))}
+         </div>
+        </div>
+       ))
+     : items.map((item, index) => (
+        <React.Fragment key={item.id}>
+         <CartItem
+          item={item}
+          onQuantityChange={onQuantityChange}
+          onDeleteItem={onDeleteItem}
+         />
+         {index < items.length - 1 && <hr className="border-gray-100" />}
+        </React.Fragment>
+       ))}
    </div>
 
    <Link

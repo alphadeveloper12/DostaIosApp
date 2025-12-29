@@ -13,6 +13,7 @@ interface FoodItem {
  imgAlt: string;
  description: string;
  price: string;
+ id: number; // Added ID field
 }
 
 // --- NEW: Interface for items in our cart, now with quantity ---
@@ -23,9 +24,14 @@ interface SelectedFoodItem extends FoodItem {
 interface MenuProps {
  handleConfirmStep: () => void;
  orderNowMenuFunc?: any; // Added optional prop for orderNowMenuFunc
+ initialCart?: SelectedFoodItem[]; // NEW: Accept initial state
 }
 
-const Menu: React.FC<MenuProps> = ({ handleConfirmStep, orderNowMenuFunc }) => {
+const Menu: React.FC<MenuProps> = ({
+ handleConfirmStep,
+ orderNowMenuFunc,
+ initialCart = [],
+}) => {
  const [openDialouge, setOpenDialouge] = useState(false);
  const [scrolled, setScrolled] = useState(false);
  const [selectedItem, setSelectedItem] = useState<FoodItem | null>(null);
@@ -36,8 +42,8 @@ const Menu: React.FC<MenuProps> = ({ handleConfirmStep, orderNowMenuFunc }) => {
  // const [selectedItems, setSelectedItems] = useState<FoodItem[]>([]);
  // const [quantity, setQuantity] = useState(1);
 
- // --- NEW: Single state for the cart. This is your backend-ready array ---
- const [cart, setCart] = useState<SelectedFoodItem[]>([]);
+ // --- NEW: Single state for the cart. Initialize from prop ---
+ const [cart, setCart] = useState<SelectedFoodItem[]>(initialCart);
  const [foodData, setFoodData] = useState<FoodItem[]>([]);
  const [loading, setLoading] = useState<boolean>(true);
  const [error, setError] = useState<string | null>(null);
@@ -84,17 +90,37 @@ const Menu: React.FC<MenuProps> = ({ handleConfirmStep, orderNowMenuFunc }) => {
 
     const data = await res.json();
 
+    // 1. Create a map of "Item Name" -> "First Valid Image URL"
+    // This ensures that if the same item appears multiple times (e.g. across weeks),
+    // we use the same URL for all of them, identifying them by name.
+    // This solves:
+    // a) Duplicate downloads (browser caches the single URL).
+    // b) Broken images (if one instance has a good URL and another has a bad one, we use the good one).
+    const imageMap: Record<string, string> = {};
+
+    data.menus?.forEach((menu: any) => {
+     menu.items?.forEach((it: any) => {
+      // Only store if we haven't found a URL for this name yet, and the current one is valid
+      if (it.image_url && !imageMap[it.name]) {
+       imageMap[it.name] = it.image_url;
+      }
+     });
+    });
+
     // Transform items from the API structure
     const allItems: FoodItem[] = [];
 
     data.menus?.forEach((menu: any) => {
      menu.items?.forEach((it: any) => {
       allItems.push({
-       imgSrc: it.image_url,
+       // Use the shared URL from the map, falling back to the item's own URL, then a placeholder
+       imgSrc:
+        imageMap[it.name] || it.image_url || "/images/placeholder_food.png",
        heading: it.name,
        imgAlt: `food-${it.id}`,
        description: it.description,
        price: `AED ${parseFloat(it.price).toFixed(2)}`,
+       id: it.id, // Map ID from API
       });
      });
     });
