@@ -21,6 +21,9 @@ const RightBar = () => {
  const [is2FAEnabled, setIs2FAEnabled] = useState<boolean>(false);
  const [isOtpSent, setIsOtpSent] = useState<boolean>(false);
  const [passwordError, setPasswordError] = useState<string>("");
+ const [emailError, setEmailError] = useState<string>("");
+ const [phoneError, setPhoneError] = useState<string>("");
+ const [apiError, setApiError] = useState<string>(""); // New global API error state
  const [loading, setLoading] = useState<boolean>(false);
 
  const baseURL = import.meta.env.VITE_API_URL;
@@ -33,10 +36,25 @@ const RightBar = () => {
   return regex.test(password);
  };
 
+ // Email validation
+ const validateEmail = (email: string) => {
+  const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return regex.test(email);
+ };
+
  // Go to next step handler
  const handleNext = async () => {
+  setApiError(""); // Clear previous API errors on new attempt
   try {
    if (currentStep === 1) {
+    setEmailError("");
+    setPasswordError("");
+
+    if (!validateEmail(email)) {
+     setEmailError("Please enter a valid email address.");
+     return;
+    }
+
     if (password !== confirmPassword) {
      setPasswordError("Passwords do not match.");
      return;
@@ -47,9 +65,15 @@ const RightBar = () => {
      );
      return;
     }
-    setPasswordError("");
+
     setCurrentStep(2);
    } else if (currentStep === 2) {
+    setPhoneError("");
+    if (!phoneNumber.trim()) {
+     setPhoneError("Phone number is required.");
+     return;
+    }
+
     if (is2FAEnabled) {
      // Send OTP
      await sendOtpRequest();
@@ -64,6 +88,7 @@ const RightBar = () => {
    }
   } catch (error) {
    console.error("Error in flow:", error);
+   setApiError("An unexpected error occurred. Please try again.");
   }
  };
 
@@ -74,19 +99,25 @@ const RightBar = () => {
 
  // Send OTP
  const sendOtpRequest = async () => {
+  setApiError("");
   try {
    setLoading(true);
    await axios.post(`${baseURL}/api/send-otp/`, { phoneNumber });
    setLoading(false);
-  } catch (error) {
+  } catch (error: any) {
    console.error("Failed to send OTP:", error);
    setLoading(false);
+   const errorMsg =
+    error.response?.data?.message ||
+    error.response?.data?.error ||
+    "Failed to send OTP.";
+   setApiError(errorMsg);
   }
  };
 
  // Handle direct signup (no 2FA)
- // Handle direct signup (no 2FA)
  const handleSignup = async () => {
+  setApiError("");
   try {
    setLoading(true);
    const res = await axios.post(`${baseURL}/api/signup/`, {
@@ -102,14 +133,40 @@ const RightBar = () => {
 
    setLoading(false);
    navigate("/"); // redirect to home
-  } catch (error) {
-   console.error("Signup failed:", error.response?.data || error);
+  } catch (error: any) {
+   console.error("Signup failed details:", error);
    setLoading(false);
+
+   let errorMsg = "Signup failed. Please try again.";
+
+   if (error.response && error.response.data) {
+    const data = error.response.data;
+    // Extract meaningful error message
+    if (typeof data === "string") {
+     errorMsg = data;
+    } else if (data.email) {
+     errorMsg = Array.isArray(data.email) ? data.email[0] : data.email;
+    } else if (data.message) {
+     errorMsg = data.message;
+    } else if (data.error) {
+     errorMsg = data.error;
+    } else if (data.detail) {
+     errorMsg = data.detail;
+    }
+   }
+
+   setApiError(errorMsg); // Show error below button
+
+   // If email exists, we might want to let user correct it, but user asked for error below button.
+   // We will NOT force navigation back to step 1 automatically to avoid confusion,
+   // or if we do, we make sure the error is visible.
+   // Given user request "error should be display below the continue button", let's prioritize that.
   }
  };
 
  // Verify OTP + signup (2FA)
  const handleOtpVerificationAndSignup = async () => {
+  setApiError("");
   try {
    setLoading(true);
 
@@ -135,15 +192,31 @@ const RightBar = () => {
     navigate("/"); // redirect home
    } else {
     console.error("OTP verification failed:", verifyRes.data);
+    setApiError("Invalid OTP. Please try again.");
    }
 
    setLoading(false);
-  } catch (error) {
-   console.error(
-    "OTP verification or signup failed:",
-    error.response?.data || error
-   );
+  } catch (error: any) {
+   console.error("OTP/Signup failed details:", error);
    setLoading(false);
+
+   let errorMsg = "Verification failed. Please try again.";
+
+   if (error.response && error.response.data) {
+    const data = error.response.data;
+    if (typeof data === "string") {
+     errorMsg = data;
+    } else if (data.email) {
+     errorMsg = Array.isArray(data.email) ? data.email[0] : data.email;
+    } else if (data.message) {
+     errorMsg = data.message;
+    } else if (data.error) {
+     errorMsg = data.error;
+    } else if (data.detail) {
+     errorMsg = data.detail;
+    }
+   }
+   setApiError(errorMsg);
   }
  };
 
@@ -168,9 +241,16 @@ const RightBar = () => {
         type="email"
         placeholder="name@example.com"
         value={email}
-        onChange={(e) => setEmail(e.target.value)}
-        className="w-full max-w-[21.875rem] py-[10px] px-3 border border-gray-300 rounded-md"
+        onChange={(e) => {
+         setEmail(e.target.value);
+         if (emailError) setEmailError("");
+         if (apiError) setApiError(""); // Clear global error on input change
+        }}
+        className={`w-full max-w-[21.875rem] py-[10px] px-3 border ${
+         emailError ? "border-red-500" : "border-gray-300"
+        } rounded-md`}
        />
+       {emailError && <p className="text-red-500 text-sm mt-1">{emailError}</p>}
       </div>
       {/* Password */}
       <div className="flex flex-col pb-7">
@@ -240,9 +320,16 @@ const RightBar = () => {
         type="text"
         placeholder="(217) 555-0113"
         value={phoneNumber}
-        onChange={(e) => setPhoneNumber(e.target.value)}
-        className="w-full max-w-[21.875rem] py-[10px] px-3 border border-gray-300 rounded-md"
+        onChange={(e) => {
+         setPhoneNumber(e.target.value);
+         if (phoneError) setPhoneError("");
+         if (apiError) setApiError(""); // Clear global error on input change
+        }}
+        className={`w-full max-w-[21.875rem] py-[10px] px-3 border ${
+         phoneError ? "border-red-500" : "border-gray-300"
+        } rounded-md`}
        />
+       {phoneError && <p className="text-red-500 text-sm mt-1">{phoneError}</p>}
       </div>
 
       {/* 2FA */}
@@ -384,6 +471,13 @@ const RightBar = () => {
         disabled={currentStep === 1}>
         Back
        </button>
+
+       {/* Global API Error Message Display */}
+       {apiError && (
+        <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-md text-red-600 text-sm text-center">
+         {apiError}
+        </div>
+       )}
       </div>
      </div>
 

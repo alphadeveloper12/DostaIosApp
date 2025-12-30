@@ -2,10 +2,11 @@ import React from "react";
 import { Button } from "@/components/ui/button";
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X } from "lucide-react"; // 'Divide' import was unused, so I removed it
+import { X } from "lucide-react";
 import { Link } from "react-router-dom";
 import { MinusIcon, PlusIcon } from "@heroicons/react/24/outline";
 import Shrimmer from "../ui/Shrimmer";
+import MenuCard from "./MenuCard";
 
 interface FoodItem {
  imgSrc: string;
@@ -37,10 +38,6 @@ const Menu: React.FC<MenuProps> = ({
  const [selectedItem, setSelectedItem] = useState<FoodItem | null>(null);
  const [isSheetOpen, setIsSheetOpen] = useState(false); // This state is set but not used
  const [toaster, setToaster] = useState<boolean>(false);
-
- // --- REMOVED: Old states ---
- // const [selectedItems, setSelectedItems] = useState<FoodItem[]>([]);
- // const [quantity, setQuantity] = useState(1);
 
  // --- NEW: Single state for the cart. Initialize from prop ---
  const [cart, setCart] = useState<SelectedFoodItem[]>(initialCart);
@@ -254,67 +251,25 @@ const Menu: React.FC<MenuProps> = ({
 
     <div className="w-full h-full pb-4">
      <div className="md:px-[30px] grid grid-cols-12 md:flex md:gap-[24px] gap-[12px] flex-wrap">
-      {loading && <Shrimmer />}
+      {loading && (
+       <div className="col-span-12 w-full h-56">
+        <Shrimmer />
+       </div>
+      )}
 
       {!loading && error && (
        <p className="text-center py-8 text-red-500">{error}</p>
       )}
       {foodData.map((data, index) => {
-       // --- NEW: Check if this item is in the cart ---
        const itemInCart = cart.find((item) => item.imgAlt === data.imgAlt);
-
        return (
-        <div
-         key={index}
-         onClick={() => handleCardClick(data)}
-         className={`w-full border ${
-          // --- UPDATED: Check if itemInCart exists ---
-          itemInCart ? "border-[#054A86]" : "border-[#EDEEF2]"
-         } max-w-[306px] max-md:col-span-6 bg-neutral-white rounded-[16px] px-3 pt-3 pb-5 sm:px-4 sm:pt-4 sm:pb-6 overflow-hidden cursor-pointer hover:shadow-lg transition-shadow`}>
-         <img
-          src={data.imgSrc}
-          alt={data.imgAlt}
-          className="block w-full h-[120px] md:h-[180px] rounded-[12px] sm:rounded-[16px] object-cover"
-         />
-         <h3 className="text-[16px] leading-[24px] md:text-[24px] pt-3 pb-1 md:leading-[32px] font-[700] tracking-[0.1px] text-[#2B2B43]">
-          {data.heading}
-         </h3>
-         <p className="text-[14px] line-clamp-2 leading-[20px] font-[400] tracking-[0.2px] text-[#83859C]">
-          {data.description}
-         </p>
-         <div className="flex justify-between items-center pt-2">
-          <h4 className="md:text-[16px] text-[13px] leading-[16px]  md:leading-[24px] font-[700] tracking-[0.1px] text-[#2B2B43]">
-           {data.price}
-          </h4>
-
-          {/* --- UPDATED: Stepper logic is now functional --- */}
-          {itemInCart ? (
-           <>
-            {/* Quantity Stepper */}
-            <div className="flex items-center">
-             <button
-              onClick={(e) => handleQuantityChange(e, data, -1)}
-              className="p-1 text-black bg-[#EDEEF2] rounded-[8px]">
-              <MinusIcon className="w-3 h-3" />
-             </button>
-             <span className="px-3 md:text-lg text-sm font-[700] md:font-medium">
-              {itemInCart.quantity}
-             </span>
-             <button
-              onClick={(e) => handleQuantityChange(e, data, 1)}
-              className="p-1 text-black bg-[#EDEEF2] rounded-[8px]">
-              <PlusIcon className="w-3 h-3" />
-             </button>
-            </div>
-           </>
-          ) : (
-           // --- UPDATED: Plus icon is now a functional button ---
-           <button onClick={(e) => handleQuantityChange(e, data, 1)}>
-            <img src="/images/icons/plusicon.svg" alt="plus icon" />
-           </button>
-          )}
-         </div>
-        </div>
+        <MenuCard
+         key={data.id || index}
+         data={data}
+         itemInCart={itemInCart}
+         handleCardClick={handleCardClick}
+         handleQuantityChange={handleQuantityChange}
+        />
        );
       })}
      </div>
@@ -524,7 +479,17 @@ const Menu: React.FC<MenuProps> = ({
        fill="none"
        xmlns="http://www.w3.org/2000/svg"
        className="flex-shrink-0">
-       {/* ... (svg paths) ... */}
+       <path
+        d="M10 20C15.5228 20 20 15.5228 20 10C20 4.47715 15.5228 0 10 0C4.47715 0 0 4.47715 0 10C0 15.5228 4.47715 20 10 20Z"
+        fill="#34C759"
+       />
+       <path
+        d="M14 6L8.5 11.5L6 9"
+        stroke="white"
+        strokeWidth="1.66667"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+       />
       </svg>
       <span className="flex-grow whitespace-nowrap text-[#2B2B43] font-medium text-sm">
        Menu selections have been successfully reset.

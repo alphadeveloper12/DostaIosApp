@@ -207,8 +207,14 @@ const OrderNow = () => {
       };
       setOrderType(typeMap[cart.plan_type] || "");
      }
-     if (cart.plan_subtype && cart.plan_subtype !== "NONE") {
-      setPlanType(cart.plan_subtype.toLowerCase()); // "WEEKLY" -> "weekly"
+
+     // Robust plan_subtype check
+     const rawSubtype = cart.plan_subtype || cart.plan_sub_type;
+     console.log("Raw API plan_subtype:", rawSubtype, "Full Cart:", cart);
+
+     if (rawSubtype && rawSubtype !== "NONE") {
+      const subtype = rawSubtype.toLowerCase();
+      setPlanType(subtype); // "WEEKLY" -> "weekly", "MONTHLY" -> "monthly"
      }
      if (cart.pickup_type) {
       const pMap: any = {
@@ -314,7 +320,7 @@ const OrderNow = () => {
   const plan_type_map = {
    "Order Now": "ORDER_NOW",
    "Smart Grab": "SMART_GRAB",
-   "Start a Plan": planType === "weekly" ? "WEEKLY" : "MONTHLY",
+   "Start a Plan": "START_PLAN",
   };
 
   // ---- MAP PICKUP TYPE ----
@@ -640,7 +646,7 @@ const OrderNow = () => {
 
   if (isLastStep) {
    // 1. Determine correct menu data
-   let currentMenuData:any = [];
+   let currentMenuData: any = [];
    if (orderType === "Order Now") currentMenuData = orderNowMenu;
    else if (orderType === "Smart Grab") currentMenuData = smartGrabMenu;
    else if (planType === "weekly") currentMenuData = weekMenu;
@@ -775,7 +781,7 @@ const OrderNow = () => {
 
   // Build intermediate payload
   // 1. Determine correct menu data (same logic as final submit)
-  let currentMenuData:any = [];
+  let currentMenuData: any = [];
   if (orderType === "Order Now") currentMenuData = orderNowMenu;
   else if (orderType === "Smart Grab") currentMenuData = smartGrabMenu;
   else if (planType === "weekly") currentMenuData = weekMenu;

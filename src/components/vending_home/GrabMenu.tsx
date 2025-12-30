@@ -2,9 +2,10 @@ import React from "react";
 import { Button } from "@/components/ui/button";
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X } from "lucide-react"; // 'Divide' import was unused
+import { X } from "lucide-react";
 import { Link } from "react-router-dom";
 import { MinusIcon, PlusIcon } from "@heroicons/react/24/outline";
+import MenuCard from "./MenuCard";
 
 interface FoodItem {
  imgSrc: string;
@@ -29,17 +30,51 @@ interface GrabMenuProps {
 
 // --- Data defined outside component (no change) ---
 const foodData: FoodItem[] = [
- // ... (your food data remains unchanged)
  {
-  imgSrc: "/images/vending_home/soft_drink.svg",
-  heading: "Soft Drink",
+  imgSrc: "/images/vending_home/cappucino.svg",
+  heading: "Cappucino",
   imgAlt: "food1",
   description:
    "Ea his sensibus eleifend, mollis iudicabit omittantur id mel. Et cum ignota euismod corpora, et saepe.",
-  price: "AED 47.25",
+  price: "AED 47.00",
   id: 1,
  },
- // ... all other food items
+ {
+  imgSrc: "/images/vending_home/crosiant.svg",
+  heading: "Croissant",
+  imgAlt: "food2",
+  description:
+   "Ea his sensibus eleifend, mollis iudicabit omittantur id mel. Et cum ignota euismod corpora, et saepe.",
+  price: "AED 34.25",
+  id: 2,
+ },
+ {
+  imgSrc: "/images/vending_home/chicken.svg",
+  heading: "Chicken wrap",
+  imgAlt: "food3",
+  description:
+   "Ea his sensibus eleifend, mollis iudicabit omittantur id mel. Et cum ignota euismod corpora, et saepe.",
+  price: "AED 56.50",
+  id: 3,
+ },
+ {
+  imgSrc: "/images/vending_home/fries.svg",
+  heading: "Fries",
+  imgAlt: "food4",
+  description:
+   "Ea his sensibus eleifend, mollis iudicabit omittantur id mel. Et cum ignota euismod corpora, et saepe.",
+  price: "AED 32.50",
+  id: 4,
+ },
+ {
+  imgSrc: "/images/vending_home/soft_drink.svg",
+  heading: "Soft Drink",
+  imgAlt: "food5",
+  description:
+   "Ea his sensibus eleifend, mollis iudicabit omittantur id mel. Et cum ignota euismod corpora, et saepe.",
+  price: "AED 47.25",
+  id: 5,
+ },
 ];
 
 const GrabMenu: React.FC<GrabMenuProps> = ({
@@ -52,10 +87,6 @@ const GrabMenu: React.FC<GrabMenuProps> = ({
  const [selectedItem, setSelectedItem] = useState<FoodItem | null>(null);
  const [isSheetOpen, setIsSheetOpen] = useState(false); // This state is set but not used
  const [toaster, setToaster] = useState<boolean>(false);
-
- // --- REMOVED: Old states ---
- // const [selectedItems, setSelectedItems] = useState<FoodItem[]>([]);
- // const [quantity, setQuantity] = useState(1);
 
  // --- NEW: Single state for the cart. This is your backend-ready array ---
  const [cart, setCart] = useState<SelectedFoodItem[]>(initialCart);
@@ -197,56 +228,13 @@ const GrabMenu: React.FC<GrabMenuProps> = ({
        const itemInCart = cart.find((item) => item.imgAlt === data.imgAlt);
 
        return (
-        <div
-         key={index}
-         onClick={() => handleCardClick(data)}
-         className={`w-full border ${
-          // --- UPDATED: Check if itemInCart exists ---
-          itemInCart ? "border-[#054A86]" : "border-[#EDEEF2]"
-         } max-w-[306px] bg-neutral-white max-md:col-span-6 rounded-[16px] px-3 pt-3 pb-5 sm:px-4 sm:pt-4 sm:pb-6 overflow-hidden cursor-pointer hover:shadow-lg transition-shadow`}>
-         <img
-          src={data.imgSrc}
-          alt={data.imgAlt}
-          className="block w-full md:h-auto h-[120px] rounded-[12px] sm:rounded-[16px] object-cover"
-         />
-         <h3 className="text-[16px] leading-[24px] md:text-[24px] pt-3 pb-1 md:leading-[32px] font-[700] tracking-[0.1px] text-[#2B2B43]">
-          {data.heading}
-         </h3>
-         <p className="text-[14px] line-clamp-2 leading-[20px] font-[400] tracking-[0.2px] text-[#83859C]">
-          {data.description}
-         </p>
-         <div className="flex justify-between items-center pt-2">
-          <h4 className="text-[13px] leading-[18px] md:text-[16px]  md:leading-[24px] font-[700] tracking-[0.1px] text-[#2B2B43]">
-           {data.price}
-          </h4>
-
-          {/* --- UPDATED: Stepper logic is now functional --- */}
-          {itemInCart ? (
-           <>
-            <div className="flex items-center  ">
-             <button
-              onClick={(e) => handleQuantityChange(e, data, -1)}
-              className="p-1 text-black bg-[#EDEEF2] rounded-[8px]">
-              <MinusIcon className="w-3 h-3" />
-             </button>
-             <span className="md:px-3 px-2 md:text-lg text-sm font-medium">
-              {itemInCart.quantity}
-             </span>
-             <button
-              onClick={(e) => handleQuantityChange(e, data, 1)}
-              className="p-1 text-black bg-[#EDEEF2] rounded-[8px]">
-              <PlusIcon className="w-3 h-3" />
-             </button>
-            </div>
-           </>
-          ) : (
-           // --- UPDATED: Plus icon is now a functional button ---
-           <button onClick={(e) => handleQuantityChange(e, data, 1)}>
-            <img src="/images/icons/plusicon.svg" alt="plus icon" />
-           </button>
-          )}
-         </div>
-        </div>
+        <MenuCard
+         key={data.id || index}
+         data={data}
+         itemInCart={itemInCart}
+         handleCardClick={handleCardClick}
+         handleQuantityChange={handleQuantityChange}
+        />
        );
       })}
      </div>
@@ -458,7 +446,17 @@ const GrabMenu: React.FC<GrabMenuProps> = ({
        fill="none"
        xmlns="http://www.w3.org/2000/svg"
        className="flex-shrink-0">
-       {/* ... (svg paths) ... */}
+       <path
+        d="M10 20C15.5228 20 20 15.5228 20 10C20 4.47715 15.5228 0 10 0C4.47715 0 0 4.47715 0 10C0 15.5228 4.47715 20 10 20Z"
+        fill="#34C759"
+       />
+       <path
+        d="M14 6L8.5 11.5L6 9"
+        stroke="white"
+        strokeWidth="1.66667"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+       />
       </svg>
       <span className="flex-grow whitespace-nowrap text-[#2B2B43] font-medium text-sm">
        Menu selections have been successfully reset.

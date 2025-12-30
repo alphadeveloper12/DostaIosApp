@@ -79,7 +79,8 @@ const Header = () => {
  const handleLoginClick = () => {
   navigate("/signin"); // Navigate to /signin when login is clicked
  };
- const capitalizeName = (name) => {
+ const capitalizeName = (name: string | null | undefined) => {
+  if (!name || typeof name !== "string") return "";
   return name.split(" ").map(
    (part) => part.charAt(0).toUpperCase() // Capitalize the first letter and make the rest lowercase
   );
