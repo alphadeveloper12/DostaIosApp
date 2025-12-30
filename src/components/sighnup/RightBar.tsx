@@ -128,8 +128,8 @@ const RightBar = () => {
    });
 
    // ✅ Save token and authenticate user
-   localStorage.setItem("authToken", res.data.token);
-   localStorage.setItem("user", JSON.stringify(res.data.user));
+   sessionStorage.setItem("authToken", res.data.token);
+   sessionStorage.setItem("user", JSON.stringify(res.data.user));
 
    setLoading(false);
    navigate("/"); // redirect to home
@@ -186,8 +186,8 @@ const RightBar = () => {
     });
 
     // ✅ Save token and authenticate user
-    localStorage.setItem("authToken", res.data.token);
-    localStorage.setItem("user", JSON.stringify(res.data.user));
+    sessionStorage.setItem("authToken", res.data.token);
+    sessionStorage.setItem("user", JSON.stringify(res.data.user));
 
     navigate("/"); // redirect home
    } else {
