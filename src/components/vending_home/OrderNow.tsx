@@ -276,7 +276,9 @@ const OrderNow = () => {
    if (!restored) {
     try {
      const selectedLocation = JSON.parse(
-      localStorage.getItem("selectedLocation") || "{}"
+      sessionStorage.getItem("selectedLocation") ||
+       localStorage.getItem("selectedLocation") ||
+       "{}"
      );
      if (selectedLocation && selectedLocation.location) {
       console.log(
