@@ -39,11 +39,16 @@ const HeroSection = () => {
 
  const handleLocationSelect = (location: any) => {
   setSelectedLocation(location);
-  // Save user ID and selected location to localStorage
-  localStorage.setItem(
-   "selectedLocation",
-   JSON.stringify({ userId: userData.id, location })
-  );
+  // Safely save user ID (if available) and selected location to localStorage
+  try {
+   const userId = userData?.id || null;
+   localStorage.setItem(
+    "selectedLocation",
+    JSON.stringify({ userId, location })
+   );
+  } catch (error) {
+   console.error("Failed to save location to localStorage:", error);
+  }
  };
 
  const handleNavigate = () => {
@@ -264,7 +269,12 @@ const HeroSection = () => {
        {/* Footer */}
        <div className="bg-white p-4">
         <button
-         className="w-full bg-[#054A86] text-white rounded-lg py-3 font-medium hover:bg-[#063a69]"
+         disabled={!selectedLocation}
+         className={`w-full text-white rounded-lg py-3 font-medium ${
+          selectedLocation
+           ? "bg-[#054A86] hover:bg-[#063a69]"
+           : "bg-gray-400 cursor-not-allowed"
+         }`}
          onClick={() => handleNavigate()}>
          Confirm & Close
         </button>

@@ -15,6 +15,7 @@ import PlanWeekly from "./PlanWeekly";
 import { Input } from "../ui/input";
 import Header from "@/pages/catering/components/layout/Header";
 import MobileFooterNav from "../home/MobileFooterNav";
+import Shrimmer from "../ui/Shrimmer"; // Import Shrimmer
 
 type StepStatus = "completed" | "active" | "pending";
 
@@ -149,17 +150,23 @@ const OrderNow = () => {
  // --- RESTORE STATE FROM API ON MOUNT ---
  const baseUrl = import.meta.env.VITE_API_URL;
  const token = sessionStorage.getItem("authToken");
+
+ // Define authHeaders here so it's available for all effects
  const authHeaders = {
   headers: {
    Authorization: `token ${token}`,
   },
  };
 
+ // ...
+
  useEffect(() => {
   const loadStateFromApi = async () => {
    let restored = false;
    try {
     const res = await axios.get(`${baseUrl}/api/vending/cart/`, authHeaders);
+    // ... rest of the logic
+
     const cart = res.data;
 
     // Check if we have a valid in-progress cart
@@ -858,7 +865,7 @@ const OrderNow = () => {
   activeStep > (orderType === "Start a Plan" && planType === "monthly" ? 7 : 4);
 
  return (
-  <div className="min-h-screen relative ">
+  <div className="bg-[#F8F8FA] min-h-screen relative flex flex-col justify-between">
    <Header />
    <main className="flex-1 bg-[#F7F7F9] max-md:pb-[122px]">
     {/* Breadcrumb and Title */}
@@ -869,8 +876,7 @@ const OrderNow = () => {
        Vending Pickup
       </h2>
      </div>
-    </div>
-
+    </div>{" "}
     {/* Steps Container */}
     <div className="w-full py-6">
      <div className="main-container space-y-4">
@@ -1826,7 +1832,6 @@ const OrderNow = () => {
       )}
      </div>
     </div>
-
     {/* ... (All sidebars are unchanged and correct from your code) ... */}
     {/* side bar sheet for timeframe */}
     <AnimatePresence>
@@ -1891,7 +1896,6 @@ const OrderNow = () => {
       </motion.div>
      )}
     </AnimatePresence>
-
     {/* save new plan menu sidebar */}
     <AnimatePresence>
      {savePlanMenu && (
