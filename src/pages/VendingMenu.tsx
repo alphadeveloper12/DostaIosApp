@@ -25,6 +25,49 @@ interface FoodItem {
  //  title: string;
 }
 
+const MenuItemCard = ({
+ data,
+ onClick,
+}: {
+ data: FoodItem;
+ onClick: () => void;
+}) => {
+ const [imageLoaded, setImageLoaded] = useState(false);
+
+ return (
+  <div
+   onClick={onClick}
+   className="w-full border border-[#EDEEF2] max-w-[354px] bg-neutral-white rounded-[16px] px-3 pt-3 pb-5 sm:px-4 sm:pt-4 sm:pb-6 overflow-hidden cursor-pointer hover:shadow-lg transition-shadow">
+   {/* Image Container with Shimmer */}
+   <div className="relative w-full md:h-[180px] h-[180px] rounded-[12px] sm:rounded-[16px] overflow-hidden z-[1]">
+    {!imageLoaded && (
+     <div className="absolute inset-0">
+      <Shrimmer />
+     </div>
+    )}
+    <img
+     src={data.image_url}
+     alt={data?.imgAlt || "Food Item"}
+     onLoad={() => setImageLoaded(true)}
+     className={`block w-full h-full object-cover transition-opacity duration-500 ${
+      imageLoaded ? "opacity-100" : "opacity-0"
+     }`}
+    />
+   </div>
+
+   <h3 className="text-[24px] pt-3 pb-1 leading-[32px] font-[700] tracking-[0.1px] text-[#2B2B43]">
+    {data.name}
+   </h3>
+   <p className="text-[14px] line-clamp-2 leading-[20px] font-[400] tracking-[0.2px] text-[#83859C]">
+    {data.description}
+   </p>
+   <h4 className="text-[16px] pt-2 leading-[24px] font-[700] tracking-[0.1px] text-[#2B2B43]">
+    AED {data.price}
+   </h4>
+  </div>
+ );
+};
+
 const VendingMenu = () => {
  const [scrolled, setScrolled] = useState(false);
  const [selectedItem, setSelectedItem] = useState<FoodItem | null>(null);
@@ -153,7 +196,7 @@ const VendingMenu = () => {
 
     {/* Sticky Header ( when scrolled) */}
     <div
-     className={`w-full sticky top-[64px] bg-neutral-white pt-2 pb-6 transition-all duration-300 ${
+     className={`w-full sticky top-[64px] bg-neutral-white pt-2 pb-6 transition-all duration-300 z-[40] ${
       scrolled ? " shadow-lg" : "shadow-none"
      }`}>
      <div className="main-container">
@@ -229,25 +272,11 @@ const VendingMenu = () => {
         </div>
        ) : (
         foodData?.map((data: any, index: number) => (
-         <div
+         <MenuItemCard
           key={index}
+          data={data}
           onClick={() => handleCardClick(data)}
-          className="w-full border border-[#EDEEF2] max-w-[354px] bg-neutral-white rounded-[16px] px-3 pt-3 pb-5 sm:px-4 sm:pt-4 sm:pb-6 overflow-hidden cursor-pointer hover:shadow-lg transition-shadow">
-          <img
-           src={data.image_url}
-           alt={data?.imgAlt || "Food Item"}
-           className="block w-full md:max-h-[180px] h-full rounded-[12px] sm:rounded-[16px] object-cover"
-          />
-          <h3 className="text-[24px] pt-3 pb-1 leading-[32px] font-[700] tracking-[0.1px] text-[#2B2B43]">
-           {data.name}
-          </h3>
-          <p className="text-[14px] line-clamp-2 leading-[20px] font-[400] tracking-[0.2px] text-[#83859C]">
-           {data.description}
-          </p>
-          <h4 className="text-[16px] pt-2 leading-[24px] font-[700] tracking-[0.1px] text-[#2B2B43]">
-           AED {data.price}
-          </h4>
-         </div>
+         />
         ))
        )}
       </div>

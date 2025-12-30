@@ -8,7 +8,7 @@ const steps = [
    "Freshly prepared dishes delivered straight to your home or workspace",
   tag: "DOSTA DELIVERY",
   button: "Browse Menus",
-  link: "/menus", // Link for this button
+  link: "/coming-soon", // Link for this button
  },
  {
   icon: "images/header/card2.svg", // Replace with your actual image path
@@ -26,7 +26,7 @@ const steps = [
    "Balanced meal plans tailored for your health goals, delivered or picked up.",
   tag: "DOSTA WELLNESS",
   button: "Explore Plans",
-  link: "/wellness", // Link for this button
+  link: "/coming-soon", // Link for this button
  },
  {
   icon: "images/header/card4.svg", // Replace with your actual image path
@@ -44,7 +44,7 @@ const steps = [
    "Office catering that's both delicious and professionally executed",
   tag: "DOSTA CORPORATE",
   button: "Order for Your Team",
-  link: "/corporate", // Link for this button
+  link: "/coming-soon", // Link for this button
  },
  {
   icon: "images/header/card6.svg", // Replace with your actual image path
@@ -53,10 +53,9 @@ const steps = [
    "Partner with us to support food drives, community events, and local causes.",
   tag: "DOSTA GIVING",
   button: "Support the Mission",
-  link: "/giving", // Link for this button
+  link: "/coming-soon", // Link for this button
  },
 ];
-
 
 const ShowCase = () => {
  const navigate = useNavigate(); // Initialize useNavigate

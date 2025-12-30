@@ -24,6 +24,7 @@ const VendingHeader = () => {
  const handleLogout = () => {
   localStorage.removeItem("user");
   localStorage.removeItem("token");
+  localStorage.removeItem("selectedLocation"); // Clear selected location
   setUser(null);
   navigate("/");
  };

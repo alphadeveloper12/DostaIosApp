@@ -32,6 +32,7 @@ import HowItWorks from "./pages/HowItWorks";
 import HelpCenter from "./pages/HelpCenter";
 import ReportBug from "./pages/ReportBug";
 import Faqs from "./pages/Faqs";
+import ComingSoon from "./pages/ComingSoon"; // Import ComingSoon
 import { useDispatch } from "react-redux";
 import { useEffect } from "react";
 import { fetchCartData } from "./redux/slices/cartSlice";
@@ -61,6 +62,7 @@ const App = () => (
      <Route path="/" element={<Index />} />
      <Route path="/vending-home" element={<VendingHome />} />
      <Route path="/about-us" element={<AboutUs />} />
+     <Route path="/coming-soon" element={<ComingSoon />} />
      <Route path="/services" element={<Services />} />
      <Route path="/portfolio" element={<Portfolio />} />
      <Route path="/contact-us" element={<ContactUs />} />

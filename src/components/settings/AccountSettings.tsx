@@ -85,6 +85,7 @@ export default function AccountSettings() {
  const handleLogout = () => {
   localStorage.removeItem("authToken");
   sessionStorage.removeItem("authToken");
+  localStorage.removeItem("selectedLocation"); // Clear selected location
   localStorage.removeItem("user");
   sessionStorage.removeItem("user");
   navigate("/signin");

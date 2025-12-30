@@ -32,6 +32,7 @@ const Header = () => {
   localStorage.removeItem("user");
   sessionStorage.removeItem("user");
   localStorage.removeItem("orderProgress");
+  localStorage.removeItem("selectedLocation"); // Clear selected location
   setIsLoggedIn(false);
   navigate("/signin");
  };

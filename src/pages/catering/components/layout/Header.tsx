@@ -69,6 +69,7 @@ const Header = () => {
   localStorage.removeItem("authToken");
   sessionStorage.removeItem("authToken");
   localStorage.removeItem("user");
+  localStorage.removeItem("selectedLocation"); // Clear selected location
   sessionStorage.removeItem("user");
   setIsLoggedIn(false);
   navigate("/signin");
