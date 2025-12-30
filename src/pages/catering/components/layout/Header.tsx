@@ -150,7 +150,7 @@ const Header = () => {
          <button
           className="w-[40px] h-[40px] relative lg:w-[48px] lg:h-[48px] bg-primary  rounded-[12px] lg:rounded-[16px] text-white flex items-center justify-center text-[12px] lg:text-[14px] font-[600] flex-shrink-0"
           onClick={() => setIsDropdownOpen(!isDropdownOpen)}>
-          {profile ? (
+          {profile?.full_name ? (
            capitalizeName(profile.full_name)
           ) : (
            <img src="/images/nav/user.svg" alt="user" />

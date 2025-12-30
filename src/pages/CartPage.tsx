@@ -33,12 +33,12 @@ interface CartAPI {
   id: number;
   name: string;
   info: string;
- };
+ } | null;
  plan_type: "ORDER_NOW" | "START_PLAN" | "SMART_GRAB";
  plan_subtype: "NONE" | "WEEKLY" | "MONTHLY";
  pickup_type: "TODAY" | "IN_24_HOURS" | null;
  pickup_date: string | null;
- pickup_slot: number | null; // ID
+ pickup_slot: { id: number; label: string } | null;
  total_price: string;
  items: CartItemAPI[];
 }
@@ -244,18 +244,24 @@ const CartPage: React.FC = () => {
          });
 
          const payload = {
-          location_id: cartData.location.id,
+          location_id: cartData.location?.id || null, // Safely access ID
           plan_type: cartData.plan_type,
           plan_subtype: cartData.plan_subtype,
           pickup_type: cartData.pickup_type,
           pickup_date: cartData.pickup_date,
-          pickup_slot_id: cartData.pickup_slot,
+          pickup_slot_id: cartData.pickup_slot?.id || null, // Extract ID from object
           items: checkoutItems,
          };
 
          console.log("Checkout Payload:", payload);
          try {
           const token = sessionStorage.getItem("authToken");
+
+          if (!payload.location_id) {
+           alert("Location data is missing. Please re-select location.");
+           return;
+          }
+
           await axios.post(`${baseUrl}/api/vending/order/confirm/`, payload, {
            headers: { Authorization: `Token ${token}` },
           });
