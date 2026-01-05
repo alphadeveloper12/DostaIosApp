@@ -469,24 +469,6 @@ const MyOrders = () => {
             size="lg">
             Reschedule Booking
            </Button>
-
-           <Button
-            onClick={() => {
-             const newState = !notificationsEnabled;
-             setNotificationsEnabled(newState);
-             localStorage.setItem("notificationsEnabled", String(newState));
-            }}
-            variant="outline"
-            size="lg"
-            className={`${
-             notificationsEnabled
-              ? "bg-green-50 border-green-500 text-green-700"
-              : ""
-            }`}>
-            {notificationsEnabled
-             ? "Notifications Enabled"
-             : "Enable Notifications"}
-           </Button>
           </div>
          </div>
 
@@ -636,8 +618,10 @@ const MyOrders = () => {
      )}
     </div>
    </main>
+   <div className="max-md:hidden">
+    <Footer />
+   </div>
    <MobileFooterNav />
-   {/* <Footer /> */}
   </div>
  );
 };

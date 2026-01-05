@@ -16,6 +16,7 @@ import { Input } from "../ui/input";
 import Header from "@/pages/catering/components/layout/Header";
 import MobileFooterNav from "../home/MobileFooterNav";
 import Shrimmer from "../ui/Shrimmer"; // Import Shrimmer
+import Footer from "../layout/Footer";
 
 type StepStatus = "completed" | "active" | "pending";
 
@@ -1968,6 +1969,9 @@ const OrderNow = () => {
      )}
     </AnimatePresence>
    </main>
+   <div className="max-md:hidden">
+    <Footer />
+   </div>
    <MobileFooterNav />
   </div>
  );

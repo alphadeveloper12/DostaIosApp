@@ -8,6 +8,7 @@ import Header from "./catering/components/layout/Header";
 import { buildConfirmPayload } from "@/utils/orderUtils";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import MobileFooterNav from "@/components/home/MobileFooterNav";
 
 // Types matching Backend API
 interface MenuItemAPI {
@@ -185,7 +186,7 @@ const CartPage: React.FC = () => {
  };
 
  return (
-  <div className="bg-gray-50 min-h-screen ">
+  <div className="bg-gray-50 min-h-screen max-md:pb-[82px]">
    <Header />
    <div className="w-full bg-white pt-2 pb-6">
     <div className="main-container">
@@ -195,7 +196,7 @@ const CartPage: React.FC = () => {
      </h2>
     </div>
    </div>
-   <div className="main-container">
+   <div className="main-container ">
     {loading ? (
      <div className="py-10 text-center">Loading cart...</div>
     ) : (
@@ -276,7 +277,10 @@ const CartPage: React.FC = () => {
      </div>
     )}
    </div>
-   <Footer />
+   <div className="max-md:hidden">
+    <Footer />
+   </div>
+   <MobileFooterNav />
   </div>
  );
 };
