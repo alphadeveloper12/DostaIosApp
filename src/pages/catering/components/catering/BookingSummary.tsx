@@ -7,7 +7,7 @@ interface BookingSummaryProps {
  guestCount: number;
  selectedDateTime: string;
  selectedProvider: { id: string | null; name: string | null };
- selectedServiceStyles: string[];
+ selectedServiceStyles: string | null;
  selectedCuisines: { id: number; name: string }[];
  selectedCourses: { id: number; name: string }[];
  selectedLocation: { id: number; name: string } | null;
@@ -122,9 +122,7 @@ const BookingSummary: React.FC<BookingSummaryProps> = ({
          {selectedProvider?.name || "Not Selected"}
         </p>
         <p className="text-blue-600 font-medium">
-         {selectedServiceStyles.length > 0
-          ? selectedServiceStyles.join(", ")
-          : "Not Selected"}
+         {selectedServiceStyles ? selectedServiceStyles : "Not Selected"}
         </p>
        </div>
 

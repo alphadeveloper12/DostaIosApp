@@ -92,7 +92,7 @@ const CuisineSelection: React.FC<CuisineSelectionProps> = ({
      <div
       className="md:w-8 md:h-8 w-6 h-6 rounded-full flex-shrink-0 flex items-center justify-center"
       style={{ backgroundColor: "hsl(var(--primary))" }}>
-      <span className="text-primary-foreground font-bold">4</span>
+      <span className="text-primary-foreground font-bold">5</span>
      </div>
      <h2 className="text-primary-text md:text-2xl text-xl font-bold">
       What's Type of Cuisines Would You Prefer?

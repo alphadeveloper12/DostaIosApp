@@ -29,6 +29,7 @@ const EventTypeSelection: React.FC<EventTypeSelectionProps> = ({
  handleContinue,
  handleGuestCountChange,
  handleGoBack,
+ setGuestCount,
 }) => {
  const [eventTypes, setEventTypes] = useState<
   { id: number; name: string; image_url: string }[]
@@ -75,7 +76,7 @@ const EventTypeSelection: React.FC<EventTypeSelectionProps> = ({
      <div
       className="md:w-8 md:h-8 w-6 h-6 rounded-full flex items-center flex-shrink-0 justify-center"
       style={{ backgroundColor: "hsl(var(--primary))" }}>
-      <span className="text-primary-foreground font-bold ">2</span>
+      <span className="text-primary-foreground font-bold ">1</span>
      </div>
      <h2 className="text-primary-text md:text-2xl text-xl font-bold">
       What Type Of Event Are you Planning?
@@ -117,7 +118,7 @@ const EventTypeSelection: React.FC<EventTypeSelectionProps> = ({
        <input
         type="number"
         value={guestCount}
-        readOnly
+        onChange={(e) => setGuestCount(Number(e.target.value))}
         style={{
          height: "44px",
          width: "94px",

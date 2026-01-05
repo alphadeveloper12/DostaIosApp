@@ -26,6 +26,10 @@ const Catering = () => {
   id: string | null;
   name: string | null;
  } | null>(null);
+ const [selectedDetailedEventName, setSelectedDetailedEventName] = useState<{
+  id: string | null;
+  name: string | null;
+ } | null>(null);
  const [guestCount, setGuestCount] = useState<number>(1);
  const [isDateTimePickerVisible, setIsDateTimePickerVisible] = useState(false);
  const [selectedDateTime, setSelectedDateTime] = useState<string | null>(null);
@@ -34,9 +38,9 @@ const Catering = () => {
   id: string | null;
   name: string | null;
  } | null>(null);
- const [selectedServiceStyles, setSelectedServiceStyles] = useState<string[]>(
-  []
- );
+ const [selectedServiceStyles, setSelectedServiceStyles] = useState<
+  string | null
+ >(null);
  const [selectedCuisines, setSelectedCuisines] = useState<
   { id: number; name: string }[]
  >([]);
@@ -52,6 +56,16 @@ const Catering = () => {
   label: string | null;
   price_range: string | null;
  }>({ id: null, label: null, price_range: null });
+
+ const [selectedPax, setSelectedPax] = useState<{
+  id: string | null;
+  label: string | null;
+  number: string | null;
+ }>({
+  id: null,
+  label: null,
+  number: null,
+ });
  const [selectedMenuItems, setSelectedMenuItems] = useState<
   { id: string; name: string; course: string; price: string }[]
  >([]);
@@ -71,37 +85,52 @@ const Catering = () => {
  };
 
  const handleContinue = () => {
-  if (step === 1 && selectedBudget.id)
+  const isBuffetOrSetMenu =
+   selectedServiceStyles &&
+   (selectedServiceStyles.toLowerCase().includes("buffet") ||
+    selectedServiceStyles.toLowerCase().includes("set menu"));
+
+  if (step === 1 && selectedEvent)
    setStep(2); // Budget (Step 1) -> Event (Step 2)
-  else if (step === 2 && selectedEvent)
+  else if (step === 2 && selectedLocation?.id)
    setStep(3); // Event (Step 2) -> Provider (Step 3)
-  else if (step === 3 && selectedProvider)
+  else if (step === 3 && selectedServiceStyles)
    setStep(4); // Provider (Step 3) -> Cuisine (Step 4)
-  else if (step === 4 && selectedCuisines.length > 0)
+  else if (step === 4 && selectedBudget.id)
    setStep(5); // Cuisine (Step 4) -> Course (Step 5)
-  else if (step === 5 && selectedCourses.length > 0)
-   setStep(6); // Course (Step 5) -> Location (Step 6)
-  else if (step === 6 && selectedLocation?.id)
+  else if (step === 5 && selectedCuisines.length > 0) {
+   if (isBuffetOrSetMenu) {
+    setStep(7); // Skip Course Selection (Step 6) -> Menu (Step 7)
+   } else {
+    setStep(6); // Go to Course Selection (Step 6)
+   }
+  } else if (step === 6 && selectedCourses.length > 0)
    setStep(7); // Location (Step 6) -> Menu (Step 7)
   else if (step === 7) setStep(8); // Menu (Step 7) -> Summary (Step 8)
  };
  const handleGoBack = () => {
+  const isBuffetOrSetMenu =
+   selectedServiceStyles &&
+   (selectedServiceStyles.toLowerCase().includes("buffet") ||
+    selectedServiceStyles.toLowerCase().includes("set menu"));
+
   if (step === 2) setStep(1); // Go back to Budget
   else if (step === 3) setStep(2); // Go back to Event
   else if (step === 4) setStep(3); // Go back to Provider
   else if (step === 5) setStep(4); // Go back to Cuisine
   else if (step === 6) setStep(5); // Go back to Course
-  else if (step === 7) setStep(6); // Go back to Location
-  else if (step === 8) setStep(7); // Go back to Menu
+  else if (step === 7) {
+   if (isBuffetOrSetMenu) {
+    setStep(5); // Go back to Cuisine (Step 5), skipping Step 6
+   } else {
+    setStep(6); // Go back to Course Selection (Step 6)
+   }
+  } else if (step === 8) setStep(7); // Go back to Menu
  };
 
  // Toggle selection functions
  const toggleServiceStyle = (style: string) => {
-  setSelectedServiceStyles((prevState) =>
-   prevState.includes(style)
-    ? prevState.filter((item) => item !== style)
-    : [...prevState, style]
-  );
+  setSelectedServiceStyles(style);
  };
 
  const toggleCuisine = (cuisine: { id: number; name: string }) => {
@@ -160,16 +189,6 @@ const Catering = () => {
       {/* Show the steps */}
 
       {step === 1 && (
-       <LazyLoad>
-        <BudgetSelection
-         selectedBudget={selectedBudget}
-         setSelectedBudget={setSelectedBudget}
-         handleGoBack={handleGoBack}
-         handleContinue={handleContinue}
-        />
-       </LazyLoad>
-      )}
-      {step === 2 && (
        <EventTypeSelection
         selectedEvent={selectedEvent}
         setSelectedEvent={setSelectedEvent}
@@ -183,6 +202,16 @@ const Catering = () => {
         handleGoBack={handleGoBack}
        />
       )}
+      {step === 2 && (
+       <LazyLoad>
+        <LocationSelection
+         selectedLocation={selectedLocation}
+         setSelectedLocation={setSelectedLocation}
+         handleGoBack={handleGoBack}
+         handleContinue={handleContinue}
+        />
+       </LazyLoad>
+      )}
       {step === 3 && (
        <LazyLoad>
         <ProviderTypeSelection
@@ -192,10 +221,26 @@ const Catering = () => {
          handleGoBack={handleGoBack}
          handleContinue={handleContinue}
          selectedServiceStyles={selectedServiceStyles}
+         selectedEvent={selectedEvent}
+         selectedDetailedEventName={selectedDetailedEventName}
+         setSelectedDetailedEventName={setSelectedDetailedEventName}
         />
        </LazyLoad>
       )}
       {step === 4 && (
+       <LazyLoad>
+        <BudgetSelection
+         selectedBudget={selectedBudget}
+         setSelectedBudget={setSelectedBudget}
+         handleGoBack={handleGoBack}
+         handleContinue={handleContinue}
+         selectedEvent={selectedEvent}
+         selectedPax={selectedPax}
+         setSelectedPax={setSelectedPax}
+        />
+       </LazyLoad>
+      )}
+      {step === 5 && (
        <LazyLoad>
         <CuisineSelection
          selectedCuisines={selectedCuisines}
@@ -206,7 +251,7 @@ const Catering = () => {
         />
        </LazyLoad>
       )}
-      {step === 5 && (
+      {step === 6 && (
        <LazyLoad>
         <CourseSelection
          selectedCourses={selectedCourses}
@@ -214,16 +259,6 @@ const Catering = () => {
          handleGoBack={handleGoBack}
          handleContinue={handleContinue}
          toggleCourse={toggleCourse}
-        />
-       </LazyLoad>
-      )}
-      {step === 6 && (
-       <LazyLoad>
-        <LocationSelection
-         selectedLocation={selectedLocation}
-         setSelectedLocation={setSelectedLocation}
-         handleGoBack={handleGoBack}
-         handleContinue={handleContinue}
         />
        </LazyLoad>
       )}
