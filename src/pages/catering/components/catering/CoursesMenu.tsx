@@ -1,147 +1,16 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
+import axios from "axios";
 import { Button } from "../ui/button";
 import LazyLoad from "@/components/ui/LazyLoad";
-import { Check } from "lucide-react";
-
-// Dummy Data for Menu Courses and Items
-const MENU_COURSES = [
- {
-  id: "course-1",
-  title: "Course 1",
-  items: [
-   {
-    id: "c1-i1",
-    name: "Menu item 1",
-    description:
-     "Ea his sensbus molli eleifend, iudica bit Et cum omittantur id mel.",
-    image: "/images/vending_home/food.svg", // Placeholder
-    price: "AED 50",
-   },
-   {
-    id: "c1-i2",
-    name: "Menu item 2",
-    description:
-     "Ea his sensbus molli eleifend, iudica bit Et cum omittantur id mel.",
-    image: "/images/vending_home/food.svg", // Placeholder
-    price: "AED 50",
-   },
-   {
-    id: "c1-i3",
-    name: "Menu item 3",
-    description:
-     "Ea his sensbus molli eleifend, iudica bit Et cum omittantur id mel.",
-    image: "/images/vending_home/food.svg", // Placeholder
-    price: "AED 50",
-   },
-  ],
- },
- {
-  id: "course-2",
-  title: "Course 2",
-  items: [
-   {
-    id: "c2-i1",
-    name: "Menu item 1",
-    description:
-     "Ea his sensbus molli eleifend, iudica bit Et cum omittantur id mel.",
-    image: "/images/vending_home/food.svg", // Placeholder
-    price: "AED 60",
-   },
-   {
-    id: "c2-i2",
-    name: "Menu item 2",
-    description:
-     "Ea his sensbus molli eleifend, iudica bit Et cum omittantur id mel.",
-    image: "/images/vending_home/food.svg", // Placeholder
-    price: "AED 60",
-   },
-   {
-    id: "c2-i3",
-    name: "Menu item 3",
-    description:
-     "Ea his sensbus molli eleifend, iudica bit Et cum omittantur id mel.",
-    image: "/images/vending_home/food.svg", // Placeholder
-    price: "AED 60",
-   },
-   {
-    id: "c2-i4",
-    name: "Menu item 4",
-    description:
-     "Ea his sensbus molli eleifend, iudica bit Et cum omittantur id mel.",
-    image: "/images/vending_home/food.svg", // Placeholder
-    price: "AED 60",
-   },
-   {
-    id: "c2-i5",
-    name: "Menu item 5",
-    description:
-     "Ea his sensbus molli eleifend, iudica bit Et cum omittantur id mel.",
-    image: "/images/vending_home/food.svg", // Placeholder
-    price: "AED 60",
-   },
-   {
-    id: "c2-i6",
-    name: "Menu item 6",
-    description:
-     "Ea his sensbus molli eleifend, iudica bit Et cum omittantur id mel.",
-    image: "/images/vending_home/food.svg", // Placeholder
-    price: "AED 60",
-   },
-  ],
- },
- {
-  id: "course-3",
-  title: "Course 3",
-  items: [
-   {
-    id: "c3-i1",
-    name: "Menu item 1",
-    description:
-     "Ea his sensbus molli eleifend, iudica bit Et cum omittantur id mel.",
-    image: "/images/vending_home/food.svg", // Placeholder
-    price: "AED 40",
-   },
-   {
-    id: "c3-i2",
-    name: "Menu item 2",
-    description:
-     "Ea his sensbus molli eleifend, iudica bit Et cum omittantur id mel.",
-    image: "/images/vending_home/food.svg", // Placeholder
-    price: "AED 40",
-   },
-   {
-    id: "c3-i3",
-    name: "Menu item 3",
-    description:
-     "Ea his sensbus molli eleifend, iudica bit Et cum omittantur id mel.",
-    image: "/images/vending_home/food.svg", // Placeholder
-    price: "AED 40",
-   },
-   {
-    id: "c3-i4",
-    name: "Menu item 4",
-    description:
-     "Ea his sensbus molli eleifend, iudica bit Et cum omittantur id mel.",
-    image: "/images/vending_home/food.svg", // Placeholder
-    price: "AED 40",
-   },
-   {
-    id: "c3-i5",
-    name: "Menu item 5",
-    description:
-     "Ea his sensbus molli eleifend, iudica bit Et cum omittantur id mel.",
-    image: "/images/vending_home/food.svg", // Placeholder
-    price: "AED 40",
-   },
-  ],
- },
-];
+import Shrimmer from "@/components/ui/Shrimmer";
 
 interface MenuItem {
  id: string;
  name: string;
- course: string;
+ course: string; // Course Name (Group Title)
  price: string;
+ description?: string;
+ image_url?: string;
 }
 
 interface CoursesMenuProps {
@@ -149,6 +18,14 @@ interface CoursesMenuProps {
  toggleMenuItem: (item: MenuItem) => void;
  handleGoBack: () => void;
  handleContinue: () => void;
+ selectedCourses: { id: number; name: string }[];
+ selectedCuisines: { id: number; name: string }[];
+ selectedBudget: {
+  id: string | null;
+  label: string | null;
+  price_range: string | null;
+ };
+ selectedEvent: { id: string | null; name: string | null } | null;
 }
 
 const CoursesMenu: React.FC<CoursesMenuProps> = ({
@@ -156,7 +33,179 @@ const CoursesMenu: React.FC<CoursesMenuProps> = ({
  toggleMenuItem,
  handleGoBack,
  handleContinue,
+ selectedCourses,
+ selectedCuisines,
+ selectedBudget,
+ selectedEvent,
 }) => {
+ const [menuGroups, setMenuGroups] = useState<
+  { id: number; title: string; items: MenuItem[] }[]
+ >([]);
+ const [loading, setLoading] = useState<boolean>(true);
+ const [error, setError] = useState<string | null>(null);
+
+ const baseUrl = import.meta.env.VITE_API_URL;
+ const authToken = sessionStorage.getItem("authToken");
+
+ useEffect(() => {
+  const fetchMenuItems = async () => {
+   try {
+    const courseIds = selectedCourses.map((c) => c.id).join(",");
+    const cuisineIds = selectedCuisines.map((c) => c.id).join(",");
+    const budgetId = selectedBudget.id;
+    const isPrivate = !selectedEvent?.name?.toLowerCase().includes("corporate");
+
+    // Fetch items with filters
+    const response = await axios.get(`${baseUrl}/api/catering/menu-items/`, {
+     params: {
+      course_ids: courseIds,
+      cuisine_ids: cuisineIds,
+      budget_id: budgetId,
+      is_private: isPrivate,
+     },
+     headers: {
+      Authorization: `Token ${authToken}`,
+     },
+    });
+
+    const items: any[] = response.data;
+
+    // Group items by Course
+    // We need to map the flat list of items to the grouped structure expected by the UI.
+    // Each item has a 'course' ID/Name in it (based on backend serializer 'course' field nesting?
+    // Wait, backend serializer currently returns course ID as integer by default unless nested)
+
+    // NOTE: Backend Serializer 'course' field is currently just ID?
+    // Let's check serializer:
+    // fields = ['id', 'name', 'description', 'image_url', 'course', 'cuisine', 'variants']
+    // 'course' is aForeignKey. Default ModelSerializer uses PK.
+    // I should have made it nested or StringRelatedField properly, or use the course list to map IDs to Names.
+
+    // Better approach: Use the `selectedCourses` list I have here to create the groups,
+    // and filter the fetched items into those groups.
+
+    const grouped = selectedCourses
+     .map((course) => {
+      // Filter items belonging to this course
+      // Backend item.course is likely just the ID (number)
+      const courseItems = items
+       .filter((item: any) => item.course === course.id)
+       .map((item: any) => ({
+        id: item.id.toString(),
+        name: item.name,
+        course: course.name,
+        price: item.active_price ? `AED ${item.active_price}` : "N/A", // Use active_price from backend logic
+        description: item.description,
+        image_url: item.image_url,
+       }));
+
+      return {
+       id: course.id,
+       title: course.name,
+       items: courseItems,
+      };
+     })
+     .filter((group) => group.items.length > 0); // Only show groups with items
+
+    setMenuGroups(grouped);
+    setLoading(false);
+   } catch (err) {
+    console.error("Error fetching menu items:", err);
+    setError("Failed to load menu items. Please try again later.");
+    setLoading(false);
+   }
+  };
+
+  if (!selectedCourses.length && !selectedCuisines.length) {
+   // If we skipped course selection (Buffet), we might rely on Cuisines only?
+   // But the previous implementation assumed Courses are present.
+   // If user skipped Step 6 (Buffet), selectedCourses is EMPTY.
+   // In that case, we should probably fetch ALL courses related to the Cuisines first, or rely on the backend to Group them?
+   // Since backend logic filters by what is provided, if course_ids is empty, it returns items for ALL courses of that Cuisine.
+   // However, frontend grouping logic above relies on `selectedCourses` to define groups.
+
+   // FIX for Skipped Step: If selectedCourses is empty, we must infer courses from the fetched items?
+   // Or we should have set selectedCourses automatically in the skipped step? To keep it simple, let's infer groups from data.
+   fetchMenuItemsFallback();
+  } else {
+   fetchMenuItems();
+  }
+
+  // Define fallback fetch for when selectedCourses is empty (e.g. buffet mode skipping step 6)
+  async function fetchMenuItemsFallback() {
+   try {
+    const cuisineIds = selectedCuisines.map((c) => c.id).join(",");
+    const budgetId = selectedBudget.id;
+    const isPrivate = !selectedEvent?.name?.toLowerCase().includes("corporate");
+
+    const response = await axios.get(`${baseUrl}/api/catering/menu-items/`, {
+     params: {
+      cuisine_ids: cuisineIds,
+      budget_id: budgetId,
+      is_private: isPrivate,
+     },
+     headers: { Authorization: `Token ${authToken}` },
+    });
+
+    const items: any[] = response.data;
+
+    // Dynamic Grouping
+    // We need course names. Backend item only has course ID.
+    // We might need to fetch all courses or change serializer to return course depth.
+    // For now, let's just group by ID and use a placeholder or separate call?
+    // Actually, let's query courses first to get names if needed.
+
+    const coursesResponse = await axios.get(
+     `${baseUrl}/api/catering/courses/?cuisine_ids=${cuisineIds}`,
+     {
+      headers: { Authorization: `Token ${authToken}` },
+     }
+    );
+    const coursesMap = new Map(
+     coursesResponse.data.map((c: any) => [c.id, c.name])
+    );
+
+    const groups: Record<
+     number,
+     { id: number; title: string; items: MenuItem[] }
+    > = {};
+
+    items.forEach((item: any) => {
+     const courseId = item.course;
+     if (!groups[courseId]) {
+      groups[courseId] = {
+       id: courseId,
+       title: coursesMap.get(courseId) || `Course ${courseId}`,
+       items: [],
+      };
+     }
+     groups[courseId].items.push({
+      id: item.id.toString(),
+      name: item.name,
+      course: groups[courseId].title,
+      price: item.active_price ? `AED ${item.active_price}` : "N/A",
+      description: item.description,
+      image_url: item.image_url,
+     });
+    });
+
+    setMenuGroups(Object.values(groups));
+    setLoading(false);
+   } catch (err) {
+    console.error(err);
+    setError("Failed to load menu items.");
+    setLoading(false);
+   }
+  }
+ }, [
+  baseUrl,
+  authToken,
+  selectedCourses,
+  selectedCuisines,
+  selectedBudget,
+  selectedEvent,
+ ]);
+
  // Helper to check if an item is selected
  const isSelected = (itemId: string) =>
   selectedMenuItems.some((item) => item.id === itemId);
@@ -169,6 +218,9 @@ const CoursesMenu: React.FC<CoursesMenuProps> = ({
   acc[item.course].push(item);
   return acc;
  }, {} as Record<string, MenuItem[]>);
+
+ if (loading) return <Shrimmer />;
+ if (error) return <div>{error}</div>;
 
  return (
   <LazyLoad>
@@ -192,7 +244,7 @@ const CoursesMenu: React.FC<CoursesMenuProps> = ({
      </h4>
 
      <div className="md:ml-12 flex flex-col gap-8">
-      {MENU_COURSES.map((course) => (
+      {menuGroups.map((course) => (
        <div key={course.id}>
         <h3 className="text-xl font-semibold mb-4 text-[#2B2B43]">
          {course.title}
@@ -203,14 +255,7 @@ const CoursesMenu: React.FC<CoursesMenuProps> = ({
           return (
            <div
             key={item.id}
-            onClick={() =>
-             toggleMenuItem({
-              id: item.id,
-              name: item.name,
-              course: course.title,
-              price: item.price,
-             })
-            }
+            onClick={() => toggleMenuItem(item)}
             className={`
                               cursor-pointer rounded-2xl border p-3 transition-all duration-200
                               ${
@@ -221,9 +266,8 @@ const CoursesMenu: React.FC<CoursesMenuProps> = ({
                             `}>
             {/* Image Placeholder */}
             <div className="relative aspect-[4/3] rounded-xl overflow-hidden mb-3 bg-gray-200">
-             {/* Replace with actual image logic/component if available */}
              <img
-              src={item.image} // Use dummy image
+              src={item.image_url}
               alt={item.name}
               className="w-full h-full object-cover"
               onError={(e) => {
@@ -244,8 +288,9 @@ const CoursesMenu: React.FC<CoursesMenuProps> = ({
              {item.name}
             </h4>
             <p className="text-neutral-gray text-[14px] leading-[20px] font-[400]">
-             {item.description}
+             {item.description || " Delicious option for your event."}
             </p>
+            <p className="text-primary font-bold mt-2">{item.price}</p>
            </div>
           );
          })}
@@ -307,7 +352,9 @@ const CoursesMenu: React.FC<CoursesMenuProps> = ({
           </h4>
           <ul className="space-y-1">
            {items.map((item) => (
-            <li key={item.id} className="text-[#2B2B43] text-[14px] leading-[20px] font-[600]">
+            <li
+             key={item.id}
+             className="text-[#2B2B43] text-[14px] leading-[20px] font-[600]">
              {item.name}
             </li>
            ))}

@@ -99,11 +99,7 @@ const Catering = () => {
   else if (step === 4 && selectedBudget.id)
    setStep(5); // Cuisine (Step 4) -> Course (Step 5)
   else if (step === 5 && selectedCuisines.length > 0) {
-   if (isBuffetOrSetMenu) {
-    setStep(7); // Skip Course Selection (Step 6) -> Menu (Step 7)
-   } else {
-    setStep(6); // Go to Course Selection (Step 6)
-   }
+   setStep(6); // Go to Course Selection (Step 6)
   } else if (step === 6 && selectedCourses.length > 0)
    setStep(7); // Location (Step 6) -> Menu (Step 7)
   else if (step === 7) setStep(8); // Menu (Step 7) -> Summary (Step 8)
@@ -120,11 +116,7 @@ const Catering = () => {
   else if (step === 5) setStep(4); // Go back to Cuisine
   else if (step === 6) setStep(5); // Go back to Course
   else if (step === 7) {
-   if (isBuffetOrSetMenu) {
-    setStep(5); // Go back to Cuisine (Step 5), skipping Step 6
-   } else {
-    setStep(6); // Go back to Course Selection (Step 6)
-   }
+   setStep(6); // Go back to Course Selection (Step 6)
   } else if (step === 8) setStep(7); // Go back to Menu
  };
 
@@ -248,6 +240,8 @@ const Catering = () => {
          handleGoBack={handleGoBack}
          handleContinue={handleContinue}
          toggleCuisine={toggleCuisine}
+         selectedBudget={selectedBudget}
+         selectedEvent={selectedEvent}
         />
        </LazyLoad>
       )}
@@ -258,7 +252,10 @@ const Catering = () => {
          setSelectedCourses={setSelectedCourses}
          handleGoBack={handleGoBack}
          handleContinue={handleContinue}
+         selectedCuisines={selectedCuisines}
          toggleCourse={toggleCourse}
+         selectedBudget={selectedBudget}
+         selectedEvent={selectedEvent}
         />
        </LazyLoad>
       )}
@@ -269,6 +266,10 @@ const Catering = () => {
          toggleMenuItem={toggleMenuItem}
          handleGoBack={handleGoBack}
          handleContinue={handleContinue}
+         selectedCourses={selectedCourses}
+         selectedCuisines={selectedCuisines}
+         selectedBudget={selectedBudget}
+         selectedEvent={selectedEvent}
         />
        </LazyLoad>
       )}

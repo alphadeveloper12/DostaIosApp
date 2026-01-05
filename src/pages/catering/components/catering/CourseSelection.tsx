@@ -18,6 +18,13 @@ interface CourseSelectionProps {
  handleGoBack: () => void;
  handleContinue: () => void;
  toggleCourse: (course: { id: number; name: string }) => void;
+ selectedCuisines: { id: number; name: string }[];
+ selectedBudget: {
+  id: string | null;
+  label: string | null;
+  price_range: string | null;
+ };
+ selectedEvent: { id: string | null; name: string | null } | null;
 }
 
 const CourseSelection: React.FC<CourseSelectionProps> = ({
@@ -26,6 +33,9 @@ const CourseSelection: React.FC<CourseSelectionProps> = ({
  handleGoBack,
  handleContinue,
  toggleCourse,
+ selectedCuisines,
+ selectedBudget,
+ selectedEvent,
 }) => {
  const [courseTypes, setCourseTypes] = useState<Course[]>([]);
  const [loading, setLoading] = useState<boolean>(true);
@@ -37,7 +47,16 @@ const CourseSelection: React.FC<CourseSelectionProps> = ({
  useEffect(() => {
   const fetchCourses = async () => {
    try {
+    const cuisineIds = selectedCuisines.map((c) => c.id).join(",");
+    const budgetId = selectedBudget.id;
+    const isPrivate = !selectedEvent?.name?.toLowerCase().includes("corporate");
+
     const response = await axios.get(`${baseUrl}/api/catering/courses/`, {
+     params: {
+      cuisine_ids: cuisineIds,
+      budget_id: budgetId,
+      is_private: isPrivate,
+     },
      headers: {
       Authorization: `Token ${authToken}`,
      },
@@ -57,7 +76,7 @@ const CourseSelection: React.FC<CourseSelectionProps> = ({
   }, 1000); // ⏱️ 2-second delay
 
   return () => clearTimeout(timer); // cleanup
- }, [baseUrl, authToken]);
+ }, [baseUrl, authToken, selectedCuisines, selectedBudget, selectedEvent]);
 
  // Render loading and error states
  if (loading) {
