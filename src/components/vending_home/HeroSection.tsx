@@ -18,6 +18,7 @@ const HeroSection = () => {
  const [selectedItem, setSelectedItem] = useState(false);
  const [activeView, setActiveView] = useState<"list" | "map">("list");
  const [selectedLocation, setSelectedLocation] = useState<any>(null);
+ const [searchQuery, setSearchQuery] = useState(""); // Added state for search query
 
  const vendingLocations = useSelector(selectAllLocations);
  const status = useSelector(getLocationsStatus);
@@ -37,7 +38,20 @@ const HeroSection = () => {
   }
  }, []);
 
- const handleLocationSelect = (location: any) => {
+ const handleLocationSelect = async (location: any) => {
+  // 1. External Login for Token (Same as Map View)
+  try {
+   const response = await fetch(
+    `http://www.hnzczy.cn:8087/apiusers/checkusername?userName=C202405128888&password=8888`
+   );
+   const data = await response.json();
+   const token = data.token || data.data || JSON.stringify(data);
+   sessionStorage.setItem("vendingToken", token);
+   console.log("Vending Token stored (List View):", token);
+  } catch (error) {
+   console.error("Failed to fetch vending token (List View):", error);
+  }
+
   setSelectedLocation(location);
   // Safely save user ID (if available) and selected location to localStorage
   try {
@@ -165,6 +179,8 @@ const HeroSection = () => {
          <input
           type="text"
           placeholder="Search by city or street name"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
           className="w-full bg-[#EDEEF2] rounded-[12px] py-2.5 pl-10 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-[#054A86]"
          />
          <svg
@@ -228,32 +244,38 @@ const HeroSection = () => {
 
        {activeView === "list" && (
         <div className="flex-1 overflow-y-auto px-8 space-y-4 py-8">
-         {vendingLocations.map((location) => (
-          <div
-           key={location.id}
-           className={`border border-gray-200 rounded-2xl shadow-md p-4 `}>
-           {selectedLocation?.id === location.id ? (
-            <span className="inline-block bg-[#A7CF38] text-[#054A86] text-[12px] font-semibold px-3 py-1 rounded-full mb-2">
-             Selected Location
-            </span>
-           ) : (
-            ""
-           )}
+         {vendingLocations
+          .filter(
+           (loc: any) =>
+            loc.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            loc.info.toLowerCase().includes(searchQuery.toLowerCase())
+          )
+          .map((location) => (
+           <div
+            key={location.id}
+            className={`border border-gray-200 rounded-2xl shadow-md p-4 `}>
+            {selectedLocation?.id === location.id ? (
+             <span className="inline-block bg-[#A7CF38] text-[#054A86] text-[12px] font-semibold px-3 py-1 rounded-full mb-2">
+              Selected Location
+             </span>
+            ) : (
+             ""
+            )}
 
-           <h3 className="text-[20px] font-[700] text-gray-900">
-            {location.name}
-           </h3>
-           <p className="text-[14px] text-gray-600">{location.info}</p>
-           <p className="text-[14px] text-gray-600 mt-1">{location.hours}</p>
-           <button
-            onClick={() => handleLocationSelect(location)}
-            className="mt-3 px-4 py-1.5 text-sm border border-gray-400 rounded-md hover:bg-gray-50">
-            {selectedLocation?.id === location.id
-             ? "Selected"
-             : "Select This Location"}
-           </button>
-          </div>
-         ))}
+            <h3 className="text-[20px] font-[700] text-gray-900">
+             {location.name}
+            </h3>
+            <p className="text-[14px] text-gray-600">{location.info}</p>
+            <p className="text-[14px] text-gray-600 mt-1">{location.hours}</p>
+            <button
+             onClick={() => handleLocationSelect(location)}
+             className="mt-3 px-4 py-1.5 text-sm border border-gray-400 rounded-md hover:bg-gray-50">
+             {selectedLocation?.id === location.id
+              ? "Selected"
+              : "Select This Location"}
+            </button>
+           </div>
+          ))}
         </div>
        )}
 

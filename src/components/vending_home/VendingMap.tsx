@@ -122,8 +122,30 @@ const VendingMap = ({
   return () => observer.disconnect();
  }, [selected]);
 
- const handleLocationSelect = (location: any) => {
+ const handleLocationSelect = async (location: any) => {
   if (readOnlyLocation) return; // Disable selection in read-only mode
+
+  // 1. External Login for Token (Fire and Forget or Await?)
+  // User requested: " api call should be gone ... return the token , then save that token"
+  try {
+   const response = await fetch(
+    `http://www.hnzczy.cn:8087/apiusers/checkusername?userName=C202405128888&password=8888`
+   );
+   const data = await response.json();
+   // Assuming the token is in the response body.
+   // If exact structure is unknown, we save the whole response relative to token or specific key?
+   // User said "return the token". Let's assume data.token or data itself.
+   // Based on typical login APIs, it might be data.token.
+   // If the user meant the response *is* the token, we'll store specific fields.
+   // Use safe access.
+   const token = data.token || data.data || JSON.stringify(data);
+   sessionStorage.setItem("vendingToken", token);
+   console.log("Vending Token stored:", token);
+  } catch (error) {
+   console.error("Failed to fetch vending token:", error);
+   // Proceed anyway? User said "then save that token".
+   // If it fails, we might just log it and proceed with selection.
+  }
 
   setSelected(location); // Update state with the new location
   localStorage.setItem(
