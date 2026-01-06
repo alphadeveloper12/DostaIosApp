@@ -8,7 +8,6 @@ interface MenuItem {
  id: string;
  name: string;
  course: string; // Course Name (Group Title)
- // price: removed
  description?: string;
  image_url?: string;
 }
@@ -94,7 +93,6 @@ const CoursesMenu: React.FC<CoursesMenuProps> = ({
         id: item.id.toString(),
         name: item.name,
         course: course.name,
-        // price: removed
         description: item.description,
         image_url: item.image_url,
        }));
@@ -290,7 +288,6 @@ const CoursesMenu: React.FC<CoursesMenuProps> = ({
             <p className="text-neutral-gray text-[14px] leading-[20px] font-[400]">
              {item.description || " Delicious option for your event."}
             </p>
-            {/* Price removed */}
            </div>
           );
          })}
