@@ -8,7 +8,7 @@ interface MenuItem {
  id: string;
  name: string;
  course: string; // Course Name (Group Title)
- price: string;
+ // price: removed
  description?: string;
  image_url?: string;
 }
@@ -29,13 +29,13 @@ interface CoursesMenuProps {
 }
 
 const CoursesMenu: React.FC<CoursesMenuProps> = ({
- selectedMenuItems,
+ selectedMenuItems = [],
  toggleMenuItem,
  handleGoBack,
  handleContinue,
- selectedCourses,
- selectedCuisines,
- selectedBudget,
+ selectedCourses = [],
+ selectedCuisines = [],
+ selectedBudget = { id: null, label: null, price_range: null },
  selectedEvent,
 }) => {
  const [menuGroups, setMenuGroups] = useState<
@@ -94,7 +94,7 @@ const CoursesMenu: React.FC<CoursesMenuProps> = ({
         id: item.id.toString(),
         name: item.name,
         course: course.name,
-        price: item.active_price ? `AED ${item.active_price}` : "N/A", // Use active_price from backend logic
+        // price: removed
         description: item.description,
         image_url: item.image_url,
        }));
@@ -116,7 +116,7 @@ const CoursesMenu: React.FC<CoursesMenuProps> = ({
    }
   };
 
-  if (!selectedCourses.length && !selectedCuisines.length) {
+  if (!selectedCourses?.length && !selectedCuisines?.length) {
    // If we skipped course selection (Buffet), we might rely on Cuisines only?
    // But the previous implementation assumed Courses are present.
    // If user skipped Step 6 (Buffet), selectedCourses is EMPTY.
@@ -183,7 +183,7 @@ const CoursesMenu: React.FC<CoursesMenuProps> = ({
       id: item.id.toString(),
       name: item.name,
       course: groups[courseId].title,
-      price: item.active_price ? `AED ${item.active_price}` : "N/A",
+      // price: removed
       description: item.description,
       image_url: item.image_url,
      });
@@ -290,7 +290,7 @@ const CoursesMenu: React.FC<CoursesMenuProps> = ({
             <p className="text-neutral-gray text-[14px] leading-[20px] font-[400]">
              {item.description || " Delicious option for your event."}
             </p>
-            <p className="text-primary font-bold mt-2">{item.price}</p>
+            {/* Price removed */}
            </div>
           );
          })}

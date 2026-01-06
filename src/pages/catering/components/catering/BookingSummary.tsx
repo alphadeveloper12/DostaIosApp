@@ -20,7 +20,6 @@ interface BookingSummaryProps {
   id: string;
   name: string;
   course: string;
-  price: string;
  }[];
  handleGoBack: () => void;
 }

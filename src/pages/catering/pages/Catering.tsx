@@ -67,7 +67,7 @@ const Catering = () => {
   number: null,
  });
  const [selectedMenuItems, setSelectedMenuItems] = useState<
-  { id: string; name: string; course: string; price: string }[]
+  { id: string; name: string; course: string }[]
  >([]);
 
  // Handler functions
@@ -145,7 +145,6 @@ const Catering = () => {
   id: string;
   name: string;
   course: string;
-  price: string;
  }) => {
   setSelectedMenuItems((prevState) =>
    prevState.some((i) => i.id === item.id)
