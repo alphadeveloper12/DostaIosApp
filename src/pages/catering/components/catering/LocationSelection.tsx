@@ -54,7 +54,11 @@ const LocationSelection: React.FC<LocationSelectionProps> = ({
  }, [baseUrl, authToken]);
 
  if (loading) {
-  return <Shrimmer />;
+  return (
+   <div className="w-full h-[50vh] rounded-2xl overflow-hidden">
+    <Shrimmer />
+   </div>
+  );
  }
 
  if (error) {

@@ -33,6 +33,7 @@ interface BudgetSelectionProps {
    number: string | null;
   }>
  >;
+ selectedServiceStyles: { id: number; name: string } | null;
 }
 
 const BudgetSelection: React.FC<BudgetSelectionProps> = ({
@@ -43,6 +44,7 @@ const BudgetSelection: React.FC<BudgetSelectionProps> = ({
  selectedEvent,
  selectedPax,
  setSelectedPax,
+ selectedServiceStyles,
 }) => {
  const [budgetOptions, setBudgetOptions] = useState<
   { id: string; label: string; price_range: string }[]
@@ -61,19 +63,22 @@ const BudgetSelection: React.FC<BudgetSelectionProps> = ({
  useEffect(() => {
   const fetchData = async () => {
    try {
-    let budgetEndpoint = "/api/catering/budget-options-private/";
-    let paxEndpoint = "/api/catering/pax-private/";
-
-    if (selectedEvent?.name?.toLowerCase().includes("corporate")) {
-     budgetEndpoint = "/api/catering/budget-options/";
-     paxEndpoint = "/api/catering/pax/";
-    }
+    const budgetEndpoint = "/api/catering/budget-options/";
+    const paxEndpoint = "/api/catering/pax/";
+    const isPrivate = !selectedEvent?.name?.toLowerCase().includes("corporate");
 
     const [budgetRes, paxRes] = await Promise.all([
      axios.get(`${baseUrl}${budgetEndpoint}`, {
+      params: {
+       service_style_id: selectedServiceStyles?.id,
+       is_private: isPrivate,
+      },
       headers: { Authorization: `Token ${authToken}` },
      }),
      axios.get(`${baseUrl}${paxEndpoint}`, {
+      params: {
+       service_style_id: selectedServiceStyles?.id,
+      },
       headers: { Authorization: `Token ${authToken}` },
      }),
     ]);
@@ -91,11 +96,15 @@ const BudgetSelection: React.FC<BudgetSelectionProps> = ({
   }, 1000); // ⏱️ 2-second delay
 
   return () => clearTimeout(timer); // cleanup
- }, [baseUrl, authToken, selectedEvent]);
+ }, [baseUrl, authToken, selectedEvent, selectedServiceStyles]);
 
  // Show loading or error message if data is still being fetched
  if (loading) {
-  return <Shrimmer />;
+  return (
+   <div className="w-full h-[50vh] rounded-2xl overflow-hidden">
+    <Shrimmer />
+   </div>
+  );
  }
 
  if (error) {

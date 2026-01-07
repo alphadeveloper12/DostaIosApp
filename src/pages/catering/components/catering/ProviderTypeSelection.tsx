@@ -19,10 +19,10 @@ interface ProviderTypeSelectionProps {
  setSelectedProvider: React.Dispatch<
   React.SetStateAction<{ id: string | null; name: string | null } | null>
  >;
- toggleServiceStyle: (style: string) => void;
+ toggleServiceStyle: (style: { id: number; name: string }) => void;
  handleGoBack: () => void;
  handleContinue: () => void;
- selectedServiceStyles: string | null;
+ selectedServiceStyles: { id: number; name: string } | null;
  selectedEvent: { id: string | null; name: string | null } | null;
  selectedDetailedEventName: { id: string | null; name: string | null } | null;
  setSelectedDetailedEventName: React.Dispatch<
@@ -101,7 +101,11 @@ const ProviderTypeSelection: React.FC<ProviderTypeSelectionProps> = ({
  }, [baseUrl, authToken, selectedEvent, showEventNameSelection]);
 
  if (loading) {
-  return <Shrimmer />;
+  return (
+   <div className="w-full h-[50vh] rounded-2xl overflow-hidden">
+    <Shrimmer />
+   </div>
+  );
  }
 
  if (error) {
@@ -175,19 +179,19 @@ const ProviderTypeSelection: React.FC<ProviderTypeSelectionProps> = ({
       {serviceStyles.map((style) => (
        <Button
         key={style.id}
-        onClick={() => toggleServiceStyle(style.name)}
+        onClick={() => toggleServiceStyle({ id: style.id, name: style.name })}
         style={{
          fontSize: "16px",
          height: "60px",
          backgroundColor:
-          selectedServiceStyles === style.name ? "#EAF5FF" : "#fff",
+          selectedServiceStyles?.id === style.id ? "#EAF5FF" : "#fff",
          color: "#2B2B43",
          fontWeight: "400",
          borderRadius: "16px",
          padding: "16px",
          width: "245px",
          border:
-          selectedServiceStyles === style.name
+          selectedServiceStyles?.id === style.id
            ? "1px solid #054A86"
            : "1px solid #C7C8D2",
          display: "flex",

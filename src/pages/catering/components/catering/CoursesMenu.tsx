@@ -217,7 +217,13 @@ const CoursesMenu: React.FC<CoursesMenuProps> = ({
   return acc;
  }, {} as Record<string, MenuItem[]>);
 
- if (loading) return <Shrimmer />;
+ if (loading) {
+  return (
+   <div className="w-full h-[600px] rounded-2xl overflow-hidden">
+    <Shrimmer />
+   </div>
+  );
+ }
  if (error) return <div>{error}</div>;
 
  return (

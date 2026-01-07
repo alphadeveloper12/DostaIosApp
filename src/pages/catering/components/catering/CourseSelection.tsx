@@ -80,7 +80,11 @@ const CourseSelection: React.FC<CourseSelectionProps> = ({
 
  // Render loading and error states
  if (loading) {
-  return <Shrimmer></Shrimmer>;
+  return (
+   <div className="w-full h-[50vh] rounded-2xl overflow-hidden">
+    <Shrimmer />
+   </div>
+  );
  }
 
  if (error) {

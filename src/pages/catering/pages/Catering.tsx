@@ -19,6 +19,10 @@ import BreadCrumb from "@/components/home/BreadCrumb";
 import LazyLoad from "@/components/ui/LazyLoad";
 import MobileFooterNav from "@/components/home/MobileFooterNav";
 import CoursesMenu from "../components/catering/CoursesMenu";
+import CoffeeBreakMenu from "../components/catering/CoffeeBreakMenu";
+import PlatterMenu from "../components/catering/PlatterMenu";
+import BoxedMealMenu from "../components/catering/BoxedMealMenu";
+import LiveStationMenu from "../components/catering/LiveStationMenu";
 
 const Catering = () => {
  const navigate = useNavigate();
@@ -38,9 +42,10 @@ const Catering = () => {
   id: string | null;
   name: string | null;
  } | null>(null);
- const [selectedServiceStyles, setSelectedServiceStyles] = useState<
-  string | null
- >(null);
+ const [selectedServiceStyles, setSelectedServiceStyles] = useState<{
+  id: number;
+  name: string;
+ } | null>(null);
  const [selectedCuisines, setSelectedCuisines] = useState<
   { id: number; name: string }[]
  >([]);
@@ -86,9 +91,21 @@ const Catering = () => {
 
  const handleContinue = () => {
   const isBuffetOrSetMenu =
-   selectedServiceStyles &&
-   (selectedServiceStyles.toLowerCase().includes("buffet") ||
-    selectedServiceStyles.toLowerCase().includes("set menu"));
+   selectedServiceStyles?.name &&
+   (selectedServiceStyles.name.toLowerCase().includes("buffet") ||
+    selectedServiceStyles.name.toLowerCase().includes("set menu"));
+
+  const isPlatters = selectedServiceStyles?.name
+   ?.toLowerCase()
+   .includes("platter");
+
+  const isBoxedMeal = selectedServiceStyles?.name
+   ?.toLowerCase()
+   .includes("boxed");
+
+  const isLiveStation = selectedServiceStyles?.name
+   ?.toLowerCase()
+   .includes("live station");
 
   if (step === 1 && selectedEvent)
    setStep(2); // Budget (Step 1) -> Event (Step 2)
@@ -96,19 +113,45 @@ const Catering = () => {
    setStep(3); // Event (Step 2) -> Provider (Step 3)
   else if (step === 3 && selectedServiceStyles)
    setStep(4); // Provider (Step 3) -> Cuisine (Step 4)
-  else if (step === 4 && selectedBudget.id)
-   setStep(5); // Cuisine (Step 4) -> Course (Step 5)
-  else if (step === 5 && selectedCuisines.length > 0) {
+  else if (step === 4 && selectedBudget.id) {
+   if (isBuffetOrSetMenu) {
+    setStep(5); // Cuisine (Step 5)
+   } else if (isPlatters) {
+    setStep(10); // Platter Menu (Step 10)
+   } else if (isBoxedMeal) {
+    setStep(11); // Boxed Meal Menu (Step 11)
+   } else if (isLiveStation) {
+    setStep(12); // Live Station Menu (Step 12)
+   } else {
+    setStep(9); // Coffee Break Menu (Step 9)
+   }
+  } else if (step === 5 && selectedCuisines.length > 0) {
    setStep(6); // Go to Course Selection (Step 6)
   } else if (step === 6 && selectedCourses.length > 0)
    setStep(7); // Location (Step 6) -> Menu (Step 7)
   else if (step === 7) setStep(8); // Menu (Step 7) -> Summary (Step 8)
+  else if (step === 9)
+   setStep(8); // Coffee Break Menu (Step 9) -> Summary (Step 8)
+  else if (step === 10)
+   setStep(8); // Platter Menu (Step 10) -> Summary (Step 8)
+  else if (step === 11)
+   setStep(8); // Boxed Meal Menu (Step 11) -> Summary (Step 8)
+  else if (step === 12) setStep(8); // Live Station Menu (Step 12) -> Summary (Step 8)
  };
  const handleGoBack = () => {
   const isBuffetOrSetMenu =
-   selectedServiceStyles &&
-   (selectedServiceStyles.toLowerCase().includes("buffet") ||
-    selectedServiceStyles.toLowerCase().includes("set menu"));
+   selectedServiceStyles?.name &&
+   (selectedServiceStyles.name.toLowerCase().includes("buffet") ||
+    selectedServiceStyles.name.toLowerCase().includes("set menu"));
+  const isPlatters = selectedServiceStyles?.name
+   ?.toLowerCase()
+   .includes("platter");
+  const isBoxedMeal = selectedServiceStyles?.name
+   ?.toLowerCase()
+   .includes("boxed");
+  const isLiveStation = selectedServiceStyles?.name
+   ?.toLowerCase()
+   .includes("live station");
 
   if (step === 2) setStep(1); // Go back to Budget
   else if (step === 3) setStep(2); // Go back to Event
@@ -117,11 +160,26 @@ const Catering = () => {
   else if (step === 6) setStep(5); // Go back to Course
   else if (step === 7) {
    setStep(6); // Go back to Course Selection (Step 6)
-  } else if (step === 8) setStep(7); // Go back to Menu
+  } else if (step === 8) {
+   if (isBuffetOrSetMenu) {
+    setStep(7); // Go back to Menu
+   } else if (isPlatters) {
+    setStep(10); // Go back to Platter Menu
+   } else if (isBoxedMeal) {
+    setStep(11); // Go back to Boxed Meal
+   } else if (isLiveStation) {
+    setStep(12); // Go back to Live Station
+   } else {
+    setStep(9); // Go back to Coffee Break Menu
+   }
+  } else if (step === 9) setStep(4); // Coffee Break Menu -> Budget
+  else if (step === 10) setStep(4); // Platter Menu -> Budget
+  else if (step === 11) setStep(4); // Boxed Meal Menu -> Budget
+  else if (step === 12) setStep(4); // Live Station Menu -> Budget
  };
 
  // Toggle selection functions
- const toggleServiceStyle = (style: string) => {
+ const toggleServiceStyle = (style: { id: number; name: string }) => {
   setSelectedServiceStyles(style);
  };
 
@@ -194,14 +252,12 @@ const Catering = () => {
        />
       )}
       {step === 2 && (
-       <LazyLoad>
-        <LocationSelection
-         selectedLocation={selectedLocation}
-         setSelectedLocation={setSelectedLocation}
-         handleGoBack={handleGoBack}
-         handleContinue={handleContinue}
-        />
-       </LazyLoad>
+       <LocationSelection
+        selectedLocation={selectedLocation}
+        setSelectedLocation={setSelectedLocation}
+        handleGoBack={handleGoBack}
+        handleContinue={handleContinue}
+       />
       )}
       {step === 3 && (
        <LazyLoad>
@@ -228,6 +284,7 @@ const Catering = () => {
          selectedEvent={selectedEvent}
          selectedPax={selectedPax}
          setSelectedPax={setSelectedPax}
+         selectedServiceStyles={selectedServiceStyles}
         />
        </LazyLoad>
       )}
@@ -241,6 +298,7 @@ const Catering = () => {
          toggleCuisine={toggleCuisine}
          selectedBudget={selectedBudget}
          selectedEvent={selectedEvent}
+         selectedServiceStyles={selectedServiceStyles}
         />
        </LazyLoad>
       )}
@@ -272,6 +330,49 @@ const Catering = () => {
         />
        </LazyLoad>
       )}
+      {step === 9 && (
+       <LazyLoad>
+        <CoffeeBreakMenu
+         selectedMenuItems={selectedMenuItems}
+         toggleMenuItem={toggleMenuItem}
+         handleGoBack={handleGoBack}
+         handleContinue={handleContinue}
+         selectedBudget={selectedBudget}
+         selectedEvent={selectedEvent}
+         setSelectedMenuItems={setSelectedMenuItems}
+        />
+       </LazyLoad>
+      )}
+      {step === 10 && (
+       <LazyLoad>
+        <PlatterMenu
+         selectedMenuItems={selectedMenuItems}
+         toggleMenuItem={toggleMenuItem}
+         handleGoBack={handleGoBack}
+         handleContinue={handleContinue}
+        />
+       </LazyLoad>
+      )}
+      {step === 11 && (
+       <LazyLoad>
+        <BoxedMealMenu
+         selectedMenuItems={selectedMenuItems}
+         toggleMenuItem={toggleMenuItem}
+         handleGoBack={handleGoBack}
+         handleContinue={handleContinue}
+        />
+       </LazyLoad>
+      )}
+      {step === 12 && (
+       <LazyLoad>
+        <LiveStationMenu
+         selectedMenuItems={selectedMenuItems}
+         toggleMenuItem={toggleMenuItem}
+         handleGoBack={handleGoBack}
+         handleContinue={handleContinue}
+        />
+       </LazyLoad>
+      )}
       {/* Show the Booking Summary after step 6 */}
       {step === 8 && (
        <LazyLoad>
@@ -290,6 +391,7 @@ const Catering = () => {
         />
        </LazyLoad>
       )}
+  
      </div>
     </LazyLoad>
    </main>

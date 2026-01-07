@@ -18,6 +18,9 @@ interface CuisineSelectionProps {
  handleGoBack: () => void;
  handleContinue: () => void;
  toggleCuisine: (cuisine: { id: number; name: string }) => void;
+ selectedBudget: any; // Added to fix lint error, though not used in logic yet. Ideally define proper type.
+ selectedEvent: { id: string | null; name: string | null } | null;
+ selectedServiceStyles: { id: number; name: string } | null;
 }
 
 const CuisineSelection: React.FC<CuisineSelectionProps> = ({
@@ -26,6 +29,8 @@ const CuisineSelection: React.FC<CuisineSelectionProps> = ({
  handleGoBack,
  handleContinue,
  toggleCuisine,
+ selectedEvent,
+ selectedServiceStyles,
 }) => {
  const [cuisineTypes, setCuisineTypes] = useState<Cuisine[]>([]);
  const [loading, setLoading] = useState(true);
@@ -38,10 +43,23 @@ const CuisineSelection: React.FC<CuisineSelectionProps> = ({
     const baseUrl = import.meta.env.VITE_API_URL;
     const authToken = sessionStorage.getItem("authToken");
 
+    // Add query params
+    const params: any = {};
+
+    // Pass event_type_name to help backend decide which M2M table to filter (Corporate vs Private)
+    if (selectedEvent?.name) {
+     params.event_type_name = selectedEvent.name;
+    }
+
+    if (selectedServiceStyles?.id) {
+     params.service_style_id = selectedServiceStyles.id;
+    }
+
     const response = await axios.get(`${baseUrl}/api/catering/cuisines/`, {
      headers: {
       Authorization: `Token ${authToken}`,
      },
+     params: params,
     });
 
     setCuisineTypes(response.data);
@@ -57,11 +75,15 @@ const CuisineSelection: React.FC<CuisineSelectionProps> = ({
   }, 1000); // ⏱️ 2-second delay
 
   return () => clearTimeout(timer); // cleanup
- }, []);
+ }, [selectedEvent, selectedServiceStyles]);
 
  // Render loading and error states
  if (loading) {
-  return <Shrimmer></Shrimmer>;
+  return (
+   <div className="w-full h-[50vh] rounded-2xl overflow-hidden">
+    <Shrimmer />
+   </div>
+  );
  }
 
  if (error) {
