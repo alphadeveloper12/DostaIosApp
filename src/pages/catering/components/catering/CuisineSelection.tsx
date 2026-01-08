@@ -31,6 +31,7 @@ const CuisineSelection: React.FC<CuisineSelectionProps> = ({
  toggleCuisine,
  selectedEvent,
  selectedServiceStyles,
+ selectedBudget,
 }) => {
  const [cuisineTypes, setCuisineTypes] = useState<Cuisine[]>([]);
  const [loading, setLoading] = useState(true);
@@ -55,6 +56,10 @@ const CuisineSelection: React.FC<CuisineSelectionProps> = ({
      params.service_style_id = selectedServiceStyles.id;
     }
 
+    if (selectedBudget?.id) {
+     params.budget_id = selectedBudget.id;
+    }
+
     const response = await axios.get(`${baseUrl}/api/catering/cuisines/`, {
      headers: {
       Authorization: `Token ${authToken}`,
@@ -75,7 +80,7 @@ const CuisineSelection: React.FC<CuisineSelectionProps> = ({
   }, 1000); // ⏱️ 2-second delay
 
   return () => clearTimeout(timer); // cleanup
- }, [selectedEvent, selectedServiceStyles]);
+ }, [selectedEvent, selectedServiceStyles, selectedBudget]);
 
  // Render loading and error states
  if (loading) {
