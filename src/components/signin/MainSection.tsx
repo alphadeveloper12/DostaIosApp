@@ -8,15 +8,6 @@ import Slider from "./Slider";
 import SignInForm from "./SigninForm";
 
 // ---------- Small inline icons ----------
-const AppleIcon = (props: React.SVGProps<SVGSVGElement>) => (
-  <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" {...props}>
-    <path
-      d="M16.365 12.89c-.03-3.01 2.463-4.45 2.576-4.521-1.403-2.051-3.586-2.332-4.35-2.366-1.85-.189-3.604 1.091-4.544 1.091-.954 0-2.396-1.067-3.95-1.037-2.032.03-3.905 1.184-4.949 3.008-2.103 3.641-.536 9.009 1.511 11.962 1 1.446 2.19 3.07 3.748 3.01 1.52-.06 2.093-.974 3.936-.974 1.827 0 2.37.974 3.963.944 1.64-.03 2.681-1.476 3.686-2.929 1.168-1.667 1.65-3.29 1.674-3.375-.036-.017-3.214-1.233-3.25-4.713zM13.6 3.844c.834-1.01 1.394-2.42 1.24-3.844-1.2.048-2.646.8-3.503 1.81-.772.892-1.44 2.324-1.262 3.694 1.334.103 2.69-.67 3.525-1.66z"
-      fill="currentColor"
-    />
-  </svg>
-);
-
 const GoogleIcon = (props: React.SVGProps<SVGSVGElement>) => (
   <svg
     width="24"
@@ -73,7 +64,7 @@ const EmailIcon = (props: React.SVGProps<SVGSVGElement>) => (
   </svg>
 );
 
-type Method = "email" | "apple" | "google" | null;
+type Method = "email" | "google" | null;
 
 const MainSection: React.FC = () => {
   const [showEmailForm, setShowEmailForm] = useState(false);
@@ -93,7 +84,7 @@ const MainSection: React.FC = () => {
         sessionStorage.setItem("user", JSON.stringify(res.data.user));
 
         // ✅ redirect
-        navigate("/vending-home");
+        navigate("/");
       } catch (err) {
         console.error("Backend Login Failed:", err);
         alert("Google login failed. Please try again.");
@@ -138,15 +129,15 @@ const MainSection: React.FC = () => {
             </h1>
 
             <p className="mt-4 text-base font-[400] text-[#545563]">
-              By clicking Sign in with email, Google, or Apple, you agree to
+              By clicking Sign in with email or Google, you agree to
               Dosta’s{" "}
-              <a className="underline font-bold text-[#056AC1]" href="#">
+              <Link className="underline font-bold text-[#056AC1]" to="/terms">
                 Terms of Use
-              </a>{" "}
+              </Link>{" "}
               and{" "}
-              <a className="underline text-[#056AC1] font-bold" href="#">
+              <Link className="underline text-[#056AC1] font-bold" to="/privacy-policy">
                 Privacy Policy
-              </a>
+              </Link>
               .
             </p>
 
@@ -167,24 +158,6 @@ const MainSection: React.FC = () => {
               >
                 <EmailIcon />
                 <span>Sign in with email</span>
-              </Button>
-
-              {/* Apple */}
-              <Button
-                variant="whitebg"
-                size="xlg"
-                className={`w-full justify-start gap-3 max-md:px-[16px] md:py-5 ${isMobile() && selectedMethod === "apple"
-                  ? "border border-blue-400"
-                  : "border border-neutral-gray-lightest"
-                  }`}
-                onClick={() =>
-                  isMobile()
-                    ? setSelectedMethod("apple")
-                    : navigate("/signin/apple")
-                }
-              >
-                <AppleIcon className="text-slate-900" />
-                <span>Continue with Apple</span>
               </Button>
 
               {/* Google */}

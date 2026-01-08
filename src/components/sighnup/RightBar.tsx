@@ -43,6 +43,19 @@ const RightBar = () => {
     return regex.test(val);
   };
 
+  // UAE Phone number validation
+  const validatePhoneNumber = (val: string) => {
+    // Remove all spaces and dashes for validation
+    const cleanedNumber = val.replace(/[\s-]/g, '');
+
+    // UAE phone number patterns:
+    // +971XXXXXXXXX (9 digits after country code)
+    // 971XXXXXXXXX (9 digits after country code, without +)
+    // 05XXXXXXXX or 04XXXXXXXX (local format, 9 digits starting with 05, 04, 02, 03, 06, 07, 09)
+    const regex = /^(\+971|971|0)?(50|51|52|54|55|56|58|2|3|4|6|7|9)\d{7}$/;
+    return regex.test(cleanedNumber);
+  };
+
   // Previous step
   const handlePrevious = () => {
     setApiError("");
@@ -191,6 +204,11 @@ const RightBar = () => {
 
         if (!phoneNumber.trim()) {
           setPhoneError("Phone number is required.");
+          return;
+        }
+
+        if (!validatePhoneNumber(phoneNumber)) {
+          setPhoneError("Please enter a valid UAE phone number (e.g., +971 50 123 4567 or 050 123 4567).");
           return;
         }
 
