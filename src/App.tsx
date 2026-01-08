@@ -3,6 +3,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+
 import Index from "./pages/Index";
 import SignIn from "./pages/SignIn";
 import VendingHome from "./pages/VendingHome";
@@ -17,8 +18,10 @@ import VendingMenu from "./pages/VendingMenu";
 import OrderNow from "./components/vending_home/OrderNow";
 import CartPage from "./pages/CartPage";
 import MyOrders from "./pages/MyOrders";
+
 import AuthMiddleware from "./middleware/AuthMiddleware";
 import GuestMiddleware from "./middleware/GuestMiddleware";
+
 import ScrollToTop from "./components/home/ScrollToTop";
 import AboutUs from "./pages/AboutUs";
 import ContactUs from "./pages/ContactUs";
@@ -32,80 +35,99 @@ import HowItWorks from "./pages/HowItWorks";
 import HelpCenter from "./pages/HelpCenter";
 import ReportBug from "./pages/ReportBug";
 import Faqs from "./pages/Faqs";
-import ComingSoon from "./pages/ComingSoon"; // Import ComingSoon
+import ComingSoon from "./pages/ComingSoon";
+
 import { useDispatch } from "react-redux";
 import { useEffect } from "react";
 import { fetchCartData } from "./redux/slices/cartSlice";
+import { GoogleOAuthProvider } from "@react-oauth/google";
 
 const queryClient = new QueryClient();
 
+const GOOGLE_CLIENT_ID =
+  "760692328304-hiu23pr6oq24ptkq3iiqqcm8k8rn639i.apps.googleusercontent.com";
+
 // Helper component to sync cart globally from API
 const GlobalCartSync = () => {
- const dispatch = useDispatch();
- useEffect(() => {
-  // Fetch latest cart state from API on mount
-  // @ts-ignore
-  dispatch(fetchCartData());
- }, [dispatch]);
- return null;
+  const dispatch = useDispatch();
+
+  useEffect(() => {
+    // Fetch latest cart state from API on mount
+    // @ts-ignore
+    dispatch(fetchCartData());
+  }, [dispatch]);
+
+  return null;
 };
 
 const App = () => (
- <QueryClientProvider client={queryClient}>
-  <TooltipProvider>
-   <Toaster />
-   <Sonner />
-   <BrowserRouter>
-    <ScrollToTop />
-    <Routes>
-     {/* Public Routes */}
-     <Route path="/" element={<Index />} />
-     <Route path="/vending-home" element={<VendingHome />} />
-     <Route path="/about-us" element={<AboutUs />} />
-     <Route path="/coming-soon" element={<ComingSoon />} />
-     <Route path="/services" element={<Services />} />
-     <Route path="/portfolio" element={<Portfolio />} />
-     <Route path="/contact-us" element={<ContactUs />} />
-     <Route path="/cookies-policy" element={<CookiesPolicy />} />
-     <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-     <Route path="/refund-policy" element={<RefundPolicy />} />
-     <Route path="/terms" element={<Terms />} />
-     <Route path="/how-it-works" element={<HowItWorks />} />
-     <Route path="/help-center" element={<HelpCenter />} />
-     <Route path="/report-bug" element={<ReportBug />} />
-     <Route path="/faqs" element={<Faqs />} />
-     <Route path="/vending-home/menu" element={<VendingMenu />} />
-     <Route path="/vending-home/order-now" element={<OrderNow />} />
-     <Route path="/vending-home/cart" element={<CartPage />} />
-     <Route element={<AuthMiddleware />}>
-      <Route path="/vending-home/my-orders" element={<MyOrders />} />
-     </Route>
-     <Route path="/catering" element={<CateringHome />} />
-     <Route path="/catering/plan" element={<CateringPlan />} />
-     <Route path="/catering/confirmation" element={<CateringConfirmation />} />
-     <Route
-      path="/catering/request-custom-quote"
-      element={<RequestCustomQuote />}
-     />
+  <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
 
-     {/* Guest Routes (Only for unauthenticated users) */}
-     <Route element={<GuestMiddleware />}>
-      <Route path="/signin" element={<SignIn />} />
-      <Route path="/signup" element={<Signup />} />
-     </Route>
+        <BrowserRouter>
+          <ScrollToTop />
 
-     {/* Protected Routes (Only for authenticated users) */}
-     <Route element={<AuthMiddleware />}>
-      <Route path="/settings" element={<Settings />} />
-     </Route>
+          <Routes>
+            {/* Public Routes */}
+            <Route path="/" element={<Index />} />
+            <Route path="/vending-home" element={<VendingHome />} />
+            <Route path="/about-us" element={<AboutUs />} />
+            <Route path="/coming-soon" element={<ComingSoon />} />
+            <Route path="/services" element={<Services />} />
+            <Route path="/portfolio" element={<Portfolio />} />
+            <Route path="/contact-us" element={<ContactUs />} />
+            <Route path="/cookies-policy" element={<CookiesPolicy />} />
+            <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+            <Route path="/refund-policy" element={<RefundPolicy />} />
+            <Route path="/terms" element={<Terms />} />
+            <Route path="/how-it-works" element={<HowItWorks />} />
+            <Route path="/help-center" element={<HelpCenter />} />
+            <Route path="/report-bug" element={<ReportBug />} />
+            <Route path="/faqs" element={<Faqs />} />
 
-     {/* Fallback Route */}
-     <Route path="*" element={<NotFound />} />
-    </Routes>
-    <GlobalCartSync />
-   </BrowserRouter>
-  </TooltipProvider>
- </QueryClientProvider>
+            {/* Vending */}
+            <Route path="/vending-home/menu" element={<VendingMenu />} />
+            <Route path="/vending-home/order-now" element={<OrderNow />} />
+            <Route path="/vending-home/cart" element={<CartPage />} />
+            <Route element={<AuthMiddleware />}>
+              <Route path="/vending-home/my-orders" element={<MyOrders />} />
+            </Route>
+
+            {/* Catering */}
+            <Route path="/catering" element={<CateringHome />} />
+            <Route path="/catering/plan" element={<CateringPlan />} />
+            <Route
+              path="/catering/confirmation"
+              element={<CateringConfirmation />}
+            />
+            <Route
+              path="/catering/request-custom-quote"
+              element={<RequestCustomQuote />}
+            />
+
+            {/* Guest Routes */}
+            <Route element={<GuestMiddleware />}>
+              <Route path="/signin" element={<SignIn />} />
+              <Route path="/signup" element={<Signup />} />
+            </Route>
+
+            {/* Protected Routes */}
+            <Route element={<AuthMiddleware />}>
+              <Route path="/settings" element={<Settings />} />
+            </Route>
+
+            {/* Fallback Route */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+
+          <GlobalCartSync />
+        </BrowserRouter>
+      </TooltipProvider>
+    </QueryClientProvider>
+  </GoogleOAuthProvider>
 );
 
 export default App;

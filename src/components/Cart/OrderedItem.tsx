@@ -1,3 +1,4 @@
+
 // src/components/cart/OrderedItem.tsx
 import React from "react";
 import { CartItemType } from "@/pages/CartPage";

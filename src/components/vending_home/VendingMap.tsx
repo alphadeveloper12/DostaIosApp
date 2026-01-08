@@ -1,243 +1,241 @@
 import {
- GoogleMap,
- useJsApiLoader,
- Marker,
- InfoWindow,
+  GoogleMap,
+  useJsApiLoader,
+  Marker,
+  InfoWindow,
 } from "@react-google-maps/api";
 import { useState, useCallback, useEffect } from "react";
-import { useDispatch, useSelector } from "react-redux"; // To get user data
+import { useDispatch, useSelector } from "react-redux";
 import {
- fetchLocations,
- selectAllLocations,
- getLocationsStatus,
+  fetchLocations,
+  selectAllLocations,
+  getLocationsStatus,
 } from "../../redux/slices/vendingLocationsSlice";
 
 const containerStyle = {
- width: "100%",
- height: "100%",
+  width: "100%",
+  height: "100%",
 };
 
 const vendingLocations = [
- {
-  id: 1,
-  name: "Barsha 1",
-  position: { lat: 25.118, lng: 55.201 },
-  info: "Near Mall of the Emirates, St. 12",
-  hours: "Open - Closes at 10 PM",
- },
- {
-  id: 2,
-  name: "JLT Cluster D",
-  position: { lat: 25.073, lng: 55.141 },
-  info: "Beside Carrefour Market",
-  hours: "Open 24 Hours",
- },
- {
-  id: 3,
-  name: "Business Bay",
-  position: { lat: 25.189, lng: 55.273 },
-  info: "Close to Bay Avenue Mall",
-  hours: "Open - Closes at 9 PM",
- },
+  {
+    id: 1,
+    name: "Barsha 1",
+    position: { lat: 25.118, lng: 55.201 },
+    info: "Near Mall of the Emirates, St. 12",
+    hours: "Open - Closes at 10 PM",
+  },
+  {
+    id: 2,
+    name: "JLT Cluster D",
+    position: { lat: 25.073, lng: 55.141 },
+    info: "Beside Carrefour Market",
+    hours: "Open 24 Hours",
+  },
+  {
+    id: 3,
+    name: "Business Bay",
+    position: { lat: 25.189, lng: 55.273 },
+    info: "Close to Bay Avenue Mall",
+    hours: "Open - Closes at 9 PM",
+  },
 ];
 
 const center = { lat: 25.118, lng: 55.201 };
 
 const VendingMap = ({
- readOnlyLocation,
+  readOnlyLocation,
+  selectedLocation,
+  onLocationSelect,
 }: {
- readOnlyLocation?: { lat: number; lng: number; name: string; info: string };
+  readOnlyLocation?: { lat: number; lng: number; name: string; info: string };
+  selectedLocation?: any;
+  onLocationSelect?: (location: any) => void;
 }) => {
- const dispatch = useDispatch();
- const { isLoaded, loadError } = useJsApiLoader({
-  id: "google-map-script",
-  googleMapsApiKey: "AIzaSyCYAsBPyik1DZcOH3jcR-awecFjyYXr5Qw", // 🟥 Replace with your valid key
- });
+  const dispatch = useDispatch();
 
- const [selected, setSelected] = useState<any>(null); // State for selected location
- const [map, setMap] = useState<google.maps.Map | null>(null);
- const [selectedLocation, setSelectedLocation] = useState<any>(null);
- /* loading vending locations */
- const vendingLocations = useSelector(selectAllLocations);
- const status = useSelector(getLocationsStatus);
+  const { isLoaded, loadError } = useJsApiLoader({
+    id: "google-map-script",
+    googleMapsApiKey: "AIzaSyCYAsBPyik1DZcOH3jcR-awecFjyYXr5Qw",
+  });
 
- /* use effect for vending locations */
- useEffect(() => {
-  // Only fetch if the status is 'idle' (to prevent re-fetching)
-  if (status === "idle" && !readOnlyLocation) {
-   dispatch(fetchLocations());
-  }
- }, [status, dispatch, readOnlyLocation]);
+  const [selected, setSelected] = useState<any>(null);
+  const [map, setMap] = useState<google.maps.Map | null>(null);
 
- const userData = useSelector((state: any) => state?.user?.user); // Get user data
+  // Use prop if provided, otherwise use internal state
+  const currentSelected =
+    selectedLocation !== undefined ? selectedLocation : selected;
+  const setCurrentSelected = onLocationSelect || setSelected;
 
- const onLoad = useCallback((mapInstance: google.maps.Map) => {
-  setMap(mapInstance);
- }, []);
+  /* loading vending locations */
+  const vendingLocationsFromStore = useSelector(selectAllLocations);
+  const status = useSelector(getLocationsStatus);
 
- const onUnmount = useCallback(() => {
-  setMap(null);
- }, []);
+  /* use effect for vending locations */
+  useEffect(() => {
+    if (status === "idle" && !readOnlyLocation) {
+      dispatch(fetchLocations() as any);
+    }
+  }, [status, dispatch, readOnlyLocation]);
 
- // Load selected location from sessionStorage if available (ONLY IF NOT READ ONLY)
- useEffect(() => {
-  if (readOnlyLocation) {
-   // If read-only, force select the provided location
-   setSelected({
-    id: -1, // Dummy ID
-    name: readOnlyLocation.name,
-    info: readOnlyLocation.info,
-    position: { lat: readOnlyLocation.lat, lng: readOnlyLocation.lng },
-    hours: "",
-   });
-   return;
-  }
+  const userData = useSelector((state: any) => state?.user?.user);
 
-  const storedLocation = localStorage.getItem("selectedLocation");
-  if (storedLocation) {
-   const { location } = JSON.parse(storedLocation);
-   setSelected(location); // Update state from localStorage
-  }
- }, [readOnlyLocation]);
+  const onLoad = useCallback((mapInstance: google.maps.Map) => {
+    setMap(mapInstance);
+  }, []);
 
- // Effect to pan map to selection
- useEffect(() => {
-  if (map && selected?.position) {
-   map.panTo(selected.position);
-  }
- }, [map, selected]);
+  const onUnmount = useCallback(() => {
+    setMap(null);
+  }, []);
 
- // Hide default close button
- useEffect(() => {
-  const hideCloseButton = () => {
-   const closeBtn = document.querySelector(
-    ".gm-ui-hover-effect"
-   ) as HTMLElement;
-   if (closeBtn) closeBtn.style.display = "none";
+  // Load selected location from localStorage if available (ONLY IF NOT READ ONLY)
+  useEffect(() => {
+    if (readOnlyLocation) {
+      setSelected({
+        id: -1,
+        name: readOnlyLocation.name,
+        info: readOnlyLocation.info,
+        position: { lat: readOnlyLocation.lat, lng: readOnlyLocation.lng },
+        hours: "",
+      });
+      return;
+    }
+
+    const storedLocation = localStorage.getItem("selectedLocation");
+    if (storedLocation && selectedLocation === undefined) {
+      const { location } = JSON.parse(storedLocation);
+      setSelected(location);
+    }
+  }, [readOnlyLocation, selectedLocation]);
+
+  // Effect to pan map to selection
+  useEffect(() => {
+    if (map && currentSelected?.position) {
+      map.panTo(currentSelected.position);
+    }
+  }, [map, currentSelected]);
+
+  // Hide default close button
+  useEffect(() => {
+    const hideCloseButton = () => {
+      const closeBtn = document.querySelector(
+        ".gm-ui-hover-effect"
+      ) as HTMLElement;
+      if (closeBtn) closeBtn.style.display = "none";
+    };
+
+    const observer = new MutationObserver(hideCloseButton);
+    observer.observe(document.body, { childList: true, subtree: true });
+    hideCloseButton();
+    return () => observer.disconnect();
+  }, [currentSelected]);
+
+  const handleLocationSelect = (location: any) => {
+    if (readOnlyLocation) return;
+
+    setCurrentSelected(location);
+    localStorage.setItem(
+      "selectedLocation",
+      JSON.stringify({ userId: userData?.id, location })
+    );
   };
 
-  const observer = new MutationObserver(hideCloseButton);
-  observer.observe(document.body, { childList: true, subtree: true });
-  hideCloseButton();
-  return () => observer.disconnect();
- }, [selected]);
+  if (loadError)
+    return <div className="p-6 text-center text-red-500">Error loading map</div>;
 
- const handleLocationSelect = async (location: any) => {
-  if (readOnlyLocation) return; // Disable selection in read-only mode
-
-  // 1. External Login for Token (Fire and Forget or Await?)
-  // User requested: " api call should be gone ... return the token , then save that token"
-  try {
-   const response = await fetch(
-    `http://www.hnzczy.cn:8087/apiusers/checkusername?userName=C202405128888&password=8888`
-   );
-   const data = await response.json();
-   // Assuming the token is in the response body.
-   // If exact structure is unknown, we save the whole response relative to token or specific key?
-   // User said "return the token". Let's assume data.token or data itself.
-   // Based on typical login APIs, it might be data.token.
-   // If the user meant the response *is* the token, we'll store specific fields.
-   // Use safe access.
-   const token = data.token || data.data || JSON.stringify(data);
-   sessionStorage.setItem("vendingToken", token);
-   console.log("Vending Token stored:", token);
-  } catch (error) {
-   console.error("Failed to fetch vending token:", error);
-   // Proceed anyway? User said "then save that token".
-   // If it fails, we might just log it and proceed with selection.
-  }
-
-  setSelected(location); // Update state with the new location
-  localStorage.setItem(
-   "selectedLocation",
-   JSON.stringify({ userId: userData?.id, location }) // Save to localStorage
-  );
- };
-
- if (loadError)
-  return <div className="p-6 text-center text-red-500">Error loading map</div>;
-
- if (!isLoaded)
-  return (
-   <div className="flex items-center justify-center h-full text-gray-500">
-    Loading map...
-   </div>
-  );
-
- return (
-  <GoogleMap
-   mapContainerStyle={containerStyle}
-   center={
-    readOnlyLocation
-     ? { lat: readOnlyLocation.lat, lng: readOnlyLocation.lng }
-     : center
-   }
-   zoom={13}
-   onLoad={onLoad}
-   onUnmount={onUnmount}
-   onClick={() => !readOnlyLocation && setSelected(null)}
-   options={{
-    disableDefaultUI: true,
-    zoomControl: true,
-    fullscreenControl: false,
-   }}>
-   {/* Render Markers : If read-only, show single marker. Else show all vending locations */}
-   {readOnlyLocation ? (
-    <Marker
-     position={{ lat: readOnlyLocation.lat, lng: readOnlyLocation.lng }}
-     icon={{
-      url: "/images/icons/red-marker.svg",
-      scaledSize: new window.google.maps.Size(42, 42),
-     }}
-    />
-   ) : (
-    vendingLocations.map((loc) => (
-     <Marker
-      key={loc.id}
-      position={loc.position}
-      onClick={() => handleLocationSelect(loc)}
-      icon={{
-       url:
-        selected?.id === loc.id
-         ? "/images/icons/red-marker.svg"
-         : "/images/icons/blue-marker.svg",
-       scaledSize: new window.google.maps.Size(42, 42),
-      }}
-     />
-    ))
-   )}
-
-   {selected && (
-    <InfoWindow
-     position={{
-      lat: selected.position.lat + 0.0002,
-      lng: selected.position.lng,
-     }}
-     options={{
-      pixelOffset: new window.google.maps.Size(0, -40),
-     }}>
-     <div
-      style={{
-       width: "280px",
-       borderRadius: "16px",
-       boxShadow: "0 12px 24px rgba(43,43,67,0.15)",
-       padding: "0 16px",
-       fontFamily: "Inter, sans-serif",
-       backgroundColor: "#fff",
-      }}>
-      <div className="inline-block bg-[#A7CF38] text-[#054A86] text-[12px] font-semibold px-3 py-1 rounded-full mb-2">
-       {readOnlyLocation ? "ORDER LOCATION" : "SELECTED LOCATION"}
+  if (!isLoaded)
+    return (
+      <div className="flex items-center justify-center h-full text-gray-500">
+        Loading map...
       </div>
-      <h3 className="text-[20px] font-[700] text-[#1F2937]">{selected.name}</h3>
-      <p className="text-[14px] text-[#4B5563] mt-1">{selected.info}</p>
-      {selected.hours && (
-       <p className="text-[14px] text-[#4B5563] mt-1">{selected.hours}</p>
+    );
+
+  return (
+    <GoogleMap
+      mapContainerStyle={containerStyle}
+      center={
+        readOnlyLocation
+          ? { lat: readOnlyLocation.lat, lng: readOnlyLocation.lng }
+          : center
+      }
+      zoom={13}
+      onLoad={onLoad}
+      onUnmount={onUnmount}
+      onClick={() => !readOnlyLocation && setCurrentSelected(null)}
+      options={{
+        disableDefaultUI: true,
+        zoomControl: true,
+        fullscreenControl: false,
+      }}
+    >
+      {/* Render Markers : If read-only, show single marker. Else show all vending locations */}
+      {readOnlyLocation ? (
+        <Marker
+          position={{ lat: readOnlyLocation.lat, lng: readOnlyLocation.lng }}
+          icon={{
+            url: "/images/icons/red-marker.svg",
+            scaledSize: new window.google.maps.Size(42, 42),
+          }}
+        />
+      ) : (
+        (vendingLocationsFromStore?.length
+          ? vendingLocationsFromStore
+          : vendingLocations
+        ).map((loc: any) => (
+          <Marker
+            key={loc.id}
+            position={loc.position}
+            onClick={() => handleLocationSelect(loc)}
+            icon={{
+              url:
+                currentSelected?.id === loc.id
+                  ? "/images/icons/red-marker.svg"
+                  : "/images/icons/blue-marker.svg",
+              scaledSize: new window.google.maps.Size(42, 42),
+            }}
+          />
+        ))
       )}
-     </div>
-    </InfoWindow>
-   )}
-  </GoogleMap>
- );
+
+      {currentSelected && (
+        <InfoWindow
+          position={{
+            lat: currentSelected.position.lat + 0.0002,
+            lng: currentSelected.position.lng,
+          }}
+          options={{
+            pixelOffset: new window.google.maps.Size(0, -40),
+          }}
+        >
+          <div
+            style={{
+              width: "280px",
+              borderRadius: "16px",
+              boxShadow: "0 12px 24px rgba(43,43,67,0.15)",
+              padding: "0 16px",
+              fontFamily: "Inter, sans-serif",
+              backgroundColor: "#fff",
+            }}
+          >
+            <div className="inline-block bg-[#A7CF38] text-[#054A86] text-[12px] font-semibold px-3 py-1 rounded-full mb-2">
+              {readOnlyLocation ? "ORDER LOCATION" : "SELECTED LOCATION"}
+            </div>
+            <h3 className="text-[20px] font-[700] text-[#1F2937]">
+              {currentSelected.name}
+            </h3>
+            <p className="text-[14px] text-[#4B5563] mt-1">
+              {currentSelected.info}
+            </p>
+            {currentSelected.hours && (
+              <p className="text-[14px] text-[#4B5563] mt-1">
+                {currentSelected.hours}
+              </p>
+            )}
+          </div>
+        </InfoWindow>
+      )}
+    </GoogleMap>
+  );
 };
 
 export default VendingMap;
