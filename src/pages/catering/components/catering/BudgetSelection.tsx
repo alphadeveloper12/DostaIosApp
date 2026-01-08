@@ -78,6 +78,7 @@ const BudgetSelection: React.FC<BudgetSelectionProps> = ({
      axios.get(`${baseUrl}${paxEndpoint}`, {
       params: {
        service_style_id: selectedServiceStyles?.id,
+       is_private: isPrivate,
       },
       headers: { Authorization: `Token ${authToken}` },
      }),
