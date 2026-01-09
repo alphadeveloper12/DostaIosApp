@@ -23,6 +23,7 @@ import CoffeeBreakMenu from "../components/catering/CoffeeBreakMenu";
 import PlatterMenu from "../components/catering/PlatterMenu";
 import BoxedMealMenu from "../components/catering/BoxedMealMenu";
 import LiveStationMenu from "../components/catering/LiveStationMenu";
+import AmericanMenuSelection from "../components/catering/AmericanMenuSelection";
 
 const Catering = () => {
  const navigate = useNavigate();
@@ -107,15 +108,27 @@ const Catering = () => {
    ?.toLowerCase()
    .includes("live station");
 
+  const isAmericanCuisine = selectedCuisines.some(
+   (c) => c.name.toLowerCase() === "american"
+  );
+
   if (step === 1 && selectedEvent)
    setStep(2); // Budget (Step 1) -> Event (Step 2)
   else if (step === 2 && selectedLocation?.id)
    setStep(3); // Event (Step 2) -> Provider (Step 3)
-  else if (step === 3 && selectedServiceStyles)
-   setStep(4); // Provider (Step 3) -> Cuisine (Step 4)
-  else if (step === 4 && selectedBudget.id) {
+  else if (step === 3 && selectedServiceStyles) {
    if (isBuffetOrSetMenu) {
-    setStep(5); // Cuisine (Step 5)
+    setStep(4); // Provider (Step 3) -> Cuisine (Step 4)
+   } else {
+    setStep(5); // Provider (Step 3) -> Budget (Step 5) -- SKIPPING Cuisine
+   }
+  } else if (step === 4 && selectedCuisines.length > 0) {
+   setStep(5); // Cuisine (Step 4) -> Budget (Step 5)
+  } else if (step === 5 && selectedBudget.id) {
+   if (isAmericanCuisine) {
+    setStep(13); // American Menu Selection (Step 13)
+   } else if (isBuffetOrSetMenu) {
+    setStep(6); // Budget (Step 5) -> Course (Step 6)
    } else if (isPlatters) {
     setStep(10); // Platter Menu (Step 10)
    } else if (isBoxedMeal) {
@@ -125,10 +138,8 @@ const Catering = () => {
    } else {
     setStep(9); // Coffee Break Menu (Step 9)
    }
-  } else if (step === 5 && selectedCuisines.length > 0) {
-   setStep(6); // Go to Course Selection (Step 6)
   } else if (step === 6 && selectedCourses.length > 0)
-   setStep(7); // Location (Step 6) -> Menu (Step 7)
+   setStep(7); // Course (Step 6) -> Menu (Step 7)
   else if (step === 7) setStep(8); // Menu (Step 7) -> Summary (Step 8)
   else if (step === 9)
    setStep(8); // Coffee Break Menu (Step 9) -> Summary (Step 8)
@@ -136,7 +147,9 @@ const Catering = () => {
    setStep(8); // Platter Menu (Step 10) -> Summary (Step 8)
   else if (step === 11)
    setStep(8); // Boxed Meal Menu (Step 11) -> Summary (Step 8)
-  else if (step === 12) setStep(8); // Live Station Menu (Step 12) -> Summary (Step 8)
+  else if (step === 12)
+   setStep(8); // Live Station Menu (Step 12) -> Summary (Step 8)
+  else if (step === 13) setStep(8); // American Menu (Step 13) -> Summary (Step 8)
  };
  const handleGoBack = () => {
   const isBuffetOrSetMenu =
@@ -151,17 +164,28 @@ const Catering = () => {
    .includes("boxed");
   const isLiveStation = selectedServiceStyles?.name
    ?.toLowerCase()
+   ?.toLowerCase()
    .includes("live station");
+  const isAmericanCuisine = selectedCuisines.some(
+   (c) => c.name.toLowerCase() === "american"
+  );
 
   if (step === 2) setStep(1); // Go back to Budget
   else if (step === 3) setStep(2); // Go back to Event
   else if (step === 4) setStep(3); // Go back to Provider
-  else if (step === 5) setStep(4); // Go back to Cuisine
-  else if (step === 6) setStep(5); // Go back to Course
+  else if (step === 5) {
+   if (isBuffetOrSetMenu) {
+    setStep(4); // Go back to Cuisine
+   } else {
+    setStep(3); // Go back to Provider (Skipped Cuisine)
+   }
+  } else if (step === 6) setStep(5); // Go back to Budget
   else if (step === 7) {
    setStep(6); // Go back to Course Selection (Step 6)
   } else if (step === 8) {
-   if (isBuffetOrSetMenu) {
+   if (isAmericanCuisine) {
+    setStep(13); // Back to American Menu
+   } else if (isBuffetOrSetMenu) {
     setStep(7); // Go back to Menu
    } else if (isPlatters) {
     setStep(10); // Go back to Platter Menu
@@ -172,15 +196,20 @@ const Catering = () => {
    } else {
     setStep(9); // Go back to Coffee Break Menu
    }
-  } else if (step === 9) setStep(4); // Coffee Break Menu -> Budget
-  else if (step === 10) setStep(4); // Platter Menu -> Budget
-  else if (step === 11) setStep(4); // Boxed Meal Menu -> Budget
-  else if (step === 12) setStep(4); // Live Station Menu -> Budget
+  } else if (step === 9) setStep(5); // Coffee Break Menu -> Budget
+  else if (step === 10) setStep(5); // Platter Menu -> Budget
+  else if (step === 11) setStep(5); // Boxed Meal Menu -> Budget
+  else if (step === 12) setStep(5); // Live Station Menu -> Budget
+  else if (step === 13) setStep(5); // American Menu -> Budget
  };
 
  // Toggle selection functions
  const toggleServiceStyle = (style: { id: number; name: string }) => {
   setSelectedServiceStyles(style);
+  // Clear downstream selections to prevent stale data
+  setSelectedCuisines([]);
+  setSelectedCourses([]);
+  setSelectedMenuItems([]);
  };
 
  const toggleCuisine = (cuisine: { id: number; name: string }) => {
@@ -219,13 +248,13 @@ const Catering = () => {
     <div className="bg-neutral-white">
      <div className="main-container !py-6">
       {/* <div className="flex items-center gap-2 text-sm mb-6">
-              <button onClick={() => navigate(-1)} className="flex items-center gap-1 text-neutral-gray-dark hover:text-primary transition-colors">
-                <ChevronLeft className="w-4 h-4" />
-                Breadcrumbs
-              </button>
-              <span className="text-neutral-gray">/</span>
-              <span className="text-neutral-gray-dark">Breadcrumbs</span>
-            </div> */}
+               <button onClick={() => navigate(-1)} className="flex items-center gap-1 text-neutral-gray-dark hover:text-primary transition-colors">
+                 <ChevronLeft className="w-4 h-4" />
+                 Breadcrumbs
+               </button>
+               <span className="text-neutral-gray">/</span>
+               <span className="text-neutral-gray-dark">Breadcrumbs</span>
+             </div> */}
       <BreadCrumb />
 
       <h1 className="md:text-4xl font-bold text-primary text-[28px]">
@@ -271,24 +300,11 @@ const Catering = () => {
          selectedEvent={selectedEvent}
          selectedDetailedEventName={selectedDetailedEventName}
          setSelectedDetailedEventName={setSelectedDetailedEventName}
+         guestCount={guestCount}
         />
        </LazyLoad>
       )}
       {step === 4 && (
-       <LazyLoad>
-        <BudgetSelection
-         selectedBudget={selectedBudget}
-         setSelectedBudget={setSelectedBudget}
-         handleGoBack={handleGoBack}
-         handleContinue={handleContinue}
-         selectedEvent={selectedEvent}
-         selectedPax={selectedPax}
-         setSelectedPax={setSelectedPax}
-         selectedServiceStyles={selectedServiceStyles}
-        />
-       </LazyLoad>
-      )}
-      {step === 5 && (
        <LazyLoad>
         <CuisineSelection
          selectedCuisines={selectedCuisines}
@@ -299,6 +315,22 @@ const Catering = () => {
          selectedBudget={selectedBudget}
          selectedEvent={selectedEvent}
          selectedServiceStyles={selectedServiceStyles}
+        />
+       </LazyLoad>
+      )}
+      {step === 5 && (
+       <LazyLoad>
+        <BudgetSelection
+         selectedBudget={selectedBudget}
+         setSelectedBudget={setSelectedBudget}
+         handleGoBack={handleGoBack}
+         handleContinue={handleContinue}
+         selectedEvent={selectedEvent}
+         selectedPax={selectedPax}
+         setSelectedPax={setSelectedPax}
+         selectedServiceStyles={selectedServiceStyles}
+         selectedCuisines={selectedCuisines}
+         guestCount={guestCount}
         />
        </LazyLoad>
       )}
@@ -327,6 +359,7 @@ const Catering = () => {
          selectedCuisines={selectedCuisines}
          selectedBudget={selectedBudget}
          selectedEvent={selectedEvent}
+         setSelectedMenuItems={setSelectedMenuItems}
         />
        </LazyLoad>
       )}
@@ -373,6 +406,16 @@ const Catering = () => {
         />
        </LazyLoad>
       )}
+      {step === 13 && (
+       <LazyLoad>
+        <AmericanMenuSelection
+         selectedMenuItems={selectedMenuItems}
+         setSelectedMenuItems={setSelectedMenuItems}
+         handleGoBack={handleGoBack}
+         handleContinue={handleContinue}
+        />
+       </LazyLoad>
+      )}
       {/* Show the Booking Summary after step 6 */}
       {step === 8 && (
        <LazyLoad>
@@ -391,7 +434,6 @@ const Catering = () => {
         />
        </LazyLoad>
       )}
-  
      </div>
     </LazyLoad>
    </main>

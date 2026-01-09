@@ -41,6 +41,17 @@ const BookingSummary: React.FC<BookingSummaryProps> = ({
 
  // Update the calculateTotal function to use the price_range from selectedBudget
  const calculateTotal = () => {
+  const isPlatters = selectedServiceStyles?.name
+   ?.toLowerCase()
+   .includes("platter");
+
+  if (isPlatters) {
+   const baseTotal = selectedMenuItems.length * 600;
+   const vat = baseTotal * 0.15;
+   const total = baseTotal + vat;
+   return { baseTotal, vat, total };
+  }
+
   const basePricePerGuest = selectedBudget.price_range
    ? parseFloat(selectedBudget.price_range.replace("AED", "").trim())
    : 70;

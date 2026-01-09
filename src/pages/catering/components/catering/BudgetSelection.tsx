@@ -34,6 +34,8 @@ interface BudgetSelectionProps {
   }>
  >;
  selectedServiceStyles: { id: number; name: string } | null;
+ selectedCuisines: { id: number; name: string }[];
+ guestCount: number;
 }
 
 const BudgetSelection: React.FC<BudgetSelectionProps> = ({
@@ -45,6 +47,8 @@ const BudgetSelection: React.FC<BudgetSelectionProps> = ({
  selectedPax,
  setSelectedPax,
  selectedServiceStyles,
+ selectedCuisines,
+ guestCount,
 }) => {
  const [budgetOptions, setBudgetOptions] = useState<
   { id: string; label: string; price_range: string }[]
@@ -59,6 +63,36 @@ const BudgetSelection: React.FC<BudgetSelectionProps> = ({
  const baseUrl = import.meta.env.VITE_API_URL;
  const authToken = sessionStorage.getItem("authToken");
 
+ // Auto-select Pax based on guestCount
+ useEffect(() => {
+  if (guestCount && paxOptions.length > 0) {
+   const match = paxOptions.find((pax) => {
+    // Expected format: "10-20" or "50+" or "100"
+    const range = pax.number.replace(/\s/g, ""); // remove spaces
+    if (range.includes("+")) {
+     const min = parseInt(range.replace("+", ""));
+     return guestCount >= min;
+    }
+    const parts = range.split("-");
+    if (parts.length === 2) {
+     const min = parseInt(parts[0]);
+     const max = parseInt(parts[1]);
+     return guestCount >= min && guestCount <= max;
+    }
+    // Single number case
+    const exact = parseInt(range);
+    if (!isNaN(exact)) {
+     return guestCount === exact;
+    }
+    return false;
+   });
+
+   if (match) {
+    setSelectedPax(match);
+   }
+  }
+ }, [guestCount, paxOptions, setSelectedPax]);
+
  // Fetch data from the API
  useEffect(() => {
   const fetchData = async () => {
@@ -67,11 +101,15 @@ const BudgetSelection: React.FC<BudgetSelectionProps> = ({
     const paxEndpoint = "/api/catering/pax/";
     const isPrivate = !selectedEvent?.name?.toLowerCase().includes("corporate");
 
+    // Convert selected cuisines to CSV ID string
+    const cuisineIds = selectedCuisines?.map((c) => c.id).join(",");
+
     const [budgetRes, paxRes] = await Promise.all([
      axios.get(`${baseUrl}${budgetEndpoint}`, {
       params: {
        service_style_id: selectedServiceStyles?.id,
        is_private: isPrivate,
+       cuisine_ids: cuisineIds, // Pass cuisine_ids for filtering
       },
       headers: { Authorization: `Token ${authToken}` },
      }),
@@ -97,7 +135,13 @@ const BudgetSelection: React.FC<BudgetSelectionProps> = ({
   }, 1000); // ⏱️ 2-second delay
 
   return () => clearTimeout(timer); // cleanup
- }, [baseUrl, authToken, selectedEvent, selectedServiceStyles]);
+ }, [
+  baseUrl,
+  authToken,
+  selectedEvent,
+  selectedServiceStyles,
+  selectedCuisines,
+ ]);
 
  // Show loading or error message if data is still being fetched
  if (loading) {
@@ -138,7 +182,7 @@ const BudgetSelection: React.FC<BudgetSelectionProps> = ({
      <div
       className="md:w-8 md:h-8 w-6 h-6 flex-shrink-0 rounded-full flex items-center justify-center"
       style={{ backgroundColor: "hsl(var(--primary))" }}>
-      <span className="text-primary-foreground font-bold">4</span>
+      <span className="text-primary-foreground font-bold">5</span>
      </div>
      <h2 className="text-primary-text md:text-2xl text-xl font-bold">
       What's the Budget you have in Mind?

@@ -25,6 +25,7 @@ interface CoursesMenuProps {
   price_range: string | null;
  };
  selectedEvent: { id: string | null; name: string | null } | null;
+ setSelectedMenuItems: React.Dispatch<React.SetStateAction<MenuItem[]>>;
 }
 
 const CoursesMenu: React.FC<CoursesMenuProps> = ({
@@ -36,6 +37,7 @@ const CoursesMenu: React.FC<CoursesMenuProps> = ({
  selectedCuisines = [],
  selectedBudget = { id: null, label: null, price_range: null },
  selectedEvent,
+ setSelectedMenuItems,
 }) => {
  const [menuGroups, setMenuGroups] = useState<
   { id: number; title: string; items: MenuItem[] }[]
@@ -54,83 +56,115 @@ const CoursesMenu: React.FC<CoursesMenuProps> = ({
     const budgetId = selectedBudget.id;
     const isPrivate = !selectedEvent?.name?.toLowerCase().includes("corporate");
 
-    // Fetch items with filters
-    const response = await axios.get(`${baseUrl}/api/catering/menu-items/`, {
-     params: {
-      course_ids: courseIds,
-      cuisine_ids: cuisineIds,
-      budget_id: budgetId,
-      is_private: isPrivate,
-     },
-     headers: {
-      Authorization: `Token ${authToken}`,
-     },
-    });
+    let grouped = [];
+    let allItems: MenuItem[] = [];
 
-    const items: any[] = response.data;
+    if (budgetId) {
+     // FIXED MENU FLOW
+     const response = await axios.get(`${baseUrl}/api/catering/fixed-menus/`, {
+      params: {
+       cuisine_ids: cuisineIds,
+       budget_id: budgetId,
+      },
+      headers: { Authorization: `Token ${authToken}` },
+     });
 
-    // Group items by Course
-    // We need to map the flat list of items to the grouped structure expected by the UI.
-    // Each item has a 'course' ID/Name in it (based on backend serializer 'course' field nesting?
-    // Wait, backend serializer currently returns course ID as integer by default unless nested)
+     if (response.data.length > 0) {
+      const menu = response.data[0];
+      const fixedItems = menu.items;
+      const fixedCourses = menu.courses;
 
-    // NOTE: Backend Serializer 'course' field is currently just ID?
-    // Let's check serializer:
-    // fields = ['id', 'name', 'description', 'image_url', 'course', 'cuisine', 'variants']
-    // 'course' is aForeignKey. Default ModelSerializer uses PK.
-    // I should have made it nested or StringRelatedField properly, or use the course list to map IDs to Names.
+      grouped = fixedCourses
+       .map((course: any) => {
+        const courseItems = fixedItems
+         .filter((item: any) => item.course === course.id)
+         .map((item: any) => ({
+          id: item.id.toString(),
+          name: item.name,
+          course: course.name,
+          description: item.description,
+          image_url: item.image_url,
+         }));
 
-    // Better approach: Use the `selectedCourses` list I have here to create the groups,
-    // and filter the fetched items into those groups.
+        // Collect for auto-select
+        allItems = [...allItems, ...courseItems];
 
-    const grouped = selectedCourses
-     .map((course) => {
-      // Filter items belonging to this course
-      // Backend item.course is likely just the ID (number)
-      const courseItems = items
-       .filter((item: any) => item.course === course.id)
-       .map((item: any) => ({
-        id: item.id.toString(),
-        name: item.name,
-        course: course.name,
-        description: item.description,
-        image_url: item.image_url,
-       }));
+        return {
+         id: course.id,
+         title: course.name,
+         items: courseItems,
+        };
+       })
+       .filter((group: any) => group.items.length > 0);
+     }
+    } else {
+     // STANDARD FLOW (Fallback logic, but theoretically should also be auto-select if "all menus" rule applies)
+     // Since user requested "all fixed menus" behavior, we apply it here too.
 
-      return {
-       id: course.id,
-       title: course.name,
-       items: courseItems,
-      };
-     })
-     .filter((group) => group.items.length > 0); // Only show groups with items
+     const response = await axios.get(`${baseUrl}/api/catering/menu-items/`, {
+      params: {
+       course_ids: courseIds,
+       cuisine_ids: cuisineIds,
+       is_private: isPrivate,
+      },
+      headers: { Authorization: `Token ${authToken}` },
+     });
+
+     const items: any[] = response.data;
+
+     grouped = selectedCourses
+      .map((course) => {
+       const courseItems = items
+        .filter((item: any) => item.course === course.id)
+        .map((item: any) => ({
+         id: item.id.toString(),
+         name: item.name,
+         course: course.name,
+         description: item.description,
+         image_url: item.image_url,
+        }));
+
+       // Collect for auto-select
+       allItems = [...allItems, ...courseItems];
+
+       return {
+        id: course.id,
+        title: course.name,
+        items: courseItems,
+       };
+      })
+      .filter((group) => group.items.length > 0);
+    }
 
     setMenuGroups(grouped);
+
+    // AUTO SELECT ALL Logic
+    // We only do this once on load. If user manually unselects?
+    // User said "he can not unselect any menu item". So we enforce valid selection state always.
+    // We can just set selected items to ALL items.
+    // But wait, if we are in "Standard" flow (e.g. Buffet), usually we select items.
+    // The user said "do same thing for all other".
+    // This implies even Buffet becomes a Fixed Menu style???
+    // "like user see all the items are selected by default... and he can not unselect any menu item".
+    // This effectively turns every menu into a Fixed Menu.
+    // I will implement strictly as requested.
+    setSelectedMenuItems(allItems);
+
     setLoading(false);
    } catch (err) {
-    console.error("Error fetching menu items:", err);
-    setError("Failed to load menu items. Please try again later.");
+    setError("Failed to load menu items.");
     setLoading(false);
    }
   };
 
-  if (!selectedCourses?.length && !selectedCuisines?.length) {
-   // If we skipped course selection (Buffet), we might rely on Cuisines only?
-   // But the previous implementation assumed Courses are present.
-   // If user skipped Step 6 (Buffet), selectedCourses is EMPTY.
-   // In that case, we should probably fetch ALL courses related to the Cuisines first, or rely on the backend to Group them?
-   // Since backend logic filters by what is provided, if course_ids is empty, it returns items for ALL courses of that Cuisine.
-   // However, frontend grouping logic above relies on `selectedCourses` to define groups.
+  // Fallback logic for skipped courses
+  const fetchMenuItemsFallback = async () => {
+   // ... (Similar logic, need to fetch courses to group)
+   // Since I am overwriting the file, I will simplify/ommit deep fallback complexity unless absolutely needed.
+   // The original code had a fallback. I should preserve it or implement fetching.
+   // For simplicity in this "overwrite", I'll reimplement the basic fetch from original code but add auto-select.
+   // Re-reading original `fetchMenuItemsFallback`... it does `axios.get(menu-items)` then grabs courses.
 
-   // FIX for Skipped Step: If selectedCourses is empty, we must infer courses from the fetched items?
-   // Or we should have set selectedCourses automatically in the skipped step? To keep it simple, let's infer groups from data.
-   fetchMenuItemsFallback();
-  } else {
-   fetchMenuItems();
-  }
-
-  // Define fallback fetch for when selectedCourses is empty (e.g. buffet mode skipping step 6)
-  async function fetchMenuItemsFallback() {
    try {
     const cuisineIds = selectedCuisines.map((c) => c.id).join(",");
     const budgetId = selectedBudget.id;
@@ -144,20 +178,10 @@ const CoursesMenu: React.FC<CoursesMenuProps> = ({
      },
      headers: { Authorization: `Token ${authToken}` },
     });
-
-    const items: any[] = response.data;
-
-    // Dynamic Grouping
-    // We need course names. Backend item only has course ID.
-    // We might need to fetch all courses or change serializer to return course depth.
-    // For now, let's just group by ID and use a placeholder or separate call?
-    // Actually, let's query courses first to get names if needed.
-
+    const items = response.data;
     const coursesResponse = await axios.get(
      `${baseUrl}/api/catering/courses/?cuisine_ids=${cuisineIds}`,
-     {
-      headers: { Authorization: `Token ${authToken}` },
-     }
+     { headers: { Authorization: `Token ${authToken}` } }
     );
     const coursesMap = new Map(
      coursesResponse.data.map((c: any) => [c.id, c.name])
@@ -167,6 +191,7 @@ const CoursesMenu: React.FC<CoursesMenuProps> = ({
      number,
      { id: number; title: string; items: MenuItem[] }
     > = {};
+    const allItems: MenuItem[] = [];
 
     items.forEach((item: any) => {
      const courseId = item.course;
@@ -177,23 +202,29 @@ const CoursesMenu: React.FC<CoursesMenuProps> = ({
        items: [],
       };
      }
-     groups[courseId].items.push({
+     const newItem = {
       id: item.id.toString(),
       name: item.name,
       course: groups[courseId].title,
-      // price: removed
       description: item.description,
       image_url: item.image_url,
-     });
+     };
+     groups[courseId].items.push(newItem);
+     allItems.push(newItem);
     });
-
     setMenuGroups(Object.values(groups));
+    setSelectedMenuItems(allItems);
     setLoading(false);
-   } catch (err) {
-    console.error(err);
-    setError("Failed to load menu items.");
+   } catch (e) {
+    setError("Failed to load fallback menu items.");
     setLoading(false);
    }
+  };
+
+  if (!selectedCourses?.length && !selectedCuisines?.length) {
+   fetchMenuItemsFallback();
+  } else {
+   fetchMenuItems();
   }
  }, [
   baseUrl,
@@ -202,11 +233,8 @@ const CoursesMenu: React.FC<CoursesMenuProps> = ({
   selectedCuisines,
   selectedBudget,
   selectedEvent,
+  setSelectedMenuItems,
  ]);
-
- // Helper to check if an item is selected
- const isSelected = (itemId: string) =>
-  selectedMenuItems.some((item) => item.id === itemId);
 
  // Group selected items by course for the sidebar
  const groupedSelectedItems = selectedMenuItems.reduce((acc, item) => {
@@ -244,7 +272,7 @@ const CoursesMenu: React.FC<CoursesMenuProps> = ({
       </h2>
      </div>
      <h4 className="ml-12 mb-6 text-neutral-gray font-[700] text-[16px] leading-[24px]">
-      Select menu items from your selected courses below:
+      The following items are included in your package:
      </h4>
 
      <div className="md:ml-12 flex flex-col gap-8">
@@ -255,19 +283,14 @@ const CoursesMenu: React.FC<CoursesMenuProps> = ({
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
          {course.items.map((item) => {
-          const selected = isSelected(item.id);
+          const selected = true; // Always Selected
           return (
            <div
             key={item.id}
-            onClick={() => toggleMenuItem(item)}
             className={`
-                              cursor-pointer rounded-2xl border p-3 transition-all duration-200
-                              ${
-                               selected
-                                ? "border-[#054A86] border-2 bg-[#F5F9FF]"
-                                : "border-[#EBEBEB] bg-white hover:border-[#C7C8D2]"
-                              }
-                            `}>
+                            cursor-pointer rounded-2xl border p-3 transition-all duration-200
+                            border-[#054A86] border-2 bg-[#F5F9FF]
+                          `}>
             {/* Image Placeholder */}
             <div className="relative aspect-[4/3] rounded-xl overflow-hidden mb-3 bg-gray-200">
              <img
@@ -279,13 +302,11 @@ const CoursesMenu: React.FC<CoursesMenuProps> = ({
                 "https://placehold.co/400x300?text=Menu+Item"; // Fallback
               }}
              />
-             {selected && (
-              <div
-               className="absolute top-0 left-0 bg-[#8BC34A] text-primary-dark text-[10px] font-bold h-8 w-[75px] flex items-center justify-center rounded-br-[12px]"
-               style={{ letterSpacing: "0.5px" }}>
-               ADDED
-              </div>
-             )}
+             <div
+              className="absolute top-0 left-0 bg-[#8BC34A] text-primary-dark text-[10px] font-bold h-8 w-[75px] flex items-center justify-center rounded-br-[12px]"
+              style={{ letterSpacing: "0.5px" }}>
+              ADDED
+             </div>
             </div>
 
             <h4 className="font-bold text-[#2B2B43] text-base mb-1">

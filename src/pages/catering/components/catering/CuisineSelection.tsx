@@ -56,9 +56,10 @@ const CuisineSelection: React.FC<CuisineSelectionProps> = ({
      params.service_style_id = selectedServiceStyles.id;
     }
 
-    if (selectedBudget?.id) {
-     params.budget_id = selectedBudget.id;
-    }
+    // Budget is now selected AFTER cuisine, so we don't filter by budget here.
+    // if (selectedBudget?.id) {
+    //  params.budget_id = selectedBudget.id;
+    // }
 
     const response = await axios.get(`${baseUrl}/api/catering/cuisines/`, {
      headers: {
@@ -80,7 +81,7 @@ const CuisineSelection: React.FC<CuisineSelectionProps> = ({
   }, 1000); // ⏱️ 2-second delay
 
   return () => clearTimeout(timer); // cleanup
- }, [selectedEvent, selectedServiceStyles, selectedBudget]);
+ }, [selectedEvent, selectedServiceStyles]); // Removed selectedBudget dependency
 
  // Render loading and error states
  if (loading) {
@@ -97,16 +98,22 @@ const CuisineSelection: React.FC<CuisineSelectionProps> = ({
 
  // Toggle cuisine selection and update selected cuisines state
  const handleCuisineSelection = (cuisine: { id: number; name: string }) => {
-  // Check if the cuisine is already selected
+  // Enforce single selection: always replace the array with the new selection
+  // or toggle off if clicking the same one (optional, but usually radio-button style behavior is expected)
+
+  // User said "restricted to select only one cuisine".
+  // Let's make it behave like a radio button (selecting one deselects others).
+  // Clicking the already selected one could deselect it? Or just keep it?
+  // Let's allow deselecting if clicked again, otherwise replace.
+
   const isSelected = selectedCuisines.some(
    (selectedCuisine) => selectedCuisine.id === cuisine.id
   );
 
-  // Toggle the selection state
   if (isSelected) {
-   setSelectedCuisines(selectedCuisines.filter((c) => c.id !== cuisine.id));
+   setSelectedCuisines([]);
   } else {
-   setSelectedCuisines([...selectedCuisines, cuisine]);
+   setSelectedCuisines([cuisine]);
   }
  };
 
@@ -119,7 +126,7 @@ const CuisineSelection: React.FC<CuisineSelectionProps> = ({
      <div
       className="md:w-8 md:h-8 w-6 h-6 rounded-full flex-shrink-0 flex items-center justify-center"
       style={{ backgroundColor: "hsl(var(--primary))" }}>
-      <span className="text-primary-foreground font-bold">5</span>
+      <span className="text-primary-foreground font-bold">4</span>
      </div>
      <h2 className="text-primary-text md:text-2xl text-xl font-bold">
       What's Type of Cuisines Would You Prefer?
