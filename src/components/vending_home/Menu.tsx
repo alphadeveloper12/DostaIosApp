@@ -269,6 +269,9 @@ const Menu: React.FC<MenuProps> = ({
                 const newQuantity = existingItem.quantity + delta;
                 if (newQuantity <= 0) {
                     newCart = prevCart.filter((i) => i.imgAlt !== item.imgAlt);
+                } else if (newQuantity > 3) {
+                    // Limit to 3
+                    newCart = prevCart;
                 } else {
                     newCart = prevCart.map((i) =>
                         i.imgAlt === item.imgAlt ? { ...i, quantity: newQuantity } : i
@@ -303,7 +306,7 @@ const Menu: React.FC<MenuProps> = ({
                                 Choose Your Meal
                             </h2>
                             <p className="text-[#545563] text-[14px] leading-[20px] font-[400] tracking-[0.1px]">
-                                Choose your meal from our daily menu of {foodData.length} chef-prepared meals
+                                Choose your meal from our daily menu of {availableItems.length} chef-prepared meals
                             </p>
                             {machineGoods === null && (
                                 <div className="flex items-center gap-2 mt-1">
@@ -355,7 +358,7 @@ const Menu: React.FC<MenuProps> = ({
                         Choose Your Meal
                     </h2>
                     <p className="text-[#545563] text-[14px] leading-[20px]">
-                        Choose your meal from our daily menu of {foodData.length} chef-prepared meals
+                        Choose your meal from our daily menu of {availableItems.length} chef-prepared meals
                     </p>
                     {machineGoods === null && (
                         <div className="flex items-center gap-2 mt-1">
@@ -382,11 +385,8 @@ const Menu: React.FC<MenuProps> = ({
                     {!loading && !error && (
                         <>
                             {/* Available Menu Section */}
-                            {availableItems.length > 0 && (
+                            {availableItems.length > 0 ? (
                                 <div className="mb-8">
-                                    <h3 className="text-[20px] font-bold mb-4 text-[#2B2B43] px-1">
-                                        Available Menu
-                                    </h3>
                                     <div className="grid grid-cols-12 md:flex md:gap-[24px] gap-[12px] flex-wrap">
                                         {availableItems.map((data, index) => {
                                             const itemInCart = cart.find(
@@ -404,33 +404,18 @@ const Menu: React.FC<MenuProps> = ({
                                         })}
                                     </div>
                                 </div>
-                            )}
-
-                            {/* Others Section */}
-                            {otherItems.length > 0 && (
-                                <div className="mb-8">
-                                    {machineGoods !== null && (
-                                        <h3 className="text-[20px] font-bold mb-4 text-[#2B2B43] px-1">
-                                            Others
-                                        </h3>
-                                    )}
-                                    <div className="grid grid-cols-12 md:flex md:gap-[24px] gap-[12px] flex-wrap">
-                                        {otherItems.map((data, index) => {
-                                            const itemInCart = cart.find(
-                                                (item) => item.imgAlt === data.imgAlt
-                                            );
-                                            return (
-                                                <MenuCard
-                                                    key={data.id || index}
-                                                    data={data}
-                                                    itemInCart={itemInCart}
-                                                    handleCardClick={handleCardClick}
-                                                    handleQuantityChange={handleQuantityChange}
-                                                />
-                                            );
-                                        })}
+                            ) : (
+                                machineGoods !== null && (
+                                    <div className="flex flex-col items-center justify-center py-20 text-center">
+                                        <div className="bg-gray-50 rounded-full p-6 mb-4">
+                                            <X className="w-12 h-12 text-gray-300" />
+                                        </div>
+                                        <h3 className="text-[20px] font-bold text-[#2B2B43] mb-2">No Items Available</h3>
+                                        <p className="text-[#83859C] max-w-[300px]">
+                                            Sorry, there are no items currently available at this location.
+                                        </p>
                                     </div>
-                                </div>
+                                )
                             )}
                         </>
                     )}

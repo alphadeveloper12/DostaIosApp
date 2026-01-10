@@ -584,6 +584,11 @@ const OrderNow = () => {
     const lastStep = isMonthly ? 7 : 4;
     const isLastStep = activeStep === lastStep;
 
+    // If moving from step 2 to 3 for a plan, default pickOrder to "Pickup Today"
+    if (activeStep === 2 && orderType === "Start a Plan" && !pickOrder) {
+      SetPickOrder("Pickup Today");
+    }
+
     // location id
     let locId = 1;
     try {
@@ -887,9 +892,11 @@ const OrderNow = () => {
                         </h2>
                         {step3Status === "completed" && (
                           <>
-                            <h4 className="text-[16px] leading-[24px] font-[700] tracking-[0.1px] text-[#056AC1]">
-                              "{pickOrder}"
-                            </h4>
+                            {orderType !== "Start a Plan" && (
+                              <h4 className="text-[16px] leading-[24px] font-[700] tracking-[0.1px] text-[#056AC1]">
+                                "{pickOrder}"
+                              </h4>
+                            )}
                             <h4 className="text-[16px] leading-[24px] font-[700] tracking-[0.1px] text-[#056AC1]">
                               "{time}"
                             </h4>
@@ -910,20 +917,22 @@ const OrderNow = () => {
 
                   {step3Status === "active" && (
                     <div className="mt-6 space-y-6">
-                      <div className="flex gap-4 flex-row">
-                        {pickupOptions.map((opt: any) => (
-                          <Button
-                            key={opt.key}
-                            onClick={() => SetPickOrder(opt.label)}
-                            className={`${pickOrder === opt.label
-                              ? "bg-[#EAF5FF] hover:bg-[#EAF5FF] border border-[#054A86] text-[#2B2B43]"
-                              : "bg-neutral-white hover:bg-neutral-white border border-[#C7C8D2] text-[#2B2B43]"
-                              } px-6 py-3 md:rounded-[16px] rounded-[10px] font-bold`}
-                          >
-                            {opt.label}
-                          </Button>
-                        ))}
-                      </div>
+                      {orderType !== "Start a Plan" && (
+                        <div className="flex gap-4 flex-row">
+                          {pickupOptions.map((opt: any) => (
+                            <Button
+                              key={opt.key}
+                              onClick={() => SetPickOrder(opt.label)}
+                              className={`${pickOrder === opt.label
+                                ? "bg-[#EAF5FF] hover:bg-[#EAF5FF] border border-[#054A86] text-[#2B2B43]"
+                                : "bg-neutral-white hover:bg-neutral-white border border-[#C7C8D2] text-[#2B2B43]"
+                                } px-6 py-3 md:rounded-[16px] rounded-[10px] font-bold`}
+                            >
+                              {opt.label}
+                            </Button>
+                          ))}
+                        </div>
+                      )}
 
                       <div className="flex md:flex-row flex-col items-start gap-8">
                         <div className="flex-1">

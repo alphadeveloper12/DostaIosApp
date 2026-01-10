@@ -7,105 +7,138 @@ All colors MUST be HSL.
 */
 
 @layer base {
- :root {
-  /* Background colors */
-  --background: 240 11% 97%; /* #F7F7F9 */
-  --foreground: 215 29% 19%; /* #202E41 */
+    :root {
+        /* Background colors */
+        --background: 240 11% 97%;
+        /* #F7F7F9 */
+        --foreground: 215 29% 19%;
+        /* #202E41 */
 
-  /* Card colors */
-  --card: 0 0% 100%;
-  --card-foreground: 215 29% 19%;
+        /* Card colors */
+        --card: 0 0% 100%;
+        --card-foreground: 215 29% 19%;
 
-  /* Popover colors */
-  --popover: 0 0% 100%;
-  --popover-foreground: 215 29% 19%;
+        /* Popover colors */
+        --popover: 0 0% 100%;
+        --popover-foreground: 215 29% 19%;
 
-  /* Primary colors - Blue palette */
-  --primary: 203 94% 22%; /* #04406E */
-  --primary-foreground: 0 0% 100%;
-  --primary-light: 203 100% 96%; /* #E9F5FF */
-  --primary-lighter: 202 100% 92%; /* #D4EFFF */
-  --primary-3d: 202 98% 50%; /* #04A3FA */
-  --primary-hover: 206 95% 39%; /* #0564C1 */
-  --primary-dark: 203 97% 15%; /* #012E4E */
+        /* Primary colors - Blue palette */
+        --primary: 203 94% 22%;
+        /* #04406E */
+        --primary-foreground: 0 0% 100%;
+        --primary-light: 203 100% 96%;
+        /* #E9F5FF */
+        --primary-lighter: 202 100% 92%;
+        /* #D4EFFF */
+        --primary-3d: 202 98% 50%;
+        /* #04A3FA */
+        --primary-hover: 206 95% 39%;
+        /* #0564C1 */
+        --primary-dark: 203 97% 15%;
+        /* #012E4E */
 
-  /* Secondary color - Red */
-  --secondary: 353 100% 50%; /* #FF0522 */
-  --secondary-foreground: 0 0% 100%;
+        /* Secondary color - Red */
+        --secondary: 353 100% 50%;
+        /* #FF0522 */
+        --secondary-foreground: 0 0% 100%;
 
-  /* Tertiary colors */
-  --tertiary-green: 82 56% 55%; /* #8BC53F */
-  --tertiary-purple: 260 100% 62%; /* #8C3EFF */
-  --tertiary-purple-light: 230 88% 94%; /* #E0E7FE */
-  /* text colours */
-  --primaryDefault: #054a86;
-  --neutralBlack: #2b2b43;
-  --neutralGray: #545563;
-  --primaryDark: #032f55;
-  --neutralWhite: #ffffff;
-  /* Neutral colors */
-  --neutral-black: 215 29% 19%; /* #202E41 */
-  --neutral-gray-dark: 217 13% 38%; /* #545E6E */
-  --neutral-gray: 220 10% 66%; /* #A4AAB2 */
-  --neutral-gray-light: 225 9% 79%; /* #C7C9D2 */
-  --neutral-gray-lightest: 240 16% 93%; /* #EDEDF2 */
-  --neutral-white: 0 0% 100%;
+        /* Tertiary colors */
+        --tertiary-green: 82 56% 55%;
+        /* #8BC53F */
+        --tertiary-purple: 260 100% 62%;
+        /* #8C3EFF */
+        --tertiary-purple-light: 230 88% 94%;
+        /* #E0E7FE */
+        /* text colours */
+        --primaryDefault: #054a86;
+        --neutralBlack: #2b2b43;
+        --neutralGray: #545563;
+        --primaryDark: #032f55;
+        --neutralWhite: #ffffff;
+        /* Neutral colors */
+        --neutral-black: 215 29% 19%;
+        /* #202E41 */
+        --neutral-gray-dark: 217 13% 38%;
+        /* #545E6E */
+        --neutral-gray: 220 10% 66%;
+        /* #A4AAB2 */
+        --neutral-gray-light: 225 9% 79%;
+        /* #C7C9D2 */
+        --neutral-gray-lightest: 240 16% 93%;
+        /* #EDEDF2 */
+        --neutral-white: 0 0% 100%;
 
-  /* Muted colors */
-  --muted: 240 16% 93%;
-  --muted-foreground: 217 13% 38%;
+        /* Muted colors */
+        --muted: 240 16% 93%;
+        --muted-foreground: 217 13% 38%;
 
-  /* Accent colors */
-  --accent: 202 100% 96%;
-  --accent-foreground: 203 94% 22%;
+        /* Accent colors */
+        --accent: 202 100% 96%;
+        --accent-foreground: 203 94% 22%;
 
-  /* Error colors */
-  --destructive: 5 100% 65%; /* #FF5C4D */
-  --destructive-foreground: 0 0% 100%;
-  --error-lightest: 5 100% 95%;
-  --error-light: 5 100% 90%;
-  --error-hover: 5 100% 60%;
-  --error-dark: 3 100% 57%;
+        /* Error colors */
+        --destructive: 5 100% 65%;
+        /* #FF5C4D */
+        --destructive-foreground: 0 0% 100%;
+        --error-lightest: 5 100% 95%;
+        --error-light: 5 100% 90%;
+        --error-hover: 5 100% 60%;
+        --error-dark: 3 100% 57%;
 
-  /* Success colors */
-  --success: 160 77% 41%; /* #1AB77D */
-  --success-light: 156 67% 95%; /* #E9F9F1 */
+        /* Success colors */
+        --success: 160 77% 41%;
+        /* #1AB77D */
+        --success-light: 156 67% 95%;
+        /* #E9F9F1 */
 
-  /* Border and input */
-  --border: 225 9% 79%;
-  --input: 225 9% 79%;
-  --ring: 203 94% 22%;
+        /* Border and input */
+        --border: 225 9% 79%;
+        --input: 225 9% 79%;
+        --ring: 203 94% 22%;
 
-  --radius: 0.5rem;
- }
+        --radius: 0.5rem;
+    }
 
- .dark {
-  --background: 215 29% 19%;
-  --foreground: 0 0% 100%;
-  --card: 215 29% 22%;
-  --card-foreground: 0 0% 100%;
-  --popover: 215 29% 22%;
-  --popover-foreground: 0 0% 100%;
-  --primary: 202 98% 50%;
-  --primary-foreground: 215 29% 19%;
-  --border: 217 13% 38%;
-  --input: 217 13% 38%;
-  --ring: 202 98% 50%;
-  --muted: 217 13% 38%;
-  --muted-foreground: 220 10% 66%;
-  --accent: 217 13% 38%;
-  --accent-foreground: 0 0% 100%;
-  --destructive: 5 100% 65%;
-  --destructive-foreground: 0 0% 100%;
- }
+    .dark {
+        --background: 215 29% 19%;
+        --foreground: 0 0% 100%;
+        --card: 215 29% 22%;
+        --card-foreground: 0 0% 100%;
+        --popover: 215 29% 22%;
+        --popover-foreground: 0 0% 100%;
+        --primary: 202 98% 50%;
+        --primary-foreground: 215 29% 19%;
+        --border: 217 13% 38%;
+        --input: 217 13% 38%;
+        --ring: 202 98% 50%;
+        --muted: 217 13% 38%;
+        --muted-foreground: 220 10% 66%;
+        --accent: 217 13% 38%;
+        --accent-foreground: 0 0% 100%;
+        --destructive: 5 100% 65%;
+        --destructive-foreground: 0 0% 100%;
+    }
 }
 
 @layer base {
- * {
-  @apply border-border;
- }
+    * {
+        @apply border-border;
+    }
 
- body {
-  @apply bg-background text-foreground;
- }
+    body {
+        @apply bg-background text-foreground;
+    }
+}
+
+/* Hide spin buttons for Chrome, Safari, Edge, Opera */
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+/* Hide spin buttons for Firefox */
+input[type="number"] {
+    -moz-appearance: textfield;
+    appearance: textfield;
 }

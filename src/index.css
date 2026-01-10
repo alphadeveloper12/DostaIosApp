@@ -7,163 +7,210 @@ All colors MUST be HSL.
 */
 
 @layer base {
- html {
-  font-family: theme("fontFamily.sans");
- }
- :root {
-  /* Background colors */
-  --background: 240 11% 97%; /* #F7F7F9 */
-  --foreground: 215 29% 19%; /* #202E41 */
+  html {
+    font-family: theme("fontFamily.sans");
+  }
 
-  /* Card colors */
-  --card: 0 0% 100%;
-  --card-foreground: 215 29% 19%;
+  :root {
+    /* Background colors */
+    --background: 240 11% 97%;
+    /* #F7F7F9 */
+    --foreground: 215 29% 19%;
+    /* #202E41 */
 
-  /* Popover colors */
-  --popover: 0 0% 100%;
-  --popover-foreground: 215 29% 19%;
+    /* Card colors */
+    --card: 0 0% 100%;
+    --card-foreground: 215 29% 19%;
 
-  /* Primary colors - Blue palette */
-  --primary: 203 94% 22%; /* #04406E */
-  --primary-foreground: 0 0% 100%;
-  --primary-light: 203 100% 96%; /* #E9F5FF */
-  --primary-lighter: 202 100% 92%; /* #D4EFFF */
-  --primary-3d: 202 98% 50%; /* #04A3FA */
-  --primary-hover: 206 95% 39%; /* #0564C1 */
-  --primary-dark: 203 97% 15%; /* #012E4E */
+    /* Popover colors */
+    --popover: 0 0% 100%;
+    --popover-foreground: 215 29% 19%;
 
-  /* Secondary color - Red */
-  --secondary: 353 100% 50%; /* #FF0522 */
-  --secondary-foreground: 0 0% 100%;
+    /* Primary colors - Blue palette */
+    --primary: 203 94% 22%;
+    /* #04406E */
+    --primary-foreground: 0 0% 100%;
+    --primary-light: 203 100% 96%;
+    /* #E9F5FF */
+    --primary-lighter: 202 100% 92%;
+    /* #D4EFFF */
+    --primary-3d: 202 98% 50%;
+    /* #04A3FA */
+    --primary-hover: 206 95% 39%;
+    /* #0564C1 */
+    --primary-dark: 203 97% 15%;
+    /* #012E4E */
 
-  /* Tertiary colors */
-  --tertiary-green: 82 56% 55%; /* #8BC53F */
-  --tertiary-purple: 260 100% 62%; /* #8C3EFF */
-  --tertiary-purple-light: 230 88% 94%; /* #E0E7FE */
-  /* text colours */
-  --primaryDefault: #054a86;
-  --neutralBlack: #2b2b43;
-  --neutralGray: #545563;
-  --primaryDark: #032f55;
-  --neutralWhite: #ffffff;
-  /* Neutral colors */
-  --neutral-black: 215 29% 19%; /* #202E41 */
-  --neutral-gray-dark: 217 13% 38%; /* #545E6E */
-  --neutral-gray: 220 10% 66%; /* #A4AAB2 */
-  --neutral-gray-light: 225 9% 79%; /* #C7C9D2 */
-  --neutral-gray-lightest: 240 16% 93%; /* #EDEDF2 */
-  --neutral-white: 0 0% 100%;
+    /* Secondary color - Red */
+    --secondary: 353 100% 50%;
+    /* #FF0522 */
+    --secondary-foreground: 0 0% 100%;
 
-  /* Muted colors */
-  --muted: 240 16% 93%;
-  --muted-foreground: 217 13% 38%;
+    /* Tertiary colors */
+    --tertiary-green: 82 56% 55%;
+    /* #8BC53F */
+    --tertiary-purple: 260 100% 62%;
+    /* #8C3EFF */
+    --tertiary-purple-light: 230 88% 94%;
+    /* #E0E7FE */
+    /* text colours */
+    --primaryDefault: #054a86;
+    --neutralBlack: #2b2b43;
+    --neutralGray: #545563;
+    --primaryDark: #032f55;
+    --neutralWhite: #ffffff;
+    /* Neutral colors */
+    --neutral-black: 215 29% 19%;
+    /* #202E41 */
+    --neutral-gray-dark: 217 13% 38%;
+    /* #545E6E */
+    --neutral-gray: 220 10% 66%;
+    /* #A4AAB2 */
+    --neutral-gray-light: 225 9% 79%;
+    /* #C7C9D2 */
+    --neutral-gray-lightest: 240 16% 93%;
+    /* #EDEDF2 */
+    --neutral-white: 0 0% 100%;
 
-  /* Accent colors */
-  --accent: 202 100% 96%;
-  --accent-foreground: 203 94% 22%;
+    /* Muted colors */
+    --muted: 240 16% 93%;
+    --muted-foreground: 217 13% 38%;
 
-  /* Error colors */
-  --destructive: 5 100% 65%; /* #FF5C4D */
-  --destructive-foreground: 0 0% 100%;
-  --error-lightest: 5 100% 95%;
-  --error-light: 5 100% 90%;
-  --error-hover: 5 100% 60%;
-  --error-dark: 3 100% 57%;
+    /* Accent colors */
+    --accent: 202 100% 96%;
+    --accent-foreground: 203 94% 22%;
 
-  /* Success colors */
-  --success: 160 77% 41%; /* #1AB77D */
-  --success-light: 156 67% 95%; /* #E9F9F1 */
+    /* Error colors */
+    --destructive: 5 100% 65%;
+    /* #FF5C4D */
+    --destructive-foreground: 0 0% 100%;
+    --error-lightest: 5 100% 95%;
+    --error-light: 5 100% 90%;
+    --error-hover: 5 100% 60%;
+    --error-dark: 3 100% 57%;
 
-  /* Border and input */
-  --border: 225 9% 79%;
-  --input: 225 9% 79%;
-  --ring: 203 94% 22%;
+    /* Success colors */
+    --success: 160 77% 41%;
+    /* #1AB77D */
+    --success-light: 156 67% 95%;
+    /* #E9F9F1 */
 
-  --radius: 0.5rem;
- }
-/* Hide scrollbar for Chrome, Safari and Opera */
-.scrollbar-hide::-webkit-scrollbar {
-  display: none;
+    /* Border and input */
+    --border: 225 9% 79%;
+    --input: 225 9% 79%;
+    --ring: 203 94% 22%;
+
+    --radius: 0.5rem;
+  }
+
+  /* Hide scrollbar for Chrome, Safari and Opera */
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Hide scrollbar for IE, Edge and Firefox */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    /* IE and Edge */
+    scrollbar-width: none;
+    /* Firefox */
+  }
+
+  .dark {
+    --background: 215 29% 19%;
+    --foreground: 0 0% 100%;
+    --card: 215 29% 22%;
+    --card-foreground: 0 0% 100%;
+    --popover: 215 29% 22%;
+    --popover-foreground: 0 0% 100%;
+    --primary: 202 98% 50%;
+    --primary-foreground: 215 29% 19%;
+    --border: 217 13% 38%;
+    --input: 217 13% 38%;
+    --ring: 202 98% 50%;
+    --muted: 217 13% 38%;
+    --muted-foreground: 220 10% 66%;
+    --accent: 217 13% 38%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 5 100% 65%;
+    --destructive-foreground: 0 0% 100%;
+  }
+
+  .settings select {
+    background-image: url("/public/images/icons/down_arrow.svg");
+    /* Add your custom arrow icon here */
+    background-position: right 8px center;
+    background-repeat: no-repeat;
+    background-size: 1rem;
+  }
 }
 
-/* Hide scrollbar for IE, Edge and Firefox */
-.scrollbar-hide {
-  -ms-overflow-style: none;  /* IE and Edge */
-  scrollbar-width: none;  /* Firefox */
-}
-
- .dark {
-  --background: 215 29% 19%;
-  --foreground: 0 0% 100%;
-  --card: 215 29% 22%;
-  --card-foreground: 0 0% 100%;
-  --popover: 215 29% 22%;
-  --popover-foreground: 0 0% 100%;
-  --primary: 202 98% 50%;
-  --primary-foreground: 215 29% 19%;
-  --border: 217 13% 38%;
-  --input: 217 13% 38%;
-  --ring: 202 98% 50%;
-  --muted: 217 13% 38%;
-  --muted-foreground: 220 10% 66%;
-  --accent: 217 13% 38%;
-  --accent-foreground: 0 0% 100%;
-  --destructive: 5 100% 65%;
-  --destructive-foreground: 0 0% 100%;
- }
- .settings select {
-  background-image: url("/public/images/icons/down_arrow.svg"); /* Add your custom arrow icon here */
-  background-position: right 8px center;
-  background-repeat: no-repeat;
-  background-size: 1rem;
- }
-}
 .slides_images button {
- display: none !important;
+  display: none !important;
 }
+
 /* Customize the overall position of the dots */
 .slick-dots {
- position: absolute;
- bottom: -80px !important; /* Adjust bottom position */
- left: 50%;
- transform: translateX(-50%);
- display: flex;
- gap: 8px; /* Space between the dots */
+  position: absolute;
+  bottom: -80px !important;
+  /* Adjust bottom position */
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 8px;
+  /* Space between the dots */
 }
+
 .login-silder .slick-dots {
- bottom: 300px; /* Adjust bottom position */
+  bottom: 300px;
+  /* Adjust bottom position */
 }
+
 /* Customize individual dots */
 .slick-dots li button:before {
- font-size: 0; /* Remove the default content */
- color: transparent; /* No text color */
- background-color: #c7c8d2; /* Default color of inactive dots */
- width: 12px !important; /* Set the width */
- height: 12px !important; /* Set the height */
- border-radius: 50%; /* Make the dots circular */
- opacity: 1; /* Ensure dots are visible */
- border: none; /* Remove any border */
- color: transparent !important;
- opacity: 100% !important;
+  font-size: 0;
+  /* Remove the default content */
+  color: transparent;
+  /* No text color */
+  background-color: #c7c8d2;
+  /* Default color of inactive dots */
+  width: 12px !important;
+  /* Set the width */
+  height: 12px !important;
+  /* Set the height */
+  border-radius: 50%;
+  /* Make the dots circular */
+  opacity: 1;
+  /* Ensure dots are visible */
+  border: none;
+  /* Remove any border */
+  color: transparent !important;
+  opacity: 100% !important;
 }
 
 /* Customize active dots */
 .slick-dots li.slick-active button:before {
- background-color: #a7cf38; /* Active dot color */
- color: transparent !important;
- opacity: 100% !important;
+  background-color: #a7cf38;
+  /* Active dot color */
+  color: transparent !important;
+  opacity: 100% !important;
 }
+
 .login-silder .slick-dots li.slick-active button:before {
- background-color: #ffffff; /* Active dot color */
- color: transparent !important;
- opacity: 100% !important;
+  background-color: #ffffff;
+  /* Active dot color */
+  color: transparent !important;
+  opacity: 100% !important;
 }
+
 /* Customize dot hover effect */
 .slick-dots li button:hover:before {
- background-color: #a7cf38; /* Hover color */
- color: transparent !important;
- opacity: 100% !important;
+  background-color: #a7cf38;
+  /* Hover color */
+  color: transparent !important;
+  opacity: 100% !important;
 }
+
 .main-container {
   max-width: 1170px;
   width: 100%;
@@ -178,11 +225,24 @@ All colors MUST be HSL.
 }
 
 @layer base {
- * {
-  @apply border-border;
- }
+  * {
+    @apply border-border;
+  }
 
- body {
-  @apply bg-background text-foreground;
- }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+/* Hide spin buttons for Chrome, Safari, Edge, Opera */
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* Hide spin buttons for Firefox */
+input[type="number"] {
+  -moz-appearance: textfield;
+  appearance: textfield;
 }

@@ -7,8 +7,20 @@ import BreadCrumb from "@/components/home/BreadCrumb";
 import Header from "./catering/components/layout/Header";
 
 import axios from "axios";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import MobileFooterNav from "@/components/home/MobileFooterNav";
+import { Trash2 } from "lucide-react";
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+    AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 // Types matching Backend API
 interface MenuItemAPI {
@@ -27,6 +39,8 @@ interface CartItemAPI {
     week_number: number | null; // 1-4
     subtotal: number;
     vending_good_uuid: string | null;
+    plan_type: string;
+    plan_subtype: string;
 }
 
 interface CartAPI {
@@ -58,6 +72,8 @@ export interface CartItemType {
     price: number;
     weekNumber: number | null; // For grouping
     vendingGoodUuid: string | null; // NEW: Good UUID
+    planType: string;
+    planSubtype: string;
 }
 
 const CartPage: React.FC = () => {
@@ -139,7 +155,7 @@ const CartPage: React.FC = () => {
         const mapped: CartItemType[] = (cart.items || []).map((apiItem) => {
             let notes = "Other notes or copy here";
 
-            if (cart.plan_subtype === "WEEKLY" || cart.plan_subtype === "MONTHLY") {
+            if (apiItem.plan_subtype === "WEEKLY" || apiItem.plan_subtype === "MONTHLY") {
                 if (apiItem.day_of_week) {
                     notes = `Meal for ${apiItem.day_of_week}`;
                 }
@@ -150,15 +166,14 @@ const CartPage: React.FC = () => {
                 menuItemId: apiItem.menu_item.id,
                 name: apiItem.menu_item.name,
                 notes: notes,
-                pickupLocation: `${locationName}`,
-                imageUrl:
-                    apiItem.menu_item.image_url ||
-                    currentImageMap[apiItem.menu_item.name] ||
-                    "/images/vending_home/food.svg",
+                pickupLocation: locationName,
+                imageUrl: currentImageMap[apiItem.menu_item.name] || "/images/icons/food-placeholder.svg",
                 quantity: apiItem.quantity,
                 price: parseFloat(apiItem.menu_item.price),
                 weekNumber: apiItem.week_number,
                 vendingGoodUuid: apiItem.vending_good_uuid,
+                planType: apiItem.plan_type,
+                planSubtype: apiItem.plan_subtype,
             };
         });
 
@@ -178,20 +193,97 @@ const CartPage: React.FC = () => {
         return "Order Now";
     };
 
-    const handleQuantityChange = (id: number, delta: number) => {
-        setItems((prev) =>
-            prev.map((item) => {
-                if (item.id === id) {
-                    const newQ = Math.max(1, item.quantity + delta);
-                    return { ...item, quantity: newQ };
-                }
-                return item;
-            })
+    const handleQuantityChange = async (id: number, delta: number) => {
+        const itemToUpdate = items.find((i) => i.id === id);
+        if (!itemToUpdate) return;
+
+        const newQ = Math.min(3, Math.max(1, itemToUpdate.quantity + delta));
+        if (newQ === itemToUpdate.quantity) return;
+
+        // Optimistically update UI
+        const updatedAllItems = items.map((item) =>
+            item.id === id ? { ...item, quantity: newQ } : item
         );
+        setItems(updatedAllItems);
+
+        try {
+            const token = sessionStorage.getItem("authToken");
+            // Filter items of the same plan type to sync
+            const samePlanItems = updatedAllItems.filter(
+                (i) => i.planType === itemToUpdate.planType && i.planSubtype === itemToUpdate.planSubtype
+            );
+
+            // Map back to API format
+            const apiItems = samePlanItems.map((i) => ({
+                menu_item_id: i.menuItemId,
+                quantity: i.quantity,
+                day_of_week: i.notes.startsWith("Meal for ") ? i.notes.replace("Meal for ", "") : null,
+                week_number: i.weekNumber,
+                vending_good_uuid: i.vendingGoodUuid,
+            }));
+
+            await axios.post(
+                `${baseUrl}/api/vending/cart/`,
+                {
+                    location_id: cartData?.location?.id,
+                    plan_type: itemToUpdate.planType,
+                    plan_subtype: itemToUpdate.planSubtype,
+                    items: apiItems,
+                },
+                {
+                    headers: { Authorization: `Token ${token}` },
+                }
+            );
+            console.log("✅ Quantity synced with backend.");
+        } catch (err) {
+            console.error("Failed to sync quantity", err);
+        }
     };
 
-    const handleDeleteItem = (id: number) => {
-        setItems((prev) => prev.filter((i) => i.id !== id));
+    const handleDeleteItem = async (id: number) => {
+        const itemToDelete = items.find((i) => i.id === id);
+        if (!itemToDelete) return;
+
+        // Optimistically update UI
+        const updatedAllItems = items.filter((i) => i.id !== id);
+        setItems(updatedAllItems);
+
+        try {
+            const token = sessionStorage.getItem("authToken");
+
+            // Filter items of the same plan type to sync
+            const samePlanItems = updatedAllItems.filter(
+                (i) => i.planType === itemToDelete.planType && i.planSubtype === itemToDelete.planSubtype
+            );
+
+            // Map back to API format
+            const apiItems = samePlanItems.map((i) => ({
+                menu_item_id: i.menuItemId,
+                quantity: i.quantity,
+                day_of_week: i.notes.startsWith("Meal for ") ? i.notes.replace("Meal for ", "") : null,
+                week_number: i.weekNumber,
+                vending_good_uuid: i.vendingGoodUuid,
+            }));
+
+            await axios.post(
+                `${baseUrl}/api/vending/cart/`,
+                {
+                    location_id: cartData?.location?.id,
+                    plan_type: itemToDelete.planType,
+                    plan_subtype: itemToDelete.planSubtype,
+                    items: apiItems,
+                },
+                {
+                    headers: { Authorization: `Token ${token}` },
+                }
+            );
+            console.log("✅ Item deleted from backend.");
+        } catch (err) {
+            console.error("Failed to delete item from backend", err);
+            // Revert UI on failure? Or just alert.
+            alert("Failed to sync deletion with server.");
+            fetchCart(); // Refresh from server to be safe
+        }
     };
 
     const summary = useMemo(() => {
@@ -205,28 +297,62 @@ const CartPage: React.FC = () => {
         return { subtotal, vat, discount, total };
     }, [items, coupon]);
 
-    const activePlanSubtype = cartData?.plan_subtype || "NONE";
+    const handleClearCart = async () => {
+        // Removed window.confirm, handled by AlertDialog
 
-    // Prepare grouped items for Monthly Plan
-    const getMonthlyGroupedItems = () => {
-        const weeks = [1, 2, 3, 4];
-        const groups: any[] = [];
+        try {
+            const token = sessionStorage.getItem("authToken");
+            await axios.post(
+                `${baseUrl}/api/vending/cart/`,
+                { clear_all: true },
+                {
+                    headers: { Authorization: `Token ${token}` },
+                }
+            );
+            setItems([]);
+            console.log("🗑️ Cart cleared successfully.");
+        } catch (err) {
+            console.error("Failed to clear cart", err);
+            alert("Failed to clear cart. Please try again.");
+        }
+    };
 
-        for (const week of weeks) {
-            const weekItems = items.filter((i) => i.weekNumber === week);
-            if (weekItems.length > 0) {
-                groups.push({
-                    title: `Week ${week}`,
-                    items: weekItems,
-                });
-            }
+    const getGroupedCartItems = () => {
+        const groups: { title: string; items: CartItemType[]; groupedItems?: any[] }[] = [];
+
+        // 1. Order Now
+        const orderNowItems = items.filter(i => i.planType === "ORDER_NOW" || i.planType === "SMART_GRAB");
+        if (orderNowItems.length > 0) {
+            groups.push({ title: "Order Now", items: orderNowItems });
         }
 
-        const extras = items.filter(
-            (i) => !i.weekNumber && activePlanSubtype === "MONTHLY"
-        );
-        if (extras.length > 0) {
-            groups.push({ title: "Other Items", items: extras });
+        // 2. Weekly Plans
+        const weeklyItems = items.filter(i => i.planType === "START_PLAN" && i.planSubtype === "WEEKLY");
+        if (weeklyItems.length > 0) {
+            groups.push({ title: "Weekly Plan", items: weeklyItems });
+        }
+
+        // 3. Monthly Plans
+        const monthlyItems = items.filter(i => i.planType === "START_PLAN" && i.planSubtype === "MONTHLY");
+        if (monthlyItems.length > 0) {
+            // Group monthly items by week
+            const weeks = [1, 2, 3, 4];
+            const monthlyGroups: any[] = [];
+            for (const week of weeks) {
+                const weekItems = monthlyItems.filter((i) => i.weekNumber === week);
+                if (weekItems.length > 0) {
+                    monthlyGroups.push({
+                        title: `Week ${week}`,
+                        items: weekItems,
+                    });
+                }
+            }
+            const extras = monthlyItems.filter((i) => !i.weekNumber);
+            if (extras.length > 0) {
+                monthlyGroups.push({ title: "Other Items", items: extras });
+            }
+
+            groups.push({ title: "Monthly Plan", items: [], groupedItems: monthlyGroups });
         }
 
         return groups;
@@ -238,9 +364,37 @@ const CartPage: React.FC = () => {
             <div className="w-full bg-white pt-2 pb-6">
                 <div className="main-container">
                     <BreadCrumb />
-                    <h2 className="text-[28px] text-[#054A86] leading-[36px] font-[700] tracking-[0.1px]">
-                        Cart
-                    </h2>
+                    <div className="flex justify-between items-center">
+                        <h2 className="text-[28px] text-[#054A86] leading-[36px] font-[700] tracking-[0.1px]">
+                            {getMainTitle()}
+                        </h2>
+                        {items.length > 0 && (
+                            <AlertDialog>
+                                <AlertDialogTrigger asChild>
+                                    <button
+                                        className="text-red-500 hover:text-red-700 font-semibold flex items-center gap-2 transition-colors"
+                                    >
+                                        <Trash2 className="w-5 h-5" />
+                                        <span>Clear Cart</span>
+                                    </button>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent>
+                                    <AlertDialogHeader>
+                                        <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                                        <AlertDialogDescription>
+                                            This action cannot be undone. This will permanently remove all items from your cart.
+                                        </AlertDialogDescription>
+                                    </AlertDialogHeader>
+                                    <AlertDialogFooter>
+                                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                        <AlertDialogAction onClick={handleClearCart} className="bg-red-500 hover:bg-red-600">
+                                            Clear Cart
+                                        </AlertDialogAction>
+                                    </AlertDialogFooter>
+                                </AlertDialogContent>
+                            </AlertDialog>
+                        )}
+                    </div>
                 </div>
             </div>
 
@@ -250,20 +404,23 @@ const CartPage: React.FC = () => {
                 ) : (
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start py-6">
                         <div className="lg:col-span-2 space-y-6">
-                            {activePlanSubtype === "MONTHLY" ? (
+                            {getGroupedCartItems().map((group, idx) => (
                                 <OrderList
-                                    title="Monthly Plan"
-                                    groupedItems={getMonthlyGroupedItems()}
+                                    key={idx}
+                                    title={group.title}
+                                    items={group.items}
+                                    groupedItems={group.groupedItems}
                                     onQuantityChange={handleQuantityChange}
                                     onDeleteItem={handleDeleteItem}
                                 />
-                            ) : (
-                                <OrderList
-                                    title={getMainTitle()}
-                                    items={items}
-                                    onQuantityChange={handleQuantityChange}
-                                    onDeleteItem={handleDeleteItem}
-                                />
+                            ))}
+                            {items.length === 0 && (
+                                <div className="bg-white rounded-lg shadow-md p-10 text-center">
+                                    <p className="text-gray-500">Your cart is empty.</p>
+                                    <Link to="/vending-home" className="text-[#054A86] font-bold mt-4 inline-block">
+                                        Go Shopping
+                                    </Link>
+                                </div>
                             )}
                         </div>
 
@@ -284,7 +441,11 @@ const CartPage: React.FC = () => {
 
                                     try {
                                         // --- 1. Vending Machine Validation & Matching ---
-                                        if (serialNumber) {
+                                        const hasOrderNowItems = items.some(
+                                            (item) => item.planType === "ORDER_NOW" || item.planType === "SMART_GRAB"
+                                        );
+
+                                        if (serialNumber && hasOrderNowItems) {
                                             console.log(
                                                 "🔍 Validating items with Vending Machine:",
                                                 serialNumber
@@ -365,12 +526,16 @@ const CartPage: React.FC = () => {
                                         const orderId = orderRes.data.id;
                                         console.log("✅ Order Confirmed. ID:", orderId);
 
-                                        // --- 3. Production Pick API ---
-                                        if (serialNumber) {
+                                        // Filter only Order Now / Smart Grab items for the vending machine pickup code
+                                        const orderNowItems = updatedItems.filter(
+                                            (item) => item.planType === "ORDER_NOW" || item.planType === "SMART_GRAB"
+                                        );
+
+                                        if (orderNowItems.length > 0) {
                                             const matchedGoods: any[] = [];
                                             let totalGoodsCount = 0;
 
-                                            updatedItems.forEach((item) => {
+                                            orderNowItems.forEach((item) => {
                                                 if (item.vendingGoodUuid) {
                                                     totalGoodsCount += item.quantity;
                                                     matchedGoods.push({
@@ -427,6 +592,23 @@ const CartPage: React.FC = () => {
                                                         storageKey,
                                                         JSON.stringify(existingCodes)
                                                     );
+
+                                                    // --- 3.5 Save Pickup Code to Backend ---
+                                                    try {
+                                                        await axios.post(
+                                                            `${baseUrl}/api/vending/order/update-pickup-code/`,
+                                                            {
+                                                                order_id: orderId,
+                                                                pickup_code: pickData.data,
+                                                            },
+                                                            {
+                                                                headers: { Authorization: `Token ${token}` },
+                                                            }
+                                                        );
+                                                        console.log("✅ Pickup code saved to backend.");
+                                                    } catch (backendErr) {
+                                                        console.error("Failed to save pickup code to backend", backendErr);
+                                                    }
                                                 } else {
                                                     console.warn("Pickup code not received:", pickData);
                                                 }
@@ -437,7 +619,7 @@ const CartPage: React.FC = () => {
                                         try {
                                             await axios.post(
                                                 `${baseUrl}/api/vending/cart/`,
-                                                { items: [], current_step: 1 },
+                                                { clear_all: true },
                                                 {
                                                     headers: { Authorization: `Token ${token}` },
                                                 }

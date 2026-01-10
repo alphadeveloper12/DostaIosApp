@@ -50,6 +50,8 @@ interface OrderAPI {
     end_time: string;
     label: string;
   } | null;
+  pickup_code: string | null;
+  qr_code_url: string | null;
   items: OrderItemAPI[];
 }
 
@@ -84,23 +86,19 @@ const MyOrders = () => {
           headers: { Authorization: `Token ${token}` },
         });
 
-        // Filter out historical orders (Completed/Cancelled)
-        const activeOrders = res.data.filter(
-          (o: OrderAPI) => o.status !== "COMPLETED" && o.status !== "CANCELLED"
-        );
+        const allOrders = res.data;
+        setOrders(allOrders);
 
-        setOrders(activeOrders);
-
-        if (activeOrders.length > 0) {
+        if (allOrders.length > 0) {
           // If we have a selected order, try to keep it selected (update it)
           if (selectedOrder) {
-            const updated = activeOrders.find(
+            const updated = allOrders.find(
               (o: OrderAPI) => o.id === selectedOrder.id
             );
             if (updated) setSelectedOrder(updated);
-            else setSelectedOrder(activeOrders[0]); // Fallback if selected was completed
+            else setSelectedOrder(allOrders[0]); // Fallback if selected was deleted
           } else {
-            setSelectedOrder(activeOrders[0]);
+            setSelectedOrder(allOrders[0]);
           }
         } else {
           setSelectedOrder(null);
@@ -210,6 +208,8 @@ const MyOrders = () => {
         price: parseFloat(apiItem.menu_item.price),
         weekNumber: apiItem.week_number,
         vendingGoodUuid: null, // Not used in MyOrders but required by type
+        planType: order.plan_type,
+        planSubtype: order.plan_subtype,
       };
     });
   };
@@ -284,10 +284,54 @@ const MyOrders = () => {
               </div>
             </div>
           ) : (
-            <div className="grid gap-4 md:gap-[30px] md:grid-cols-[1fr_320px]">
-              {/* LEFT: Booking Card + Details */}
+            <div className="grid gap-4 md:gap-[30px] lg:grid-cols-[300px_1fr_320px] md:grid-cols-[250px_1fr]">
+              {/* LEFT: Order List Sidebar */}
+              <div className="space-y-3 overflow-y-auto max-h-[calc(100vh-250px)] pr-2 hidden md:block">
+                <h3 className="text-lg font-bold text-[#2B2B43] mb-4">Order History</h3>
+                {orders.map((order) => (
+                  <div
+                    key={order.id}
+                    onClick={() => setSelectedOrder(order)}
+                    className={`p-4 rounded-xl border cursor-pointer transition-all ${selectedOrder.id === order.id
+                      ? "border-[#054A86] bg-[#F6FBFF] shadow-sm"
+                      : "border-[#EDEEF2] bg-white hover:border-gray-300"
+                      }`}
+                  >
+                    <div className="flex justify-between items-start mb-2">
+                      <span className="font-bold text-[#2B2B43]">Order #{order.id}</span>
+                      <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold uppercase ${order.status === 'COMPLETED' || order.status === 'PICKED_UP' || order.status === 'READY'
+                        ? "bg-green-100 text-green-700"
+                        : "bg-blue-100 text-blue-700"
+                        }`}>
+                        {order.status}
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-[#83859C]">{formatDate(order.created_at)}</p>
+                    <p className="text-sm font-semibold mt-2 text-[#054A86]">AED {parseFloat(order.total_amount).toFixed(2)}</p>
+                  </div>
+                ))}
+              </div>
+
+              {/* MIDDLE: Booking Card + Details */}
               <div className="space-y-4">
-                {/* Booking Header Card (ORIGINAL UI RESTORED, BOUND TO LATEST ORDER) */}
+                {/* Mobile Order Selector (Horizontal Scroll) */}
+                <div className="md:hidden flex gap-3 overflow-x-auto pb-4 -mx-1 px-1">
+                  {orders.map((order) => (
+                    <div
+                      key={order.id}
+                      onClick={() => setSelectedOrder(order)}
+                      className={`flex-shrink-0 p-3 rounded-xl border min-w-[140px] ${selectedOrder.id === order.id
+                        ? "border-[#054A86] bg-[#F6FBFF]"
+                        : "border-[#EDEEF2] bg-white"
+                        }`}
+                    >
+                      <p className="font-bold text-sm">Order #{order.id}</p>
+                      <p className="text-[10px] text-[#83859C] truncate">{formatDate(order.created_at)}</p>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Booking Header Card */}
                 <div className="rounded-2xl border border-[#EDEEF2] bg-white">
                   {/* Header */}
                   <div className="flex items-start justify-between gap-3 p-4">
@@ -344,7 +388,7 @@ const MyOrders = () => {
                     </div>
                   </div>
 
-                  {/* Progress (ORIGINAL UI) */}
+                  {/* Progress */}
                   <div className="px-4 pt-3">
                     {/* Desktop Layout */}
                     <div className="hidden sm:block">
@@ -496,21 +540,25 @@ const MyOrders = () => {
                   </div>
 
                   {/* Info note */}
-                  {currentStep === 1 && (
-                    <div className="md:p-4 px-4 pb-4 text-xsm font-normal leading-5 text-[#2B2B43">
-                      You can edit or cancel your order right in the kitchen view (for
-                      demo).
-                    </div>
-                  )}
+                  {/* Info note removed */}
                   {/* print qr code */}
-                  {currentStep === 2 && (
-                    <div className="flex flex-col justify-center items-center md:py-[40px] py-[16px]">
+                  {(selectedOrder.qr_code_url || selectedOrder.pickup_code) && (
+                    <div className="flex flex-col justify-center items-center md:py-[40px] py-[16px] border-t border-gray-50 mt-4">
                       <p className="text-[16px] leading-[24px] font-[700] tracking-[0.1px]">
-                        Woohoo! Your order is ready for pickup!
+                        {currentStep === 2 ? "Woohoo! Your order is ready for pickup!" : "Your Pickup Details"}
                       </p>
-                      <div className="mt-[24px] mb-[20px] rounded-[16px] border border-[#83859C] max-w-[158px] max-h-[158px] p-5">
-                        <img src="/images/icons/barcode.svg" alt="barcode" />
+                      <div className="mt-[24px] mb-[20px] rounded-[16px] border border-[#83859C] max-w-[158px] max-h-[158px] p-5 overflow-hidden flex items-center justify-center bg-white">
+                        <img
+                          src={selectedOrder.qr_code_url || `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${selectedOrder.pickup_code}`}
+                          alt="QR Code"
+                          className="w-full h-full object-contain"
+                        />
                       </div>
+                      {selectedOrder.pickup_code && (
+                        <p className="text-[20px] font-bold text-[#054A86] mb-4">
+                          Code: {selectedOrder.pickup_code}
+                        </p>
+                      )}
                       <Button className="border w-[158px] border-[#545563] bg-transparent hover:bg-transparent text-[14px] leading-[16px] text-[#545563]">
                         Print
                       </Button>
@@ -518,7 +566,7 @@ const MyOrders = () => {
                   )}
                 </div>
 
-                {/* Booking Details (REPLACED TotalOrders WITH NEW LOGIC) */}
+                {/* Booking Details */}
                 <div className="bg-white rounded-[16px] md:p-6 p-4 border border-[#EDEEF2]">
                   <div className="justify-between items-center mb-6">
                     <h2 className="md:text-xl flex text-[18px] leading-6 font-[700] md:font-semibold text-gray-800">
@@ -538,11 +586,13 @@ const MyOrders = () => {
                       const pickupCodes = JSON.parse(
                         localStorage.getItem(`pickup_codes_${selectedOrder.id}`) || "{}"
                       );
+                      const backendPickupCode = selectedOrder.pickup_code;
+                      const backendQrCode = selectedOrder.qr_code_url;
                       return getGroupedItems(selectedOrder).map((group, idx) => {
                         // Further group items by pickup code within this group
                         const itemsByCode: Record<string, CartItemType[]> = {};
                         group.items.forEach((item) => {
-                          const code = pickupCodes[`menu_${item.menuItemId}`] || "NO_CODE";
+                          const code = backendPickupCode || pickupCodes[`menu_${item.menuItemId}`] || "NO_CODE";
                           if (!itemsByCode[code]) itemsByCode[code] = [];
                           itemsByCode[code].push(item);
                         });
@@ -557,13 +607,23 @@ const MyOrders = () => {
                             <div className="space-y-6">
                               {Object.entries(itemsByCode).map(([code, items], codeIdx) => (
                                 <div key={codeIdx} className="space-y-0 divide-y divide-dashed divide-gray-100 border border-gray-50 rounded-lg p-3 bg-gray-50/30">
-                                  {code !== "NO_CODE" && (
-                                    <div className="mb-3">
+                                  <div className="mb-3 flex flex-wrap gap-3 items-center">
+                                    {code !== "NO_CODE" && (
                                       <span className="text-[12px] font-[600] text-[#054A86] bg-[#E6F0F9] px-2 py-1 rounded-md border border-[#B3D4F0]">
                                         Pickup Code: <span className="text-[14px] font-[700]">{code}</span>
                                       </span>
-                                    </div>
-                                  )}
+                                    )}
+                                    {(backendQrCode || (code !== "NO_CODE" && !backendPickupCode)) && (
+                                      <div className="flex items-center gap-2">
+                                        <img
+                                          src={backendQrCode || `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${code}`}
+                                          alt="QR"
+                                          className="w-10 h-10 rounded border border-gray-200 bg-white p-1"
+                                        />
+                                        <span className="text-[10px] text-gray-400 uppercase font-bold">Scan to Pickup</span>
+                                      </div>
+                                    )}
+                                  </div>
                                   {items.map((item) => (
                                     <OrderedItem
                                       key={item.id}
@@ -582,8 +642,8 @@ const MyOrders = () => {
                 </div>
               </div>
 
-              {/* RIGHT: Summary (ORIGINAL UI RESTORED, BOUND TO LATEST ORDER) */}
-              <aside className="">
+              {/* RIGHT: Summary */}
+              <aside className="hidden lg:block">
                 <div className="rounded-2xl border border-[#EDEEF2] bg-white h-fit p-4">
                   <h1 className="text-[24px] leading-[32px] font-[700] text-[#2B2B43] ">
                     Pickup Location

@@ -167,8 +167,7 @@ const GrabMenu: React.FC<GrabMenuProps> = ({
 
    // Prefer provided items, fallback to static
    const itemsToDisplay = useMemo(() => {
-      if (availableItems && availableItems.length > 0) return availableItems;
-      return fallbackFoodData;
+      return availableItems || [];
    }, [availableItems]);
 
    // Derived: total number of meals
@@ -208,8 +207,14 @@ const GrabMenu: React.FC<GrabMenuProps> = ({
 
          if (idx >= 0) {
             const newQty = next[idx].quantity + change;
-            if (newQty <= 0) next.splice(idx, 1);
-            else next[idx] = { ...next[idx], quantity: newQty };
+            if (newQty <= 0) {
+               next.splice(idx, 1);
+            } else if (newQty > 3) {
+               // Limit to 3
+               return prev;
+            } else {
+               next[idx] = { ...next[idx], quantity: newQty };
+            }
             return next;
          }
 
@@ -229,7 +234,7 @@ const GrabMenu: React.FC<GrabMenuProps> = ({
                <div className="md:px-[30px]">
                   <div className="flex md:flex-row flex-col justify-between items-center py-4">
                      <h2 className="text-[16px] text-[#2B2B43] leading-[24px] font-[700] tracking-[0.1px]">
-                        Choose your meal from our daily menu of 13 chef-prepared meals
+                        Choose your meal from our daily menu of {itemsToDisplay.length} chef-prepared meals
                      </h2>
 
                      <div className="md:flex gap-4 hidden md:flex-row flex-col">
@@ -278,20 +283,32 @@ const GrabMenu: React.FC<GrabMenuProps> = ({
 
             {/* Cards */}
             <div className="w-full h-full pb-4">
-               <div className="md:px-[30px] grid grid-cols-12 md:flex md:gap-[24px] gap-[12px] flex-wrap">
-                  {itemsToDisplay.map((data, index) => {
-                     const itemInCart = cart.find((i) => i.imgAlt === data.imgAlt);
-                     return (
-                        <MenuCard
-                           key={data.id ?? index}
-                           data={data}
-                           itemInCart={itemInCart}
-                           onCardClick={handleCardClick}
-                           onChangeQty={handleQuantityChange}
-                        />
-                     );
-                  })}
-               </div>
+               {itemsToDisplay.length > 0 ? (
+                  <div className="md:px-[30px] grid grid-cols-12 md:flex md:gap-[24px] gap-[12px] flex-wrap">
+                     {itemsToDisplay.map((data, index) => {
+                        const itemInCart = cart.find((i) => i.imgAlt === data.imgAlt);
+                        return (
+                           <MenuCard
+                              key={data.id ?? index}
+                              data={data}
+                              itemInCart={itemInCart}
+                              onCardClick={handleCardClick}
+                              onChangeQty={handleQuantityChange}
+                           />
+                        );
+                     })}
+                  </div>
+               ) : (
+                  <div className="flex flex-col items-center justify-center py-20 text-center">
+                     <div className="bg-gray-50 rounded-full p-6 mb-4">
+                        <X className="w-12 h-12 text-gray-300" />
+                     </div>
+                     <h3 className="text-[20px] font-bold text-[#2B2B43] mb-2">No Items Available</h3>
+                     <p className="text-[#83859C] max-w-[300px]">
+                        Sorry, there are no items currently available at this location.
+                     </p>
+                  </div>
+               )}
 
                {/* Mobile buttons */}
                <div className="flex gap-4 md:flex-row flex-col md:hidden pt-6">
