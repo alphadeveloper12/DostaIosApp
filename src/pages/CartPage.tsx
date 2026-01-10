@@ -427,6 +427,8 @@ const CartPage: React.FC = () => {
                                                         storageKey,
                                                         JSON.stringify(existingCodes)
                                                     );
+                                                } else {
+                                                    console.warn("Pickup code not received:", pickData);
                                                 }
                                             }
                                         }

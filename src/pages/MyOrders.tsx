@@ -209,6 +209,7 @@ const MyOrders = () => {
         quantity: apiItem.quantity,
         price: parseFloat(apiItem.menu_item.price),
         weekNumber: apiItem.week_number,
+        vendingGoodUuid: null, // Not used in MyOrders but required by type
       };
     });
   };
@@ -537,28 +538,45 @@ const MyOrders = () => {
                       const pickupCodes = JSON.parse(
                         localStorage.getItem(`pickup_codes_${selectedOrder.id}`) || "{}"
                       );
-                      return getGroupedItems(selectedOrder).map((group, idx) => (
-                        <div key={idx} className="mb-6 last:mb-0">
-                          {group.title !== "Order Details" && (
-                            <h5 className="text-[14px] font-semibold text-[#83859C] mb-3 uppercase tracking-wider">
-                              {group.title}
-                            </h5>
-                          )}
-                          <div className="space-y-0 divide-y divide-dashed divide-gray-100">
-                            {group.items.map((item) => {
-                              const code = pickupCodes[`menu_${item.menuItemId}`];
-                              return (
-                                <OrderedItem
-                                  key={item.id}
-                                  item={item}
-                                  pickupCode={code}
-                                  isOrderInProgress={currentStep === 1}
-                                />
-                              );
-                            })}
+                      return getGroupedItems(selectedOrder).map((group, idx) => {
+                        // Further group items by pickup code within this group
+                        const itemsByCode: Record<string, CartItemType[]> = {};
+                        group.items.forEach((item) => {
+                          const code = pickupCodes[`menu_${item.menuItemId}`] || "NO_CODE";
+                          if (!itemsByCode[code]) itemsByCode[code] = [];
+                          itemsByCode[code].push(item);
+                        });
+
+                        return (
+                          <div key={idx} className="mb-6 last:mb-0">
+                            {group.title !== "Order Details" && (
+                              <h5 className="text-[14px] font-semibold text-[#83859C] mb-3 uppercase tracking-wider">
+                                {group.title}
+                              </h5>
+                            )}
+                            <div className="space-y-6">
+                              {Object.entries(itemsByCode).map(([code, items], codeIdx) => (
+                                <div key={codeIdx} className="space-y-0 divide-y divide-dashed divide-gray-100 border border-gray-50 rounded-lg p-3 bg-gray-50/30">
+                                  {code !== "NO_CODE" && (
+                                    <div className="mb-3">
+                                      <span className="text-[12px] font-[600] text-[#054A86] bg-[#E6F0F9] px-2 py-1 rounded-md border border-[#B3D4F0]">
+                                        Pickup Code: <span className="text-[14px] font-[700]">{code}</span>
+                                      </span>
+                                    </div>
+                                  )}
+                                  {items.map((item) => (
+                                    <OrderedItem
+                                      key={item.id}
+                                      item={item}
+                                      isOrderInProgress={currentStep === 1}
+                                    />
+                                  ))}
+                                </div>
+                              ))}
+                            </div>
                           </div>
-                        </div>
-                      ));
+                        );
+                      });
                     })()}
                   </div>
                 </div>
