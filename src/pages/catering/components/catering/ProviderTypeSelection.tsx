@@ -117,9 +117,17 @@ const ProviderTypeSelection: React.FC<ProviderTypeSelectionProps> = ({
   return <div>{error}</div>;
  }
 
+ const selectedStyleObj = serviceStyles.find(
+  (s) => s.id === selectedServiceStyles?.id
+ );
+ const isSelectedStyleInvalid =
+  selectedStyleObj && selectedStyleObj.min_pax > guestCount;
+
  const isContinueDisabled = showEventNameSelection
-  ? !selectedServiceStyles || !selectedDetailedEventName?.id
-  : !selectedServiceStyles;
+  ? !selectedServiceStyles ||
+    !selectedDetailedEventName?.id ||
+    isSelectedStyleInvalid
+  : !selectedServiceStyles || isSelectedStyleInvalid;
 
  return (
   <LazyLoad>

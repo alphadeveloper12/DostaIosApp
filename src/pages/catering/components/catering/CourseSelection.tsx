@@ -168,7 +168,8 @@ const CourseSelection: React.FC<CourseSelectionProps> = ({
         }
         style={{
          fontSize: "16px",
-         height: "80px",
+         minHeight: "80px",
+         height: "auto",
          backgroundColor: selectedCourses.some(
           (selectedCourse) => selectedCourse.id === course.id
          )
@@ -187,6 +188,9 @@ const CourseSelection: React.FC<CourseSelectionProps> = ({
          display: "flex",
          alignItems: "center",
          justifyContent: "flex-start",
+         whiteSpace: "normal",
+         lineHeight: "1.2",
+         textAlign: "left",
         }}>
         <img
          src={course.image_url}
@@ -197,7 +201,11 @@ const CourseSelection: React.FC<CourseSelectionProps> = ({
           marginRight: "8px",
          }}
         />
-        <span style={{ textAlign: "left" }}>{course.name}</span>
+        <span
+         style={{ textAlign: "left", flex: 1, wordBreak: "break-word" }}
+         className="">
+         {course.name}
+        </span>
        </Button>
       ))}
      </div>

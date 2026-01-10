@@ -19,6 +19,7 @@ const Footer = () => {
     { label: "Refund Policy", to: "/refund-policy" },
     { label: "Terms & Conditions", to: "/terms" },
     { label: "Catering", to: "/catering" },
+    { label: "Trade Licenses", to: "/trade-licenses" },
    ],
   },
   {

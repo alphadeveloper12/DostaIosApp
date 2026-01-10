@@ -21,9 +21,10 @@ import MobileFooterNav from "@/components/home/MobileFooterNav";
 import CoursesMenu from "../components/catering/CoursesMenu";
 import CoffeeBreakMenu from "../components/catering/CoffeeBreakMenu";
 import PlatterMenu from "../components/catering/PlatterMenu";
-import BoxedMealMenu from "../components/catering/BoxedMealMenu";
+
 import LiveStationMenu from "../components/catering/LiveStationMenu";
 import AmericanMenuSelection from "../components/catering/AmericanMenuSelection";
+import CanapeMenu from "../components/catering/CanapeMenu";
 
 const Catering = () => {
  const navigate = useNavigate();
@@ -100,9 +101,9 @@ const Catering = () => {
    ?.toLowerCase()
    .includes("platter");
 
-  const isBoxedMeal = selectedServiceStyles?.name
+  const isCanape = selectedServiceStyles?.name
    ?.toLowerCase()
-   .includes("boxed");
+   .includes("canape");
 
   const isLiveStation = selectedServiceStyles?.name
    ?.toLowerCase()
@@ -131,10 +132,10 @@ const Catering = () => {
     setStep(6); // Budget (Step 5) -> Course (Step 6)
    } else if (isPlatters) {
     setStep(10); // Platter Menu (Step 10)
-   } else if (isBoxedMeal) {
-    setStep(11); // Boxed Meal Menu (Step 11)
    } else if (isLiveStation) {
     setStep(12); // Live Station Menu (Step 12)
+   } else if (isCanape) {
+    setStep(14); // Canape Menu (Step 14)
    } else {
     setStep(9); // Coffee Break Menu (Step 9)
    }
@@ -145,11 +146,11 @@ const Catering = () => {
    setStep(8); // Coffee Break Menu (Step 9) -> Summary (Step 8)
   else if (step === 10)
    setStep(8); // Platter Menu (Step 10) -> Summary (Step 8)
-  else if (step === 11)
-   setStep(8); // Boxed Meal Menu (Step 11) -> Summary (Step 8)
   else if (step === 12)
    setStep(8); // Live Station Menu (Step 12) -> Summary (Step 8)
-  else if (step === 13) setStep(8); // American Menu (Step 13) -> Summary (Step 8)
+  else if (step === 13)
+   setStep(8); // American Menu (Step 13) -> Summary (Step 8)
+  else if (step === 14) setStep(8); // Canape Menu (Step 14) -> Summary (Step 8)
  };
  const handleGoBack = () => {
   const isBuffetOrSetMenu =
@@ -159,13 +160,14 @@ const Catering = () => {
   const isPlatters = selectedServiceStyles?.name
    ?.toLowerCase()
    .includes("platter");
-  const isBoxedMeal = selectedServiceStyles?.name
-   ?.toLowerCase()
-   .includes("boxed");
+
   const isLiveStation = selectedServiceStyles?.name
    ?.toLowerCase()
    ?.toLowerCase()
    .includes("live station");
+  const isCanape = selectedServiceStyles?.name
+   ?.toLowerCase()
+   .includes("canape");
   const isAmericanCuisine = selectedCuisines.some(
    (c) => c.name.toLowerCase() === "american"
   );
@@ -189,18 +191,18 @@ const Catering = () => {
     setStep(7); // Go back to Menu
    } else if (isPlatters) {
     setStep(10); // Go back to Platter Menu
-   } else if (isBoxedMeal) {
-    setStep(11); // Go back to Boxed Meal
    } else if (isLiveStation) {
     setStep(12); // Go back to Live Station
+   } else if (isCanape) {
+    setStep(14); // Go back to Canape
    } else {
     setStep(9); // Go back to Coffee Break Menu
    }
   } else if (step === 9) setStep(5); // Coffee Break Menu -> Budget
   else if (step === 10) setStep(5); // Platter Menu -> Budget
-  else if (step === 11) setStep(5); // Boxed Meal Menu -> Budget
   else if (step === 12) setStep(5); // Live Station Menu -> Budget
   else if (step === 13) setStep(5); // American Menu -> Budget
+  else if (step === 14) setStep(5); // Canape Menu -> Budget
  };
 
  // Toggle selection functions
@@ -386,16 +388,7 @@ const Catering = () => {
         />
        </LazyLoad>
       )}
-      {step === 11 && (
-       <LazyLoad>
-        <BoxedMealMenu
-         selectedMenuItems={selectedMenuItems}
-         toggleMenuItem={toggleMenuItem}
-         handleGoBack={handleGoBack}
-         handleContinue={handleContinue}
-        />
-       </LazyLoad>
-      )}
+
       {step === 12 && (
        <LazyLoad>
         <LiveStationMenu
@@ -413,6 +406,17 @@ const Catering = () => {
          setSelectedMenuItems={setSelectedMenuItems}
          handleGoBack={handleGoBack}
          handleContinue={handleContinue}
+        />
+       </LazyLoad>
+      )}
+      {step === 14 && (
+       <LazyLoad>
+        <CanapeMenu
+         selectedMenuItems={selectedMenuItems}
+         toggleMenuItem={toggleMenuItem}
+         handleGoBack={handleGoBack}
+         handleContinue={handleContinue}
+         selectedBudget={selectedBudget}
         />
        </LazyLoad>
       )}
