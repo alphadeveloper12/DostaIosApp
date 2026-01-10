@@ -34,6 +34,8 @@ interface BudgetSelectionProps {
   }>
  >;
  selectedServiceStyles: { id: number; name: string } | null;
+ selectedCuisines: { id: number; name: string }[];
+ guestCount: number;
 }
 
 const BudgetSelection: React.FC<BudgetSelectionProps> = ({
@@ -45,6 +47,8 @@ const BudgetSelection: React.FC<BudgetSelectionProps> = ({
  selectedPax,
  setSelectedPax,
  selectedServiceStyles,
+ selectedCuisines,
+ guestCount,
 }) => {
  const [budgetOptions, setBudgetOptions] = useState<
   { id: string; label: string; price_range: string }[]
@@ -59,6 +63,51 @@ const BudgetSelection: React.FC<BudgetSelectionProps> = ({
  const baseUrl = import.meta.env.VITE_API_URL;
  const authToken = sessionStorage.getItem("authToken");
 
+ // Auto-select Pax based on guestCount
+ useEffect(() => {
+  console.log("Auto-select Pax Debug:", {
+   guestCount,
+   paxOptionsLength: paxOptions.length,
+  });
+  if (guestCount && paxOptions.length > 0) {
+   const match = paxOptions.find((pax) => {
+    // Expected format: "10-20" or "50+" or "100"
+    const range = pax.number.replace(/\s/g, ""); // remove spaces
+    console.log(
+     `Checking Pax: ${pax.label} (${pax.number}) -> Range: ${range}`
+    );
+
+    if (range.includes("+")) {
+     const min = parseInt(range.replace("+", ""));
+     return guestCount >= min;
+    }
+    const parts = range.split("-");
+    if (parts.length === 2) {
+     const min = parseInt(parts[0]);
+     const max = parseInt(parts[1]);
+     const result = guestCount >= min && guestCount <= max;
+     console.log(
+      `  Range Check: ${min} <= ${guestCount} <= ${max} ? ${result}`
+     );
+     return result;
+    }
+    // Single number case
+    const exact = parseInt(range);
+    if (!isNaN(exact)) {
+     return guestCount === exact;
+    }
+    return false;
+   });
+
+   if (match) {
+    setSelectedPax(match);
+   } else if (paxOptions.length > 0) {
+    // Fallback to the first option if no exact match (e.g. guest count too low)
+    setSelectedPax(paxOptions[0]);
+   }
+  }
+ }, [guestCount, paxOptions, setSelectedPax]);
+
  // Fetch data from the API
  useEffect(() => {
   const fetchData = async () => {
@@ -67,11 +116,15 @@ const BudgetSelection: React.FC<BudgetSelectionProps> = ({
     const paxEndpoint = "/api/catering/pax/";
     const isPrivate = !selectedEvent?.name?.toLowerCase().includes("corporate");
 
+    // Convert selected cuisines to CSV ID string
+    const cuisineIds = selectedCuisines?.map((c) => c.id).join(",");
+
     const [budgetRes, paxRes] = await Promise.all([
      axios.get(`${baseUrl}${budgetEndpoint}`, {
       params: {
        service_style_id: selectedServiceStyles?.id,
        is_private: isPrivate,
+       cuisine_ids: cuisineIds, // Pass cuisine_ids for filtering
       },
       headers: { Authorization: `Token ${authToken}` },
      }),
@@ -84,7 +137,15 @@ const BudgetSelection: React.FC<BudgetSelectionProps> = ({
      }),
     ]);
 
-    setBudgetOptions(budgetRes.data);
+    setBudgetOptions(
+     budgetRes.data.sort((a: any, b: any) => {
+      const getPrice = (str: string) => {
+       const match = str.match(/\d+/);
+       return match ? parseInt(match[0]) : 0;
+      };
+      return getPrice(a.price_range) - getPrice(b.price_range);
+     })
+    );
     setPaxOptions(paxRes.data);
     setLoading(false); // Stop loading after data is fetched
    } catch (err) {
@@ -97,7 +158,13 @@ const BudgetSelection: React.FC<BudgetSelectionProps> = ({
   }, 1000); // ⏱️ 2-second delay
 
   return () => clearTimeout(timer); // cleanup
- }, [baseUrl, authToken, selectedEvent, selectedServiceStyles]);
+ }, [
+  baseUrl,
+  authToken,
+  selectedEvent,
+  selectedServiceStyles,
+  selectedCuisines,
+ ]);
 
  // Show loading or error message if data is still being fetched
  if (loading) {
@@ -138,7 +205,7 @@ const BudgetSelection: React.FC<BudgetSelectionProps> = ({
      <div
       className="md:w-8 md:h-8 w-6 h-6 flex-shrink-0 rounded-full flex items-center justify-center"
       style={{ backgroundColor: "hsl(var(--primary))" }}>
-      <span className="text-primary-foreground font-bold">4</span>
+      <span className="text-primary-foreground font-bold">5</span>
      </div>
      <h2 className="text-primary-text md:text-2xl text-xl font-bold">
       What's the Budget you have in Mind?
@@ -198,13 +265,8 @@ const BudgetSelection: React.FC<BudgetSelectionProps> = ({
       {paxOptions.map((pax) => (
        <Button
         key={pax.id}
-        onClick={() =>
-         handlePaxSelection({
-          id: pax.id,
-          label: pax.label,
-          number: pax.number,
-         })
-        }
+        // onClick handler removed/disabled effectively via pointer-events,
+        // but we keep the visual state indicating the selection.
         style={{
          fontSize: "16px",
          height: "80px",
@@ -223,6 +285,8 @@ const BudgetSelection: React.FC<BudgetSelectionProps> = ({
          alignItems: "center",
          justifyContent: "center",
          gap: "4px",
+         pointerEvents: "none", // Disable user interaction
+         cursor: "default",
         }}>
         <span style={{ fontWeight: "400", fontSize: "16px" }}>{pax.label}</span>
         <span style={{ fontWeight: "400", fontSize: "16px" }}>
@@ -248,17 +312,28 @@ const BudgetSelection: React.FC<BudgetSelectionProps> = ({
       Go Back
      </Button>
      <Button
-      onClick={handleContinue}
+      onClick={() => {
+       if (!selectedBudget?.id || !selectedPax?.id) {
+        // This should theoretically not be reachable if disabled works, but acts as a safety net
+        alert("Please select a budget and pax to continue.");
+        return;
+       }
+       handleContinue();
+      }}
       disabled={!selectedBudget?.id || !selectedPax?.id}
-      className={`bg-[#054A86] text-white hover:bg-[#054A86] hover:bg-opacity-70 ${
-       !selectedBudget?.id || !selectedPax?.id ? "cursor-not-allowed" : ""
-      }`}
+      className={`
+        ${
+         !selectedBudget?.id || !selectedPax?.id
+          ? "bg-gray-300 text-gray-500 cursor-not-allowed hover:bg-gray-300"
+          : "bg-[#054A86] text-white hover:bg-[#054A86] hover:bg-opacity-70 shadow-lg shadow-[#4E60FF29]"
+        }
+        transition-all duration-200
+       `}
       style={{
        padding: "12px 16px",
        borderRadius: "8px",
        fontSize: "16px",
        fontWeight: "600",
-       boxShadow: "0px 8px 20px 0px #4E60FF29",
       }}>
       Continue
      </Button>

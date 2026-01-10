@@ -3,10 +3,13 @@ import axios from "axios";
 import { Button } from "../ui/button";
 import LazyLoad from "@/components/ui/LazyLoad";
 import Shrimmer from "@/components/ui/Shrimmer";
+import Tippy from "@tippyjs/react";
+import "tippy.js/dist/tippy.css";
 
 interface ServiceStyle {
  id: number;
  name: string;
+ min_pax: number;
 }
 
 interface EventName {
@@ -28,6 +31,7 @@ interface ProviderTypeSelectionProps {
  setSelectedDetailedEventName: React.Dispatch<
   React.SetStateAction<{ id: string | null; name: string | null } | null>
  >;
+ guestCount: number;
 }
 
 const ProviderTypeSelection: React.FC<ProviderTypeSelectionProps> = ({
@@ -38,6 +42,7 @@ const ProviderTypeSelection: React.FC<ProviderTypeSelectionProps> = ({
  selectedEvent,
  selectedDetailedEventName,
  setSelectedDetailedEventName,
+ guestCount,
 }) => {
  const [serviceStyles, setServiceStyles] = useState<ServiceStyle[]>([]);
  const [eventNames, setEventNames] = useState<EventName[]>([]);
@@ -112,9 +117,17 @@ const ProviderTypeSelection: React.FC<ProviderTypeSelectionProps> = ({
   return <div>{error}</div>;
  }
 
+ const selectedStyleObj = serviceStyles.find(
+  (s) => s.id === selectedServiceStyles?.id
+ );
+ const isSelectedStyleInvalid =
+  selectedStyleObj && selectedStyleObj.min_pax > guestCount;
+
  const isContinueDisabled = showEventNameSelection
-  ? !selectedServiceStyles || !selectedDetailedEventName?.id
-  : !selectedServiceStyles;
+  ? !selectedServiceStyles ||
+    !selectedDetailedEventName?.id ||
+    isSelectedStyleInvalid
+  : !selectedServiceStyles || isSelectedStyleInvalid;
 
  return (
   <LazyLoad>
@@ -172,35 +185,53 @@ const ProviderTypeSelection: React.FC<ProviderTypeSelectionProps> = ({
 
     {/* --- Service Style Section --- */}
     <div className="md:ml-12">
-     <h3 className="text-primary-text md:text-xl text-lg font-bold mb-4">
-      Select Service Style
-     </h3>
      <div className="grid md:grid-cols-4 gap-6 max-w-5xl">
-      {serviceStyles.map((style) => (
-       <Button
-        key={style.id}
-        onClick={() => toggleServiceStyle({ id: style.id, name: style.name })}
-        style={{
-         fontSize: "16px",
-         height: "60px",
-         backgroundColor:
-          selectedServiceStyles?.id === style.id ? "#EAF5FF" : "#fff",
-         color: "#2B2B43",
-         fontWeight: "400",
-         borderRadius: "16px",
-         padding: "16px",
-         width: "245px",
-         border:
-          selectedServiceStyles?.id === style.id
-           ? "1px solid #054A86"
-           : "1px solid #C7C8D2",
-         display: "flex",
-         alignItems: "center",
-         justifyContent: "center",
-        }}>
-        {style.name}
-       </Button>
-      ))}
+      {serviceStyles.map((style) => {
+       const isDisabled = style.min_pax > guestCount;
+       const tooltipContent = isDisabled
+        ? `Minimum ${style.min_pax} guests required`
+        : "";
+
+       return (
+        <Tippy key={style.id} content={tooltipContent} disabled={!isDisabled}>
+         <div className="inline-block">
+          {" "}
+          {/* Wrapper for Tippy on disabled button */}
+          <Button
+           onClick={() =>
+            !isDisabled &&
+            toggleServiceStyle({ id: style.id, name: style.name })
+           }
+           disabled={isDisabled}
+           style={{
+            fontSize: "16px",
+            height: "60px",
+            backgroundColor: isDisabled
+             ? "#F5F5F5"
+             : selectedServiceStyles?.id === style.id
+             ? "#EAF5FF"
+             : "#fff",
+            color: isDisabled ? "#A0A0A0" : "#2B2B43",
+            fontWeight: "400",
+            borderRadius: "16px",
+            padding: "16px",
+            width: "245px",
+            border:
+             selectedServiceStyles?.id === style.id
+              ? "1px solid #054A86"
+              : "1px solid #C7C8D2",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            cursor: isDisabled ? "not-allowed" : "pointer",
+            opacity: isDisabled ? 0.7 : 1,
+           }}>
+           {style.name}
+          </Button>
+         </div>
+        </Tippy>
+       );
+      })}
      </div>
     </div>
 

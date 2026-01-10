@@ -20,6 +20,7 @@ interface BookingSummaryProps {
   id: string;
   name: string;
   course: string;
+  price?: number;
  }[];
  handleGoBack: () => void;
 }
@@ -41,6 +42,45 @@ const BookingSummary: React.FC<BookingSummaryProps> = ({
 
  // Update the calculateTotal function to use the price_range from selectedBudget
  const calculateTotal = () => {
+  const isPlatters = selectedServiceStyles?.name
+   ?.toLowerCase()
+   .includes("platter");
+
+  if (isPlatters) {
+   const baseTotal = selectedMenuItems.length * 600;
+   const vat = baseTotal * 0.15;
+   const total = baseTotal + vat;
+   return { baseTotal, vat, total };
+  }
+
+  const isBoxedMeal = selectedServiceStyles?.name
+   ?.toLowerCase()
+   .includes("boxed");
+
+  if (isBoxedMeal) {
+   const baseTotal = guestCount * 45;
+   const vat = baseTotal * 0.15;
+   const total = baseTotal + vat;
+   return { baseTotal, vat, total };
+  }
+
+  const isLiveStation = selectedServiceStyles?.name
+   ?.toLowerCase()
+   .includes("live station");
+
+  if (isLiveStation) {
+   // Find the selected Live Station item to get its price
+   // Assuming only one item is selected as per the new constraint
+   const liveStationItem = selectedMenuItems.find(
+    (item) => item.course === "Live Station"
+   );
+   const pricePerPax = liveStationItem?.price || 0; // Fallback to 0 if none selected
+   const baseTotal = guestCount * pricePerPax;
+   const vat = baseTotal * 0.15;
+   const total = baseTotal + vat;
+   return { baseTotal, vat, total };
+  }
+
   const basePricePerGuest = selectedBudget.price_range
    ? parseFloat(selectedBudget.price_range.replace("AED", "").trim())
    : 70;
@@ -166,6 +206,7 @@ const BookingSummary: React.FC<BookingSummaryProps> = ({
         </h2>
         <p className="text-blue-600 font-medium">
          {selectedBudget?.label || "Not Selected"}
+         {selectedBudget?.price_range ? ` - ${selectedBudget.price_range}` : ""}
         </p>
        </div>
 

@@ -15,16 +15,47 @@ const AboutUsContent = () => {
       <h1 className="text-5xl md:text-6xl font-extrabold text-primary leading-tight mb-6">
        About Us
       </h1>
-      <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-       DOSTA is a UAE-based multi-sector business group focused on smart,
-       sustainable, and technology-driven solutions in food, events, and
-       Delivery automation. Established under Dosta Holding LLC, we unify all
-       our subsidiaries — including{" "}
-       <strong>
-        DOSTA Catering, DOSTA Vending Machines, and Dosta For Events Managing
-       </strong>{" "}
-       — to deliver operational excellence, innovation, and scalable growth.
+      <p className="text-xl text-gray-600 max-w-3xl mx-auto mb-8">
+       DOSTA is a UAE-based smart food and beverage group delivering innovative
+       F&B solutions, automated catering services, smart vending machines, and
+       event food management across Dubai, Abu Dhabi, and the wider United Arab
+       Emirates.
       </p>
+      <p className="text-lg text-gray-600 max-w-3xl mx-auto mb-8">
+       Operating under Dosta Holding LLC, DOSTA brings together a portfolio of
+       specialized subsidiaries to provide technology-driven, scalable, and
+       sustainable food and delivery solutions tailored for corporate clients,
+       government entities, developers, and high-footfall locations.
+      </p>
+      <p className="text-lg text-gray-600 max-w-3xl mx-auto mb-8">
+       By integrating AI-enabled systems, smart kitchen operations, automated
+       vending infrastructure, and data-driven delivery models, DOSTA is
+       redefining how food and beverage services are produced, managed, and
+       distributed in the UAE.
+      </p>
+      <div className="text-left max-w-2xl mx-auto bg-gray-50 p-6 rounded-lg">
+       <h3 className="text-xl font-bold text-primary mb-4">
+        Our group includes:
+       </h3>
+       <ul className="list-disc list-inside space-y-2 text-gray-700">
+        <li>
+         <strong>DOSTA Catering</strong> – smart catering and bulk food
+         production solutions
+        </li>
+        <li>
+         <strong>DOSTA Vending Machines</strong> – automated food and beverage
+         vending across commercial and industrial sites
+        </li>
+        <li>
+         <strong>DOSTA Events Management</strong> – end-to-end food and beverage
+         solutions for events, exhibitions, and large gatherings
+        </li>
+       </ul>
+       <p className="mt-4 text-gray-600 italic">
+        Together, these verticals position DOSTA as a leading food innovation
+        and delivery automation company in the UAE.
+       </p>
+      </div>
      </div>
     </section>
 
@@ -51,13 +82,11 @@ const AboutUsContent = () => {
         <h2 className="text-3xl font-bold text-gray-900">Our Mission</h2>
        </div>
        <p className="text-gray-700 text-lg leading-relaxed">
-        To consolidate and manage all subsidiaries under one holding structure,
-        driving growth through{" "}
-        <strong>
-         innovation, operational excellence, and digital transformation
-        </strong>
-        , while supporting the UAE’s Vision 2031 for sustainability and economic
-        development.
+        To lead food and beverage innovation in the UAE by consolidating
+        advanced catering, vending, and delivery automation services under one
+        smart holding structure—driving operational excellence, digital
+        transformation, and sustainable growth while supporting the UAE Vision
+        2031 and national sustainability objectives.
        </p>
       </div>
 
@@ -85,74 +114,63 @@ const AboutUsContent = () => {
         <h2 className="text-3xl font-bold text-gray-900">Our Vision</h2>
        </div>
        <p className="text-gray-700 text-lg leading-relaxed">
-        To be the{" "}
-        <strong>leading UAE smart food, events, and Delivery solutions</strong>{" "}
-        — delivering sustainable, technology-driven, and customer-centric
-        experiences across the region.
+        To become the UAE’s most trusted smart food, catering, and delivery
+        solutions provider, recognized across Dubai, Abu Dhabi, and the GCC for
+        technology-driven operations, sustainable practices, and
+        customer-centric food experiences.
        </p>
       </div>
      </div>
     </section>
 
-    {/* 3. Focus Areas / Pillars of Growth Section */}
-    <section className="py-20 ">
-     <div className="w-full">
-      <h2 className="text-4xl font-extrabold text-primary text-center mb-12">
-       Our Focus Areas
-      </h2>
+    {/* 3. What We Do Section (Replaces Focus Areas) */}
+    <section className="py-20 bg-gray-50">
+     <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="text-center mb-16">
+       <h2 className="text-4xl font-extrabold text-primary mb-6">What We Do</h2>
+       <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+        DOSTA specializes in revolutionary food and beverage innovation
+        services, combining culinary expertise with advanced technology to
+        deliver:
+       </p>
+      </div>
 
-      <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
-       {/* Focus Area 1: Synergy */}
-       <div className="p-6 bg-gray-50 rounded-lg shadow-md hover:shadow-xl transition duration-300">
-        {/* Icon: Network/Synergy */}
+      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+       {[
+        "Smart catering solutions for corporate, industrial, and institutional clients",
+        "Automated vending machine networks across offices, construction sites, and public locations",
+        "Centralized kitchen operations with real-time production tracking",
+        "AI-driven demand forecasting and inventory optimization",
+        "Sustainable food systems aligned with UAE ESG and sustainability goals",
+        "End-to-end food and beverage management for events and high-volume environments",
+       ].map((item, index) => (
+        <div
+         key={index}
+         className="flex items-start p-6 bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300">
+         <div className="flex-shrink-0 mr-4">
+          <svg
+           className="w-6 h-6 text-primary"
+           fill="none"
+           stroke="currentColor"
+           viewBox="0 0 24 24">
+           <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth="2"
+            d="M5 13l4 4L19 7"></path>
+          </svg>
+         </div>
+         <p className="text-gray-700 font-medium">{item}</p>
+        </div>
+       ))}
+      </div>
 
-        <h3 className="text-lg font-bold text-primary mb-2">
-         Operational Synergy
-        </h3>
-        <p className="text-gray-600">
-         Creating financial and operational synergy across subsidiaries to
-         maximize efficiency and shared resources.
-        </p>
-       </div>
-
-       {/* Focus Area 2: Scalable Growth */}
-       <div className="p-6 bg-gray-50 rounded-lg shadow-md hover:shadow-xl transition duration-300">
-        {/* Icon: Growth/Scale */}
-
-        <h3 className="text-lg font-bold text-primary mb-2">
-         Strategic Expansion
-        </h3>
-        <p className="text-gray-600">
-         Driving scalable growth via strategic partnerships and technology
-         adoption across all business units.
-        </p>
-       </div>
-
-       {/* Focus Area 3: Diversifying Revenue */}
-       <div className="p-6 bg-gray-50 rounded-lg shadow-md hover:shadow-xl transition duration-300">
-        {/* Icon: Diversification/Money */}
-
-        <h3 className="text-lg font-bold text-primary mb-2">
-         Revenue Model
-        </h3>
-        <p className="text-gray-600">
-         Diversifying revenue streams across catering, vending, logistics, and
-         events to ensure stability and market resilience.
-        </p>
-       </div>
-
-       {/* Focus Area 4: Sustainability */}
-       <div className="p-6 bg-gray-50 rounded-lg shadow-md hover:shadow-xl transition duration-300">
-        {/* Icon: Sustainability/Ecology */}
-
-        <h3 className="text-lg font-bold text-primary mb-2">
-         Social Responsibility
-        </h3>
-        <p className="text-gray-600">
-         Embedding sustainability and social responsibility into all operations
-         to align with the UAE's long-term vision.
-        </p>
-       </div>
+      <div className="mt-12 text-center">
+       <p className="text-lg text-gray-600 max-w-4xl mx-auto border-t border-gray-200 pt-8">
+        Our solutions are designed for cost efficiency, consistency,
+        scalability, and compliance with UAE regulations and international food
+        safety standards.
+       </p>
       </div>
      </div>
     </section>

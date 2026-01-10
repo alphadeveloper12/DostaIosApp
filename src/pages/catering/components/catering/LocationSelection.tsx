@@ -39,7 +39,18 @@ const LocationSelection: React.FC<LocationSelectionProps> = ({
       Authorization: `Token ${authToken}`,
      },
     });
-    setLocations(response.data); // Assuming the response is an array of location objects
+    // Sort locations: Dubai -> Sharjah -> Ajman -> Others
+    const sortedLocations = response.data.sort((a: any, b: any) => {
+     const getPriority = (name: string) => {
+      const lowerName = (name || "").toLowerCase();
+      if (lowerName.includes("dubai")) return 1;
+      if (lowerName.includes("sharjah")) return 2;
+      if (lowerName.includes("ajman")) return 3;
+      return 4;
+     };
+     return getPriority(a.name) - getPriority(b.name);
+    });
+    setLocations(sortedLocations);
     setLoading(false);
    } catch (err) {
     setError("Failed to load locations. Please try again later.");

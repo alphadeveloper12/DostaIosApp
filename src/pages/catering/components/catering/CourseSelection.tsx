@@ -51,19 +51,35 @@ const CourseSelection: React.FC<CourseSelectionProps> = ({
     const budgetId = selectedBudget.id;
     const isPrivate = !selectedEvent?.name?.toLowerCase().includes("corporate");
 
-    const response = await axios.get(`${baseUrl}/api/catering/courses/`, {
-     params: {
-      cuisine_ids: cuisineIds,
-      budget_id: budgetId,
-      is_private: isPrivate,
-     },
-     headers: {
-      Authorization: `Token ${authToken}`,
-     },
-    });
+    if (budgetId) {
+     // FIXED MENU FLOW: Fetch from fixed-menus endpoint
+     const response = await axios.get(`${baseUrl}/api/catering/fixed-menus/`, {
+      params: {
+       cuisine_ids: cuisineIds,
+       budget_id: budgetId,
+      },
+      headers: { Authorization: `Token ${authToken}` },
+     });
 
-    // Assuming the response is in the format [{ name, image }]
-    setCourseTypes(response.data);
+     if (response.data.length > 0) {
+      const menu = response.data[0]; // Take the first matching fixed menu
+      setCourseTypes(menu.courses);
+      setSelectedCourses(menu.courses); // Auto-select all
+     } else {
+      setCourseTypes([]); // No menu found
+      setSelectedCourses([]);
+     }
+    } else {
+     // STANDARD FLOW: Fetch generic courses
+     const response = await axios.get(`${baseUrl}/api/catering/courses/`, {
+      params: {
+       cuisine_ids: cuisineIds,
+       is_private: isPrivate,
+      },
+      headers: { Authorization: `Token ${authToken}` },
+     });
+     setCourseTypes(response.data);
+    }
     setLoading(false);
    } catch (err) {
     console.error("Error fetching courses:", err);
@@ -76,7 +92,14 @@ const CourseSelection: React.FC<CourseSelectionProps> = ({
   }, 1000); // ⏱️ 2-second delay
 
   return () => clearTimeout(timer); // cleanup
- }, [baseUrl, authToken, selectedCuisines, selectedBudget, selectedEvent]);
+ }, [
+  baseUrl,
+  authToken,
+  selectedCuisines,
+  selectedBudget,
+  selectedEvent,
+  setSelectedCourses,
+ ]);
 
  // Render loading and error states
  if (loading) {
@@ -93,6 +116,9 @@ const CourseSelection: React.FC<CourseSelectionProps> = ({
 
  // Toggle course selection and update selected courses state
  const handleCourseSelection = (course: { id: number; name: string }) => {
+  // If budget selected, prevent toggling (Fixed Menu)
+  if (selectedBudget?.id) return;
+
   // Check if the course is already selected
   const isSelected = selectedCourses.some(
    (selectedCourse) => selectedCourse.id === course.id
@@ -142,7 +168,8 @@ const CourseSelection: React.FC<CourseSelectionProps> = ({
         }
         style={{
          fontSize: "16px",
-         height: "80px",
+         minHeight: "80px",
+         height: "auto",
          backgroundColor: selectedCourses.some(
           (selectedCourse) => selectedCourse.id === course.id
          )
@@ -161,6 +188,9 @@ const CourseSelection: React.FC<CourseSelectionProps> = ({
          display: "flex",
          alignItems: "center",
          justifyContent: "flex-start",
+         whiteSpace: "normal",
+         lineHeight: "1.2",
+         textAlign: "left",
         }}>
         <img
          src={course.image_url}
@@ -171,7 +201,11 @@ const CourseSelection: React.FC<CourseSelectionProps> = ({
           marginRight: "8px",
          }}
         />
-        <span style={{ textAlign: "left" }}>{course.name}</span>
+        <span
+         style={{ textAlign: "left", flex: 1, wordBreak: "break-word" }}
+         className="">
+         {course.name}
+        </span>
        </Button>
       ))}
      </div>

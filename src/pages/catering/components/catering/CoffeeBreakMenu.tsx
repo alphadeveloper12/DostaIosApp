@@ -28,7 +28,9 @@ interface CoffeeBreakMenuProps {
  handleContinue: () => void;
  selectedBudget: any;
  selectedEvent: any;
- setSelectedMenuItems?: React.Dispatch<any>; // Optional to handle old prop
+ setSelectedMenuItems: React.Dispatch<
+  React.SetStateAction<{ id: string; name: string; course: string }[]>
+ >;
 }
 
 const CoffeeBreakMenu: React.FC<CoffeeBreakMenuProps> = ({
@@ -36,6 +38,7 @@ const CoffeeBreakMenu: React.FC<CoffeeBreakMenuProps> = ({
  handleContinue,
  selectedMenuItems,
  toggleMenuItem,
+ setSelectedMenuItems,
 }) => {
  const [rotations, setRotations] = useState<CoffeeBreakRotation[]>([]);
  const [activeRotationId, setActiveRotationId] = useState<number | null>(null);
@@ -96,21 +99,24 @@ const CoffeeBreakMenu: React.FC<CoffeeBreakMenuProps> = ({
   fetchRotations();
  }, [baseUrl, authToken]);
 
+ // Effect to auto-select items when activeRotationId changes
+ useEffect(() => {
+  if (activeRotationId && rotations.length > 0) {
+   const activeRotation = rotations.find((r) => r.id === activeRotationId);
+   if (activeRotation) {
+    const allItems = activeRotation.categories.flatMap((cat) =>
+     cat.items.map((item) => ({
+      id: item.id.toString(),
+      name: item.name,
+      course: cat.category,
+     }))
+    );
+    setSelectedMenuItems(allItems);
+   }
+  }
+ }, [activeRotationId, rotations, setSelectedMenuItems]);
+
  const activeRotation = rotations.find((r) => r.id === activeRotationId);
-
- // Helper to check if this rotation has any items selected
- const isCurrentRotationSelected = (rotationId: number) => {
-  if (selectedMenuItems.length === 0) return false;
-
-  const rotation = rotations.find((r) => r.id === rotationId);
-  if (!rotation) return false;
-
-  return rotation.categories.some((cat) =>
-   cat.items.some((item) =>
-    selectedMenuItems.some((selected) => selected.id === item.id.toString())
-   )
-  );
- };
 
  if (loading) {
   return (
@@ -130,7 +136,6 @@ const CoffeeBreakMenu: React.FC<CoffeeBreakMenuProps> = ({
      <div
       className="md:w-8 md:h-8 w-6 h-6 flex-shrink-0 rounded-full flex items-center justify-center"
       style={{ backgroundColor: "hsl(var(--primary))" }}>
-      {/* Step Number could be dynamic, but let's assume valid sequence */}
       <span className="text-primary-foreground font-bold">5</span>
      </div>
      <h2 className="text-primary-text md:text-2xl text-xl font-bold">
@@ -146,11 +151,11 @@ const CoffeeBreakMenu: React.FC<CoffeeBreakMenuProps> = ({
        onClick={() => setActiveRotationId(rotation.id)}
        className={`px-4 py-2 rounded-full whitespace-nowrap transition-colors ${
         activeRotationId === rotation.id
-         ? "bg-[#054A86] text-white font-bold"
+         ? "bg-[#054A86] text-white font-bold shadow-md"
          : "bg-gray-100 text-gray-600 hover:bg-gray-200"
        }`}>
-       {rotation.name}
-       {isCurrentRotationSelected(rotation.id) && (
+       Start: {rotation.name}
+       {activeRotationId === rotation.id && (
         <Check className="inline-block ml-2 w-4 h-4" />
        )}
       </button>
@@ -174,10 +179,10 @@ const CoffeeBreakMenu: React.FC<CoffeeBreakMenuProps> = ({
           <h4 className="text-xl font-semibold mb-4 text-[#2B2B43]">
            {cat.category}
           </h4>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
            {cat.items.map((item) => {
-            const itemId = item.id.toString(); // Use backend ID
-            const selected = selectedMenuItems.some((sel) => sel.id === itemId);
+            const itemId = item.id.toString();
+            const selected = true; // Always selected
 
             // Construct image URL (mock or real)
             const imageUrl =
@@ -189,21 +194,10 @@ const CoffeeBreakMenu: React.FC<CoffeeBreakMenuProps> = ({
             return (
              <div
               key={itemId}
-              onClick={() =>
-               toggleMenuItem({
-                id: itemId,
-                name: item.name,
-                course: cat.category,
-               })
-              }
               className={`
-                    cursor-pointer rounded-2xl border p-3 transition-all duration-200
-                    ${
-                     selected
-                      ? "border-[#054A86] border-2 bg-[#F5F9FF]"
-                      : "border-[#EBEBEB] bg-white hover:border-[#C7C8D2]"
-                    }
-                  `}>
+                                  cursor-pointer rounded-2xl border p-3 transition-all duration-200
+                                  border-[#054A86] border-2 bg-[#F5F9FF]
+                                `}>
               {/* Image Placeholder */}
               <div className="relative aspect-[4/3] rounded-xl overflow-hidden mb-3 bg-gray-200">
                <img
@@ -211,13 +205,11 @@ const CoffeeBreakMenu: React.FC<CoffeeBreakMenuProps> = ({
                 alt={item.name}
                 className="w-full h-full object-cover"
                />
-               {selected && (
-                <div
-                 className="absolute top-0 left-0 bg-[#8BC34A] text-primary-dark text-[10px] font-bold h-8 w-[75px] flex items-center justify-center rounded-br-[12px]"
-                 style={{ letterSpacing: "0.5px" }}>
-                 ADDED
-                </div>
-               )}
+               <div
+                className="absolute top-0 left-0 bg-[#8BC34A] text-primary-dark text-[10px] font-bold h-8 w-[75px] flex items-center justify-center rounded-br-[12px]"
+                style={{ letterSpacing: "0.5px" }}>
+                ADDED
+               </div>
               </div>
 
               <h4 className="font-bold text-[#2B2B43] text-base mb-1">
@@ -245,77 +237,49 @@ const CoffeeBreakMenu: React.FC<CoffeeBreakMenuProps> = ({
         </h3>
 
         <div className="flex flex-col gap-6 mb-8 max-h-[60vh] overflow-y-auto pr-2">
-         {selectedMenuItems.length === 0 ? (
-          <p className="text-gray-400 text-sm">No items selected yet.</p>
-         ) : (
-          // Group by "Course" (Category) for display
-          Object.entries(
-           selectedMenuItems.reduce((acc, item) => {
-            if (!acc[item.course]) acc[item.course] = [];
-            acc[item.course].push(item);
-            return acc;
-           }, {} as Record<string, typeof selectedMenuItems>)
-          ).map(([category, items]) => (
-           <div key={category}>
-            <h4 className="text-sm font-semibold text-[#545563] mb-2">
-             {category}
-            </h4>
-            <ul className="space-y-1">
-             {items.map((item) => (
-              <li
-               key={item.id}
-               className="text-[#2B2B43] text-[14px] leading-[20px] font-[600]">
-               {item.name}
-              </li>
-             ))}
-            </ul>
-           </div>
-          ))
-         )}
+         {/* List items from state to show what is selected */}
+         {Object.entries(
+          selectedMenuItems.reduce((acc, item) => {
+           if (!acc[item.course]) acc[item.course] = [];
+           acc[item.course].push(item);
+           return acc;
+          }, {} as Record<string, typeof selectedMenuItems>)
+         ).map(([category, items]) => (
+          <div key={category}>
+           <h4 className="text-sm font-semibold text-[#545563] mb-2">
+            {category}
+           </h4>
+           <ul className="space-y-1">
+            {items.map((item) => (
+             <li
+              key={item.id}
+              className="text-[#2B2B43] text-[14px] leading-[20px] font-[600]">
+              {item.name}
+             </li>
+            ))}
+           </ul>
+          </div>
+         ))}
         </div>
 
         <div className="flex flex-col gap-3">
-         {/* Helper text or summary stats could go here */}
-         <p className="text-xs text-gray-500 text-center">
-          {selectedMenuItems.length} items selected
-         </p>
+         <Button
+          onClick={handleContinue}
+          disabled={selectedMenuItems.length === 0}
+          className={`bg-[#054A86] text-white hover:bg-[#054A86] hover:bg-opacity-70 w-full py-3 h-12 rounded-lg font-semibold shadow-lg shadow-[#4E60FF29] flex items-center justify-center gap-2`}>
+          Review Catering Service
+         </Button>
+         <Button
+          onClick={handleGoBack}
+          variant="outline"
+          className="w-full py-3 h-12 rounded-lg text-[#2B2B43] font-semibold border-[#C7C8D2] hover:bg-gray-50 bg-white">
+          Go Back
+         </Button>
         </div>
        </div>
       </div>
      </div>
     )}
-
-    {/* Navigation */}
-    <div className="flex justify-between mt-8">
-     <Button
-      onClick={handleGoBack}
-      style={{
-       padding: "12px 16px",
-       borderRadius: "8px",
-       fontSize: "14px",
-       fontWeight: "700",
-       color: "#054A86",
-       border: "1px solid #054A86",
-       backgroundColor: "#fff",
-      }}>
-      Go Back
-     </Button>
-     <Button
-      onClick={handleContinue}
-      disabled={selectedMenuItems.length === 0}
-      className={`bg-[#054A86] text-white hover:bg-[#054A86] hover:bg-opacity-70 ${
-       selectedMenuItems.length === 0 ? "cursor-not-allowed" : ""
-      }`}
-      style={{
-       padding: "12px 16px",
-       borderRadius: "8px",
-       fontSize: "16px",
-       fontWeight: "600",
-       boxShadow: "0px 8px 20px 0px #4E60FF29",
-      }}>
-      Continue <ChevronRight className="w-4 h-4 ml-1" />
-     </Button>
-    </div>
    </div>
   </LazyLoad>
  );
