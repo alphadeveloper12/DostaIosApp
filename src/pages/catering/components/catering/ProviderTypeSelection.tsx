@@ -10,6 +10,7 @@ interface ServiceStyle {
  id: number;
  name: string;
  min_pax: number;
+ description?: string;
 }
 
 interface EventName {
@@ -22,10 +23,18 @@ interface ProviderTypeSelectionProps {
  setSelectedProvider: React.Dispatch<
   React.SetStateAction<{ id: string | null; name: string | null } | null>
  >;
- toggleServiceStyle: (style: { id: number; name: string }) => void;
+ toggleServiceStyle: (style: {
+  id: number;
+  name: string;
+  description?: string;
+ }) => void;
  handleGoBack: () => void;
  handleContinue: () => void;
- selectedServiceStyles: { id: number; name: string } | null;
+ selectedServiceStyles: {
+  id: number;
+  name: string;
+  description?: string;
+ } | null;
  selectedEvent: { id: string | null; name: string | null } | null;
  selectedDetailedEventName: { id: string | null; name: string | null } | null;
  setSelectedDetailedEventName: React.Dispatch<
@@ -120,8 +129,16 @@ const ProviderTypeSelection: React.FC<ProviderTypeSelectionProps> = ({
  const selectedStyleObj = serviceStyles.find(
   (s) => s.id === selectedServiceStyles?.id
  );
+
+ const isPrivateChef = selectedEvent?.name
+  ?.toLowerCase()
+  .includes("private chef");
+
  const isSelectedStyleInvalid =
-  selectedStyleObj && selectedStyleObj.min_pax > guestCount;
+  selectedStyleObj &&
+  (isPrivateChef
+   ? guestCount > selectedStyleObj.min_pax // Invalid if guests > limit
+   : selectedStyleObj.min_pax > guestCount); // Invalid if guests < limit
 
  const isContinueDisabled = showEventNameSelection
   ? !selectedServiceStyles ||
@@ -187,10 +204,20 @@ const ProviderTypeSelection: React.FC<ProviderTypeSelectionProps> = ({
     <div className="md:ml-12">
      <div className="grid md:grid-cols-4 gap-6 max-w-5xl">
       {serviceStyles.map((style) => {
-       const isDisabled = style.min_pax > guestCount;
-       const tooltipContent = isDisabled
-        ? `Minimum ${style.min_pax} guests required`
-        : "";
+       let isDisabled = false;
+       let tooltipContent = "";
+
+       if (isPrivateChef) {
+        isDisabled = guestCount > style.min_pax;
+        tooltipContent = isDisabled
+         ? `Maximum ${style.min_pax} guests allowed`
+         : "";
+       } else {
+        isDisabled = style.min_pax > guestCount;
+        tooltipContent = isDisabled
+         ? `Minimum ${style.min_pax} guests required`
+         : "";
+       }
 
        return (
         <Tippy key={style.id} content={tooltipContent} disabled={!isDisabled}>
@@ -200,7 +227,11 @@ const ProviderTypeSelection: React.FC<ProviderTypeSelectionProps> = ({
           <Button
            onClick={() =>
             !isDisabled &&
-            toggleServiceStyle({ id: style.id, name: style.name })
+            toggleServiceStyle({
+             id: style.id,
+             name: style.name,
+             description: style.description,
+            })
            }
            disabled={isDisabled}
            style={{

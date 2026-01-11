@@ -98,15 +98,9 @@ const ContactUsContent = () => {
          <dt className="font-medium text-gray-500">Phone</dt>
          <dd className="text-gray-700 font-semibold">
           <a
-           href="tel:+971501638613"
+           href="tel:+971501638612"
            className="hover:text-gray-900 transition duration-300 mr-4">
-           +971 50 1638 613
-          </a>
-          <span className="hidden sm:inline">|</span>
-          <a
-           href="tel:+97143207543"
-           className="hover:text-gray-900 transition duration-300 ml-4">
-           +971 4 320 7543
+           00971 50 1638612
           </a>
          </dd>
         </div>

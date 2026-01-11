@@ -52,10 +52,21 @@ const VendingHeader = () => {
      {/* Desktop Navigation */}
      <div className="hidden md:flex items-center gap-4 lg:gap-6">
       {/* Language Selector */}
-      <select className="text-[14px] lg:text-[16px] leading-[24px] tracking-[0.1px] font-[700] select-none outline-none text-neutral-black cursor-pointer hover:text-primary transition-colors bg-transparent">
-       <option value="">En</option>
-       <option value="">Ar</option>
-       <option value="">Cn</option>
+      <select
+        defaultValue={document.cookie.includes("googtrans=/en/ar") ? "ar" : "en"}
+       onChange={(e) => {
+        const lang = e.target.value;
+        if (lang === "en") {
+         document.cookie =
+          "googtrans=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC";
+        } else {
+         document.cookie = `googtrans=/en/${lang}; path=/`;
+        }
+        window.location.reload();
+       }}
+       className="text-[14px] lg:text-[16px] leading-[24px] tracking-[0.1px] font-[700] select-none outline-none text-neutral-black cursor-pointer hover:text-primary transition-colors bg-transparent">
+       <option value="en">En</option>
+       <option value="ar">Ar</option>
       </select>
 
       <span className="h-[32px] bg-[#EDEEF2] w-[1px]"></span>
@@ -131,10 +142,21 @@ const VendingHeader = () => {
         <span className="text-[14px] font-[600] text-neutral-black">
          Language
         </span>
-        <select className="text-[14px] font-[700] outline-none text-neutral-black cursor-pointer bg-transparent px-2 py-1 border border-neutral-gray-lightest rounded">
-         <option value="">En</option>
-         <option value="">Ar</option>
-         <option value="">Cn</option>
+        <select
+        defaultValue={document.cookie.includes("googtrans=/en/ar") ? "ar" : "en"}
+         onChange={(e) => {
+          const lang = e.target.value;
+          if (lang === "en") {
+           document.cookie =
+            "googtrans=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC";
+          } else {
+           document.cookie = `googtrans=/en/${lang}; path=/`;
+          }
+          window.location.reload();
+         }}
+         className="text-[14px] font-[700] outline-none text-neutral-black cursor-pointer bg-transparent px-2 py-1 border border-neutral-gray-lightest rounded">
+         <option value="en">En</option>
+         <option value="ar">Ar</option>
         </select>
        </div>
 

@@ -26,6 +26,9 @@ interface CoursesMenuProps {
  };
  selectedEvent: { id: string | null; name: string | null } | null;
  setSelectedMenuItems: React.Dispatch<React.SetStateAction<MenuItem[]>>;
+ setSelectedMenuDescription: React.Dispatch<
+  React.SetStateAction<string | null>
+ >;
 }
 
 const CoursesMenu: React.FC<CoursesMenuProps> = ({
@@ -38,6 +41,7 @@ const CoursesMenu: React.FC<CoursesMenuProps> = ({
  selectedBudget = { id: null, label: null, price_range: null },
  selectedEvent,
  setSelectedMenuItems,
+ setSelectedMenuDescription,
 }) => {
  const [menuGroups, setMenuGroups] = useState<
   { id: number; title: string; items: MenuItem[] }[]
@@ -73,6 +77,13 @@ const CoursesMenu: React.FC<CoursesMenuProps> = ({
       const menu = response.data[0];
       const fixedItems = menu.items;
       const fixedCourses = menu.courses;
+
+      // Set the description from the fetched fixed menu
+      if (menu.description) {
+       setSelectedMenuDescription(menu.description);
+      } else {
+       setSelectedMenuDescription(null);
+      }
 
       grouped = fixedCourses
        .map((course: any) => {
@@ -135,6 +146,28 @@ const CoursesMenu: React.FC<CoursesMenuProps> = ({
       })
       .filter((group) => group.items.length > 0);
     }
+
+    // Sort grouped items based on user preference
+    grouped.sort((a: any, b: any) => {
+     const getPriority = (title: string) => {
+      const lowerTitle = title.toLowerCase();
+      if (lowerTitle.includes("salad")) return 1;
+      if (lowerTitle.includes("appetizer")) return 2;
+      if (lowerTitle.includes("soup")) return 3;
+      if (lowerTitle.includes("main course")) return 4;
+
+      // Dessert and Beverage should be last
+      if (lowerTitle.includes("dessert") || lowerTitle.includes("desert"))
+       return 100;
+      if (lowerTitle.includes("beverage") || lowerTitle.includes("drink"))
+       return 101;
+
+      // Everything else (like Live Stations, etc.) goes between Main Course and Dessert
+      return 50;
+     };
+
+     return getPriority(a.title) - getPriority(b.title);
+    });
 
     setMenuGroups(grouped);
 
@@ -265,7 +298,7 @@ const CoursesMenu: React.FC<CoursesMenuProps> = ({
       <div
        className="md:w-8 md:h-8 w-6 h-6 flex-shrink-0 rounded-full flex items-center justify-center"
        style={{ backgroundColor: "hsl(var(--primary))" }}>
-       <span className="text-primary-foreground font-bold">7</span>
+       <span className="text-primary-foreground font-bold">6</span>
       </div>
       <h2 className="text-primary-text md:text-2xl text-xl font-bold">
        Menu options based on your selections and budget
@@ -288,7 +321,7 @@ const CoursesMenu: React.FC<CoursesMenuProps> = ({
            <div
             key={item.id}
             className={`
-                            cursor-pointer rounded-2xl border p-3 transition-all duration-200
+                            cursor-pointer rounded-2xl p-3 transition-all duration-200
                             border-[#054A86] border-2 bg-[#F5F9FF]
                           `}>
             {/* Image Placeholder */}

@@ -7,7 +7,12 @@ interface BookingSummaryProps {
  guestCount: number;
  selectedDateTime: string;
  selectedProvider: { id: string | null; name: string | null };
- selectedServiceStyles: { id: number; name: string } | null;
+ selectedServiceStyles: {
+  id: number;
+  name: string;
+  description?: string;
+ } | null;
+ selectedMenuDescription?: string | null;
  selectedCuisines: { id: number; name: string }[];
  selectedCourses: { id: number; name: string }[];
  selectedLocation: { id: number; name: string } | null;
@@ -21,6 +26,7 @@ interface BookingSummaryProps {
   name: string;
   course: string;
   price?: number;
+  description?: string;
  }[];
  handleGoBack: () => void;
 }
@@ -31,6 +37,7 @@ const BookingSummary: React.FC<BookingSummaryProps> = ({
  selectedDateTime,
  selectedProvider,
  selectedServiceStyles,
+ selectedMenuDescription,
  selectedCuisines,
  selectedCourses,
  selectedLocation,
@@ -69,13 +76,16 @@ const BookingSummary: React.FC<BookingSummaryProps> = ({
    .includes("live station");
 
   if (isLiveStation) {
-   // Find the selected Live Station item to get its price
-   // Assuming only one item is selected as per the new constraint
-   const liveStationItem = selectedMenuItems.find(
+   // Sum up prices of all selected Live Station items
+   const liveStationItems = selectedMenuItems.filter(
     (item) => item.course === "Live Station"
    );
-   const pricePerPax = liveStationItem?.price || 0; // Fallback to 0 if none selected
-   const baseTotal = guestCount * pricePerPax;
+   const totalPerPax = liveStationItems.reduce(
+    (sum, item) => sum + (Number(item.price) || 0),
+    0
+   );
+
+   const baseTotal = guestCount * totalPerPax;
    const vat = baseTotal * 0.15;
    const total = baseTotal + vat;
    return { baseTotal, vat, total };
@@ -93,8 +103,118 @@ const BookingSummary: React.FC<BookingSummaryProps> = ({
  const { baseTotal, vat, total } = calculateTotal();
 
  // Handle button clicks for navigation
- const handleConfirmAndPay = () => {
-  navigate("/catering/confirmation"); // Navigate to catering confirmation
+ const handleConfirmAndPay = async () => {
+  try {
+   const token = sessionStorage.getItem("authToken");
+
+   // Parse Date and Time
+   // selectedDateTime format assumption: "YYYY-MM-DD HH:MM" or similar
+   // Fallback if parsing fails
+   let eventDate = new Date().toISOString().split("T")[0];
+   let eventTime = "12:00:00";
+
+   if (selectedDateTime) {
+    // Expected format: "DD, MonthName, YYYY - HH:MM AM/PM"
+    // e.g. "08, November, 2025 - 08:00 PM"
+    try {
+     const parts = selectedDateTime.split(" - ");
+     if (parts.length === 2) {
+      const datePart = parts[0]; // "08, November, 2025"
+      const timePart = parts[1]; // "08:00 PM"
+
+      const [day, monthName, year] = datePart.split(", ");
+      const monthNames: Record<string, string> = {
+       January: "01",
+       February: "02",
+       March: "03",
+       April: "04",
+       May: "05",
+       June: "06",
+       July: "07",
+       August: "08",
+       September: "09",
+       October: "10",
+       November: "11",
+       December: "12",
+      };
+
+      const month = monthNames[monthName] || "01";
+      eventDate = `${year}-${month}-${day}`;
+
+      const [time, period] = timePart.split(" ");
+      let [hours, minutes] = time.split(":").map(Number);
+
+      if (period === "PM" && hours !== 12) hours += 12;
+      if (period === "AM" && hours === 12) hours = 0;
+
+      eventTime = `${hours.toString().padStart(2, "0")}:${minutes
+       .toString()
+       .padStart(2, "0")}`;
+     }
+    } catch (error) {
+     console.error("Error parsing date:", error);
+    }
+   }
+
+   const orderData = {
+    event_type: eventType?.name || "Unknown",
+    guest_count: guestCount,
+    event_date: eventDate,
+    event_time: eventTime,
+    provider_type: selectedProvider?.name || "",
+    service_style: selectedServiceStyles?.name || "",
+    location: selectedLocation?.name || "",
+    total_amount: total,
+    items: selectedMenuItems.map((item) => ({
+     name: item.name,
+     course: item.course,
+     quantity: 1, // Defaulting to 1 for per-person items
+     price: item.price || 0,
+     description: item.description || "",
+    })),
+   };
+
+   const response = await fetch(
+    "http://127.0.0.1:8000/api/catering/orders/create/",
+    {
+     method: "POST",
+     headers: {
+      "Content-Type": "application/json",
+      Authorization: `Token ${token}`, // Adjust based on your auth scheme (Bearer vs Token)
+     },
+     body: JSON.stringify(orderData),
+    }
+   );
+
+   if (response.ok) {
+    const data = await response.json();
+    console.log("Order placed:", data);
+    navigate("/catering/confirmation", {
+     state: {
+      orderId: data.order_id,
+      orderDetails: data,
+      // Pass extra details for display that aren't in the backend model
+      extraDetails: {
+       cuisines: selectedCuisines,
+       courses: selectedCourses,
+       budget: selectedBudget,
+       menuItems: selectedMenuItems,
+       pricing: {
+        baseTotal,
+        vat,
+        total,
+       },
+      },
+     },
+    });
+   } else {
+    console.error("Failed to place order", await response.text());
+    alert("Failed to place order. Please try again.");
+   }
+  } catch (error) {
+   console.error("Error placing order:", error);
+   alert("An error occurred.");
+  }
  };
 
  const handleRequestCustomQuote = () => {
@@ -152,17 +272,31 @@ const BookingSummary: React.FC<BookingSummaryProps> = ({
         </p>
        </div>
 
-       {/* Provider Type Section */}
+       {/* Service Style Section */}
        <div className="mb-6 pb-6">
         <h2 style={{ fontSize: "24px", fontWeight: "700", color: "#545563" }}>
-         Provider Type:
+         Service Style:
         </h2>
-        <p className="text-blue-600 font-medium mb-1">
-         {selectedProvider?.name || "Not Selected"}
-        </p>
         <p className="text-blue-600 font-medium">
          {selectedServiceStyles ? selectedServiceStyles.name : "Not Selected"}
         </p>
+        {(selectedMenuDescription || selectedServiceStyles?.description) && (
+         <>
+          <h4
+           style={{
+            fontSize: "24px",
+            fontWeight: "700",
+            color: "#545563",
+            marginTop: "12px",
+            marginBottom: "4px",
+           }}>
+           Description:
+          </h4>
+          <p className="text-sm text-neutral-gray">
+           {selectedMenuDescription || selectedServiceStyles?.description}
+          </p>
+         </>
+        )}
        </div>
 
        {/* Cuisines Section */}
@@ -173,18 +307,6 @@ const BookingSummary: React.FC<BookingSummaryProps> = ({
         <p className="text-blue-600 font-medium">
          {selectedCuisines.length > 0
           ? selectedCuisines.map((cuisine) => cuisine.name).join(", ")
-          : "Not Selected"}
-        </p>
-       </div>
-
-       {/* Courses Section */}
-       <div className="mb-6 pb-6">
-        <h2 style={{ fontSize: "24px", fontWeight: "700", color: "#545563" }}>
-         Courses:
-        </h2>
-        <p className="text-blue-600 font-medium">
-         {selectedCourses.length > 0
-          ? selectedCourses.map((course) => course.name).join(", ")
           : "Not Selected"}
         </p>
        </div>
@@ -245,7 +367,12 @@ const BookingSummary: React.FC<BookingSummaryProps> = ({
                 fontWeight: "400",
                 color: "#545563",
                }}>
-               {item.name}
+               <span className="font-semibold">{item.name}</span>
+               {item.description && (
+                <p className="text-xs text-gray-500 mt-0.5">
+                 {item.description}
+                </p>
+               )}
               </li>
              ))}
             </ul>
@@ -281,16 +408,49 @@ const BookingSummary: React.FC<BookingSummaryProps> = ({
        </h3>
 
        <div className="space-y-3 mb-6">
-        <div className="flex justify-between text-sm">
-         <span
-          style={{ fontSize: "14px", fontWeight: "400", color: "#545563" }}>
-          Guest x{guestCount}
-         </span>
-         <span
-          style={{ fontSize: "14px", fontWeight: "600", color: "#2B2B43" }}>
-          AED{baseTotal.toFixed(2)}
-         </span>
-        </div>
+        {selectedServiceStyles?.name?.toLowerCase().includes("live station") ? (
+         <>
+          {selectedMenuItems
+           .filter((item) => item.course === "Live Station")
+           .map((item) => {
+            const price = Number(item.price) || 0;
+            const itemTotal = price * guestCount;
+            return (
+             <div key={item.id} className="flex justify-between text-sm">
+              <span
+               style={{
+                fontSize: "14px",
+                fontWeight: "400",
+                color: "#545563",
+               }}>
+               {item.name} ({price} x {guestCount})
+              </span>
+              <span
+               style={{
+                fontSize: "14px",
+                fontWeight: "600",
+                color: "#2B2B43",
+               }}>
+               AED{itemTotal.toFixed(2)}
+              </span>
+             </div>
+            );
+           })}
+          <div className="border-t border-gray-100 my-2"></div>
+         </>
+        ) : (
+         <div className="flex justify-between text-sm">
+          <span
+           style={{ fontSize: "14px", fontWeight: "400", color: "#545563" }}>
+           Guest x{guestCount}
+          </span>
+          <span
+           style={{ fontSize: "14px", fontWeight: "600", color: "#2B2B43" }}>
+           AED{baseTotal.toFixed(2)}
+          </span>
+         </div>
+        )}
+
         <div className="flex justify-between text-sm">
          <span
           style={{ fontSize: "14px", fontWeight: "400", color: "#545563" }}>

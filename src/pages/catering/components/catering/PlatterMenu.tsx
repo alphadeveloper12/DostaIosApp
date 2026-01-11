@@ -12,7 +12,12 @@ interface PlatterItem {
 
 interface PlatterMenuProps {
  selectedMenuItems: { id: string; name: string; course: string }[];
- toggleMenuItem: (item: { id: string; name: string; course: string }) => void;
+ toggleMenuItem: (item: {
+  id: string;
+  name: string;
+  course: string;
+  description?: string;
+ }) => void;
  handleGoBack: () => void;
  handleContinue: () => void;
 }
@@ -87,7 +92,12 @@ const PlatterMenu: React.FC<PlatterMenuProps> = ({
        <div
         key={item.id}
         onClick={() =>
-         toggleMenuItem({ id: itemId, name: item.name, course: "Platter" })
+         toggleMenuItem({
+          id: itemId,
+          name: item.name,
+          course: "Platter",
+          description: item.description,
+         })
         }
         className={`
          cursor-pointer rounded-2xl border p-3 transition-all duration-200

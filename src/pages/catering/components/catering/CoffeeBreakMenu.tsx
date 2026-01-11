@@ -15,6 +15,7 @@ interface CoffeeBreakItem {
 interface CoffeeBreakRotation {
  id: number;
  name: string;
+ description?: string;
  categories: {
   category: string;
   items: CoffeeBreakItem[];
@@ -31,6 +32,9 @@ interface CoffeeBreakMenuProps {
  setSelectedMenuItems: React.Dispatch<
   React.SetStateAction<{ id: string; name: string; course: string }[]>
  >;
+ setSelectedMenuDescription: React.Dispatch<
+  React.SetStateAction<string | null>
+ >;
 }
 
 const CoffeeBreakMenu: React.FC<CoffeeBreakMenuProps> = ({
@@ -39,6 +43,7 @@ const CoffeeBreakMenu: React.FC<CoffeeBreakMenuProps> = ({
  selectedMenuItems,
  toggleMenuItem,
  setSelectedMenuItems,
+ setSelectedMenuDescription,
 }) => {
  const [rotations, setRotations] = useState<CoffeeBreakRotation[]>([]);
  const [activeRotationId, setActiveRotationId] = useState<number | null>(null);
@@ -77,10 +82,27 @@ const CoffeeBreakMenu: React.FC<CoffeeBreakMenuProps> = ({
      return {
       id: rot.id,
       name: rot.name,
-      categories: Object.entries(groupedItems).map(([cat, items]) => ({
-       category: cat,
-       items: items,
-      })),
+      description: rot.description,
+      categories: Object.entries(groupedItems)
+       .map(([cat, items]) => ({
+        category: cat,
+        items: items,
+       }))
+       .sort((a, b) => {
+        const getPriority = (title: string) => {
+         const lowerTitle = title.toLowerCase();
+         if (lowerTitle.includes("salad")) return 1;
+         if (lowerTitle.includes("appetizer")) return 2;
+         if (lowerTitle.includes("soup")) return 3;
+         if (lowerTitle.includes("main course")) return 4;
+         if (lowerTitle.includes("dessert") || lowerTitle.includes("desert"))
+          return 100;
+         if (lowerTitle.includes("beverage") || lowerTitle.includes("drink"))
+          return 101;
+         return 50;
+        };
+        return getPriority(a.category) - getPriority(b.category);
+       }),
      };
     });
 
@@ -104,6 +126,12 @@ const CoffeeBreakMenu: React.FC<CoffeeBreakMenuProps> = ({
   if (activeRotationId && rotations.length > 0) {
    const activeRotation = rotations.find((r) => r.id === activeRotationId);
    if (activeRotation) {
+    if (activeRotation.description) {
+     setSelectedMenuDescription(activeRotation.description);
+    } else {
+     setSelectedMenuDescription(null);
+    }
+
     const allItems = activeRotation.categories.flatMap((cat) =>
      cat.items.map((item) => ({
       id: item.id.toString(),
@@ -114,7 +142,12 @@ const CoffeeBreakMenu: React.FC<CoffeeBreakMenuProps> = ({
     setSelectedMenuItems(allItems);
    }
   }
- }, [activeRotationId, rotations, setSelectedMenuItems]);
+ }, [
+  activeRotationId,
+  rotations,
+  setSelectedMenuItems,
+  setSelectedMenuDescription,
+ ]);
 
  const activeRotation = rotations.find((r) => r.id === activeRotationId);
 
@@ -195,7 +228,7 @@ const CoffeeBreakMenu: React.FC<CoffeeBreakMenuProps> = ({
              <div
               key={itemId}
               className={`
-                                  cursor-pointer rounded-2xl border p-3 transition-all duration-200
+                                  cursor-pointer rounded-2xl p-3 transition-all duration-200
                                   border-[#054A86] border-2 bg-[#F5F9FF]
                                 `}>
               {/* Image Placeholder */}

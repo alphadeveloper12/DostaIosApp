@@ -103,22 +103,14 @@ const LiveStationMenu: React.FC<LiveStationMenuProps> = ({
        <div
         key={item.id}
         onClick={() => {
-         // Check if another item is already selected
-         const existingSelection = selectedMenuItems.find(
-          (i) => i.course === "Live Station" && i.id !== itemId
-         );
-
-         if (existingSelection) {
-          // Remove the existing selection first
-          toggleMenuItem(existingSelection);
-         }
-
          // Toggle existing one on/off or add new one
          toggleMenuItem({
-          id: itemId,
+          id: item.id.toString(),
           name: item.name,
           course: "Live Station",
-          price: item.price,
+          // @ts-ignore
+          description: item.description,
+          price: Number(item.price),
          });
         }}
         className={`
