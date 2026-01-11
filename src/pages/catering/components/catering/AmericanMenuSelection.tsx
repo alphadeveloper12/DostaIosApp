@@ -17,6 +17,7 @@ interface AmericanMenuItem {
 interface AmericanMenu {
  id: number;
  name: string;
+ description?: string;
  items: AmericanMenuItem[];
 }
 
@@ -24,6 +25,9 @@ interface AmericanMenuSelectionProps {
  selectedMenuItems: { id: string; name: string; course: string }[];
  setSelectedMenuItems: React.Dispatch<
   React.SetStateAction<{ id: string; name: string; course: string }[]>
+ >;
+ setSelectedMenuDescription: React.Dispatch<
+  React.SetStateAction<string | null>
  >;
  handleGoBack: () => void;
  handleContinue: () => void;
@@ -33,6 +37,7 @@ const AmericanMenuSelection: React.FC<AmericanMenuSelectionProps> = ({
  handleGoBack,
  handleContinue,
  setSelectedMenuItems,
+ setSelectedMenuDescription,
 }) => {
  const [menus, setMenus] = useState<AmericanMenu[]>([]);
  const [activeMenuId, setActiveMenuId] = useState<number | null>(null);
@@ -79,6 +84,13 @@ const AmericanMenuSelection: React.FC<AmericanMenuSelectionProps> = ({
   }));
 
   setSelectedMenuItems(menuItems);
+
+  if (activeMenu.description) {
+   setSelectedMenuDescription(activeMenu.description);
+  } else {
+   setSelectedMenuDescription(null);
+  }
+
   handleContinue();
  };
 
@@ -112,7 +124,7 @@ const AmericanMenuSelection: React.FC<AmericanMenuSelectionProps> = ({
       <div
        className="md:w-8 md:h-8 w-6 h-6 flex-shrink-0 rounded-full flex items-center justify-center"
        style={{ backgroundColor: "hsl(var(--primary))" }}>
-       <span className="text-primary-foreground font-bold">13</span>
+       <span className="text-primary-foreground font-bold">6</span>
       </div>
       <h2 className="text-primary-text md:text-2xl text-xl font-bold">
        Select Your American Menu

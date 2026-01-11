@@ -55,9 +55,9 @@ const Header = () => {
        <Link to="/services" className="text-[16px] font-[700]">
         Services
        </Link>
-       <Link to="/portfolio" className="text-[16px] font-[700]">
+       {/* <Link to="/portfolio" className="text-[16px] font-[700]">
         Portfolio
-       </Link>
+       </Link> */}
        <Link to="/about-us" className="text-[16px] font-[700]">
         About us
        </Link>
@@ -71,10 +71,26 @@ const Header = () => {
 
      {/* Right side (Desktop) */}
      <div className="hidden md:flex items-center gap-4 lg:gap-6 relative">
-      <select className="text-[16px] font-[700] bg-transparent text-neutral-white cursor-pointer outline-none">
-       <option value="en">En</option>
-       <option value="ar">Ar</option>
-       <option value="cn">Cn</option>
+      <select
+        defaultValue={document.cookie.includes("googtrans=/en/ar") ? "ar" : "en"}
+       onChange={(e) => {
+        const lang = e.target.value;
+        if (lang === "en") {
+         document.cookie =
+          "googtrans=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC";
+        } else {
+         document.cookie = `googtrans=/en/${lang}; path=/`;
+        }
+        window.location.reload();
+       }}
+       className="text-[16px] font-[700] bg-transparent text-neutral-white  cursor-pointer outline-none">
+       <option value="en" className="text-black cursor-pointer">
+        En
+       </option>
+       <option value="ar" className="text-black cursor-pointer">
+        {" "}
+        Ar
+       </option>
       </select>
 
       <span className="h-[32px] w-[1px] bg-neutral-gray-light"></span>

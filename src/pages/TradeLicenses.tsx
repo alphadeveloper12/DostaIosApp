@@ -1,35 +1,67 @@
-import React from "react";
+import React, { useState } from "react";
 import Header from "../components/layout/Header";
 import Footer from "../components/layout/Footer";
 import BreadCrumb from "../components/home/BreadCrumb";
-import { FileText, Download } from "lucide-react";
+import { FileText, Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import LicenseViewerModal from "@/components/common/LicenseViewerModal";
 
 const TradeLicenses = () => {
+ const [isModalOpen, setIsModalOpen] = useState(false);
+ const [selectedImages, setSelectedImages] = useState<string[]>([]);
+ const [selectedTitle, setSelectedTitle] = useState("");
+
  const licenses = [
   {
    id: 1,
    title: "Dosta Vending",
    description: "Official Trade License for our automated vending operations.",
-   file: "/licenses/dosta_vending.pdf",
+   images: [
+    "/licenses/vending1.png",
+    "/licenses/vending2.png",
+    "/licenses/vending3.png",
+    "/licenses/vending4.png",
+    "/licenses/vending5.png",
+   ],
+   file: null, // Removed PDF link
   },
   {
    id: 2,
    title: "Dosta Catering",
    description:
     "Certified documentation for our specialized catering services.",
-   file: "/licenses/dosta_catering.pdf",
+   images: [
+    "/licenses/TradeL1.png",
+    "/licenses/TradeL2.png",
+    "/licenses/TradeL3.png",
+    "/licenses/TradeL4.png",
+    "/licenses/TradeL5.png",
+   ],
+   file: null,
   },
   {
    id: 3,
    title: "Dosta for Events",
    description: "Authorized license for complete event food management.",
-   file: "/licenses/dosta_events.pdf",
+   images: [
+    "/licenses/event1.png",
+    "/licenses/event2.png",
+    "/licenses/event3.png",
+    "/licenses/event4.png",
+   ],
+   file: null,
   },
  ];
 
- const handleOpenPdf = (fileUrl: string) => {
-  window.open(fileUrl, "_blank");
+ const handleViewLicense = (license: (typeof licenses)[0]) => {
+  if (license.images && license.images.length > 0) {
+   setSelectedImages(license.images);
+   setSelectedTitle(license.title);
+   setIsModalOpen(true);
+  } else {
+   // Fallback or alert if no images are available
+   // alert("License preview not available.");
+  }
  };
 
  return (
@@ -71,10 +103,17 @@ const TradeLicenses = () => {
         </p>
 
         <Button
-         onClick={() => handleOpenPdf(license.file)}
-         className="bg-primary hover:bg-primary/90 text-white px-8 py-6 rounded-xl text-lg w-full flex items-center justify-center gap-2 group-hover:-translate-y-1 transition-transform duration-300">
-         <span className="font-semibold">View License</span>
-         <Download className="w-5 h-5" />
+         onClick={() => handleViewLicense(license)}
+         disabled={!license.images || license.images.length === 0}
+         className="bg-primary hover:bg-primary/90 text-white px-8 py-6 rounded-xl text-lg w-full flex items-center justify-center gap-2 group-hover:-translate-y-1 transition-transform duration-300 disabled:opacity-50 disabled:cursor-not-allowed">
+         <span className="font-semibold">
+          {license.images && license.images.length > 0
+           ? "View License"
+           : "Not Available"}
+         </span>
+         {license.images && license.images.length > 0 && (
+          <Eye className="w-5 h-5" />
+         )}
         </Button>
        </div>
       ))}
@@ -83,6 +122,13 @@ const TradeLicenses = () => {
    </main>
 
    <Footer />
+
+   <LicenseViewerModal
+    isOpen={isModalOpen}
+    onClose={() => setIsModalOpen(false)}
+    images={selectedImages}
+    title={selectedTitle}
+   />
   </div>
  );
 };

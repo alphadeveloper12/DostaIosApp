@@ -196,6 +196,13 @@ const BudgetSelection: React.FC<BudgetSelectionProps> = ({
   setSelectedPax(pax);
  };
 
+ const isBuffetOrSetMenu =
+  selectedServiceStyles?.name &&
+  (selectedServiceStyles.name.toLowerCase().includes("buffet") ||
+   selectedServiceStyles.name.toLowerCase().includes("set menu"));
+
+ const stepNumber = isBuffetOrSetMenu ? 5 : 4;
+
  return (
   <LazyLoad>
    <div
@@ -205,7 +212,7 @@ const BudgetSelection: React.FC<BudgetSelectionProps> = ({
      <div
       className="md:w-8 md:h-8 w-6 h-6 flex-shrink-0 rounded-full flex items-center justify-center"
       style={{ backgroundColor: "hsl(var(--primary))" }}>
-      <span className="text-primary-foreground font-bold">5</span>
+      <span className="text-primary-foreground font-bold">{stepNumber}</span>
      </div>
      <h2 className="text-primary-text md:text-2xl text-xl font-bold">
       What's the Budget you have in Mind?
@@ -256,7 +263,9 @@ const BudgetSelection: React.FC<BudgetSelectionProps> = ({
 
     <div className="flex items-center mb-6 gap-4 mt-8">
      <h3 className="text-primary-text md:text-xl text-lg font-bold md:ml-12">
-      Select Minimum Pax
+      {selectedEvent?.name?.toLowerCase().includes("private chef")
+       ? "Select Maximum Pax"
+       : "Select Minimum Pax"}
      </h3>
     </div>
 
@@ -288,7 +297,11 @@ const BudgetSelection: React.FC<BudgetSelectionProps> = ({
          pointerEvents: "none", // Disable user interaction
          cursor: "default",
         }}>
-        <span style={{ fontWeight: "400", fontSize: "16px" }}>{pax.label}</span>
+        <span style={{ fontWeight: "400", fontSize: "16px" }}>
+         {selectedEvent?.name?.toLowerCase().includes("private chef")
+          ? pax.label.replace("Minimum", "Maximum")
+          : pax.label}
+        </span>
         <span style={{ fontWeight: "400", fontSize: "16px" }}>
          {pax.number}
         </span>

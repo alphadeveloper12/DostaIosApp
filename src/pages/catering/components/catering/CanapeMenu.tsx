@@ -8,11 +8,17 @@ interface CanapeItem {
  name: string;
  category: string;
  image_url: string | null;
+ description?: string;
 }
 
 interface CanapeMenuProps {
  selectedMenuItems: { id: string; name: string; course: string }[];
- toggleMenuItem: (item: { id: string; name: string; course: string }) => void;
+ toggleMenuItem: (item: {
+  id: string;
+  name: string;
+  course: string;
+  description?: string;
+ }) => void;
  handleGoBack: () => void;
  handleContinue: () => void;
  selectedBudget: {
@@ -115,6 +121,7 @@ const CanapeMenu: React.FC<CanapeMenuProps> = ({
     id: itemId,
     name: item.name,
     course: category + " Canape",
+    description: item.description,
    });
    return;
   }
@@ -132,7 +139,12 @@ const CanapeMenu: React.FC<CanapeMenuProps> = ({
    return;
   }
 
-  toggleMenuItem({ id: itemId, name: item.name, course: category + " Canape" });
+  toggleMenuItem({
+   id: itemId,
+   name: item.name,
+   course: category + " Canape",
+   description: item.description,
+  });
  };
 
  return (

@@ -1,5 +1,5 @@
 import { ChevronLeft } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import Header from "../components/layout/Header";
 
 import Footer from "@/components/layout/Footer";
@@ -30,14 +30,13 @@ function ItemLink({ children }) {
 }
 const CateringConfirmation = () => {
  const navigate = useNavigate();
+ const location = useLocation(); // Import useLocation
+ const { orderId, orderDetails, extraDetails } = location.state || {}; // Destructure orderId, orderDetails, and extraDetails
+
  const [step, setStep] = useState(1); // Step state to track progress
 
- // Function to handle changing the step
- const changeStep = (newStep) => {
-  if (newStep >= 1 && newStep <= 2) {
-   setStep(newStep);
-  }
- };
+ // Function to handle change step...
+
  return (
   <div className="min-h-screen flex flex-col">
    <Header />
@@ -58,16 +57,13 @@ const CateringConfirmation = () => {
       {/* LEFT: Booking Card + Details */}
       <div className="space-y-4">
        {/* Booking Header Card */}
-       <div
-        className="rounded-2xl border border-[#EDEEF2] bg-white"
-        onClick={() => setStep(2)}
-        onDoubleClick={() => setStep(1)}>
+       <div className="rounded-2xl border border-[#EDEEF2] bg-white">
         {/* Header */}
         <div className="flex items-start justify-between gap-3 p-4">
          <div className="flex w-full flex-col md:flex-row gap-1">
           <div className="flex flex-col justify-between gap-3 w-full">
            <p className="text-[24px] font-bold leading-8 text-#2B2B43">
-            Order ID 67352427
+            Order ID {orderId || "67352427"}
            </p>
            <div className="mt-1 flex items-center gap-2">
             {step === 1 && (
@@ -87,200 +83,11 @@ const CateringConfirmation = () => {
             )}
            </div>
           </div>
-          <div className="flex md:items-end items-start max-md:pt-4 flex-col  gap-3 w-full">
-           <div className="flex max-md:flex-row-reverse gap-2 items-center">
-            <p className="text-xs font-semibold leading-[16px] text-[#83859C]">
-             Location at Barsha 1, near Mall of the Emirates
-            </p>
-            <img
-             src={locationimg}
-             alt="location Icon"
-             className="w-[16px] h-[16px]"
-            />
-           </div>
-           <div className="flex gap-2 items-center max-md:flex-row-reverse">
-            <p className="text-xs font-semibold leading-[16px] text-[#83859C]">
-             06 November 2025, 08:00 PM
-            </p>
-            <img
-             src={calendar}
-             alt="calendar Icon"
-             className="w-[16px] h-[16px]"
-            />
-           </div>
-          </div>
          </div>
         </div>
 
         {/* Progress */}
         <div className="px-4 pt-3">
-         {/* ==================================================================== */}
-         {/* 1. DESKTOP / TABLET LAYOUT (Horizontal) - Original Code - Visible SM+ */}
-         {/* ==================================================================== */}
-         <div className="hidden sm:block">
-          {/* Progress Circles and Horizontal Bar (Original Structure) */}
-          <div className="flex justify-between w-full gap-2 items-center">
-           {/* Step 1 Circle */}
-           <span
-            className={`flex h-[32px] w-[32px] flex-shrink-0 items-center justify-center rounded-full ${
-             step >= 1 ? "bg-[#1ABF70]" : "bg-[#EDEEF2]"
-            } text-white ring-[#1ABF70]`}>
-            <svg
-             width="20"
-             height="20"
-             viewBox="0 0 20 20"
-             fill="none"
-             xmlns="http://www.w3.org/2000/svg">
-             <path
-              d="M16.6673 5.83398L7.50065 15.0007L3.33398 10.834"
-              stroke="white"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-             />
-            </svg>
-           </span>
-
-           {/* Progress Bar (Horizontal) */}
-           <div className="relative h-0.5 w-full overflow-hidden rounded-full bg-gray-100">
-            <div
-             className={`absolute left-0 top-0 h-full ${
-              step === 1 ? "w-1/2" : step === 2 ? "w-full" : "w-0"
-             } rounded-full bg-emerald-500`}
-             aria-hidden
-            />
-           </div>
-
-           {/* Step 2 Circle */}
-           <span
-            className={`flex h-[32px] w-[32px] items-center justify-center rounded-full ${
-             step >= 2
-              ? "bg-[#1ABF70]"
-              : "bg-[#EDEEF2] text-[#2B2B43] font-semibold"
-            } text-white ring-[#1ABF70]`}
-            style={{
-             // Ensure the circle doesn't get squished by flex
-             flexShrink: 0,
-            }}>
-            {step >= 2 ? (
-             <svg
-              width="20"
-              height="20"
-              viewBox="0 0 20 20"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg">
-              <path
-               d="M16.6673 5.83398L7.50065 15.0007L3.33398 10.834"
-               stroke="white"
-               strokeWidth="2"
-               strokeLinecap="round"
-               strokeLinejoin="round"
-              />
-             </svg>
-            ) : (
-             "2"
-            )}
-           </span>
-          </div>
-
-          {/* Labels (Original Structure) */}
-          <div className="mt-3 flex items-center justify-between">
-           <div className="flex items-center gap-2">
-            <span className="text-base font-bold text-[#2B2B43]">
-             Booking Confirmed
-            </span>
-           </div>
-           <span className="text-base font-bold text-[#2B2B43]">Served</span>
-          </div>
-          <p className="text-sm text-gray-500">09:51</p>
-         </div>
-
-         {/* ==================================================================== */}
-         {/* 2. MOBILE LAYOUT (Vertical) - Visible up to SM (block sm:hidden) */}
-         {/* ==================================================================== */}
-         <div className=" sm:hidden flex flex-col">
-          {/* Step 1: Order Placed (Done) */}
-          <div className="flex items-start">
-           {/* Left Column: Circle & Progress Line */}
-           <div className="flex flex-col items-center mr-4">
-            {/* Step 1 Circle */}
-            <span
-             className={`flex h-[32px] w-[32px] items-center justify-center rounded-full ${
-              step >= 1 ? "bg-[#1ABF70]" : "bg-[#EDEEF2]"
-             } text-white ring-[#1ABF70]`}>
-             <svg
-              width="20"
-              height="20"
-              viewBox="0 0 20 20"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg">
-              <path
-               d="M16.6673 5.83398L7.50065 15.0007L3.33398 10.834"
-               stroke="white"
-               strokeWidth="2"
-               strokeLinecap="round"
-               strokeLinejoin="round"
-              />
-             </svg>
-            </span>
-            {/* Vertical Line */}
-            <div
-             className={`w-0.5 h-12 transition-colors duration-500 ${
-              step >= 2 ? "bg-[#1ABF70]" : "bg-gray-200"
-             }`}
-            />
-           </div>
-
-           {/* Right Column: Content */}
-           <div className="flex flex-col pt-0.5 pb-4">
-            <span className="text-base font-bold text-[#2B2B43]">
-             Booking Confirmed
-            </span>
-            <p className="text-sm text-gray-500">09:51</p>
-           </div>
-          </div>
-
-          {/* Step 2: Ready for Pickup */}
-          <div className="flex items-start">
-           {/* Left Column: Circle */}
-           <div className="flex flex-col items-center mr-4">
-            {/* Step 2 Circle */}
-            <span
-             className={`flex h-[32px] w-[32px] items-center justify-center rounded-full ${
-              step >= 2
-               ? "bg-[#1ABF70]"
-               : "bg-[#EDEEF2] text-[#2B2B43] font-semibold"
-             } text-white ring-[#1ABF70]`}
-             style={{ flexShrink: 0 }}>
-             {step >= 2 ? (
-              <svg
-               width="20"
-               height="20"
-               viewBox="0 0 20 20"
-               fill="none"
-               xmlns="http://www.w3.org/2000/svg">
-               <path
-                d="M16.6673 5.83398L7.50065 15.0007L3.33398 10.834"
-                stroke="white"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-               />
-              </svg>
-             ) : (
-              "2"
-             )}
-            </span>
-           </div>
-
-           {/* Right Column: Content */}
-           <div className="flex flex-col pt-0.5">
-            <span className="text-base font-bold text-[#2B2B43]">Served</span>
-           </div>
-          </div>
-         </div>
-         {/* ==================================================================== */}
-
          {/* Actions */}
 
          <div className="flex flex-col md:flex-row max-md:justify-center items-center gap-3 md:py-4 py-6">
@@ -300,27 +107,6 @@ const CateringConfirmation = () => {
           </Button>
          </div>
         </div>
-
-        {/* Info note */}
-        {step === 1 && (
-         <div className="md:p-4 px-4 pb-4 text-xsm font-normal leading-5 text-[#2B2B43">
-          You can edit or cancel your order before 23 September 2025, 09:50 am
-         </div>
-        )}
-        {/* print qr code */}
-        {step === 2 && (
-         <div className="flex flex-col justify-center items-center md:py-[40px] py-[16px]">
-          <p className="text-[16px] leading-[24px] font-[700] tracking-[0.1px]">
-           Woohoo! Your order is ready for pickup!
-          </p>
-          <div className="mt-[24px] mb-[20px] rounded-[16px] border border-[#83859C] max-w-[158px] max-h-[158px] p-5">
-           <img src="/images/icons/barcode.svg" alt="barcode" />
-          </div>
-          <Button className="border w-[158px] border-[#545563] bg-transparent hover:bg-transparent text-[14px] leading-[16px] text-[#545563]">
-           Print
-          </Button>
-         </div>
-        )}
        </div>
 
        {/* Booking Details */}
@@ -336,34 +122,134 @@ const CateringConfirmation = () => {
           label="Event Type"
           value={
            <div className="space-y-1">
-            <ItemLink>Corporate Event</ItemLink>
-            <ItemLink>20 Guests</ItemLink>
-            <ItemLink>06 November 2025, 08:00 PM</ItemLink>
+            <ItemLink>{orderDetails?.event_type || "Event"}</ItemLink>
+            <ItemLink>{orderDetails?.guest_count || 0} Guests</ItemLink>
+            <ItemLink>
+             {orderDetails?.event_date && orderDetails?.event_time
+              ? (() => {
+                 const d = new Date(
+                  `${orderDetails.event_date}T${orderDetails.event_time}`
+                 );
+                 // Simple formatter: "06 November 2025, 08:00 PM"
+                 const dateStr = d.toLocaleDateString("en-GB", {
+                  day: "2-digit",
+                  month: "long",
+                  year: "numeric",
+                 });
+                 const timeStr = d.toLocaleTimeString("en-US", {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                  hour12: true,
+                 });
+                 return `${dateStr}, ${timeStr}`;
+                })()
+              : "Date Not Selected"}
+            </ItemLink>
            </div>
           }
          />
          <Row
-          label="Provider Type"
+          label="Service Style"
           value={
            <div className="space-y-1">
-            <ItemLink>Caterers</ItemLink>
-            <ItemLink>Boxed Meal, Plated Meal</ItemLink>
+            <ItemLink>
+             {orderDetails?.service_style || "Service Style"}
+            </ItemLink>
            </div>
           }
          />
          <Row
-          label="Cuisines"
-          value={<ItemLink>American, Italian, Mediterranean</ItemLink>}
+          label="Location"
+          value={<ItemLink>{orderDetails?.location || "Location"}</ItemLink>}
          />
-         <Row
-          label="Courses"
-          value={<ItemLink>Canapes, Coffee/Tea</ItemLink>}
-         />
-         <Row label="Location" value={<ItemLink>Ajman</ItemLink>} />
          <Row
           label="Budget"
-          value={<ItemLink>Basic AED70 per guest</ItemLink>}
+          value={
+           <ItemLink>
+            {extraDetails?.budget?.label || ""}{" "}
+            {extraDetails?.budget?.price_range || ""}
+           </ItemLink>
+          }
          />
+
+         {/* Menu Items Section */}
+         <div className="p-4 border-t border-[#EDEEF2]">
+          <div className="text-xl font-medium text-[#545563] mb-3">
+           Menu Items
+          </div>
+          {(orderDetails?.items && orderDetails.items.length > 0) ||
+          (extraDetails?.menuItems && extraDetails.menuItems.length > 0) ? (
+           <div className="mt-2 text-base text-[#545563]">
+            {Object.entries(
+             (orderDetails?.items || extraDetails.menuItems).reduce(
+              (acc: any, item: any) => {
+               // Ensure we have a course key, default to 'Other' if missing
+               const course = item.course || "Other";
+               if (!acc[course]) {
+                acc[course] = [];
+               }
+               acc[course].push(item);
+               return acc;
+              },
+              {}
+             )
+            ).map(([course, items]: any) => (
+             <div key={course} className="mb-4 last:mb-0">
+              <h4
+               style={{
+                fontSize: "16px",
+                fontWeight: "700",
+                color: "#056AC1",
+                marginBottom: "4px",
+               }}>
+               {course}
+              </h4>
+              <ul className="pl-0 space-y-1">
+               {items.map((item: any) => (
+                <li
+                 key={item.name}
+                 style={{
+                  fontSize: "14px",
+                  fontWeight: "400",
+                  color: "#545563",
+                 }}>
+                 <span className="font-semibold">{item.name}</span>
+                 {item.quantity > 1 && (
+                  <span className="text-xs text-gray-500 ml-1">
+                   (x{item.quantity})
+                  </span>
+                 )}
+                 {item.description && (
+                  <p className="text-xs text-gray-500 mt-0.5">
+                   {item.description}
+                  </p>
+                 )}
+                </li>
+               ))}
+              </ul>
+             </div>
+            ))}
+           </div>
+          ) : (
+           <div className="text-base text-[#545563]">Not Selected</div>
+          )}
+         </div>
+        </div>
+
+        {/* Contact Info Box */}
+        <div className="p-4 mt-2">
+         <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 text-center">
+          <p className="text-sm text-gray-600 mb-3">
+           For any queries, please contact us on this phone number:{" "}
+           <span className="font-bold text-gray-800">00971 50 1638612</span>
+          </p>
+          <Button
+           onClick={() => navigate("/contact-us")}
+           variant="outline"
+           className="w-full sm:w-auto border-[#054A86] text-[#054A86] hover:bg-[#054A86] hover:text-white">
+           Contact Us
+          </Button>
+         </div>
         </div>
        </div>
       </div>
@@ -379,21 +265,28 @@ const CateringConfirmation = () => {
        <div className="space-y-3 text-sm">
         <div className="flex items-center justify-between">
          <span className="text-sm fot-noraml leading-5 text[#545563]">
-          Guest ×20
+          Guest ×{orderDetails?.guest_count || 0}
          </span>
          <span className="text-sm font-semibold text-[#2B2B43]">
-          AED1400.00
+          AED{extraDetails?.pricing?.baseTotal?.toFixed(2) || "0.00"}
          </span>
         </div>
         <div className="flex items-center justify-between">
          <span className="text-sm fot-noraml leading-5 text[#545563]">VAT</span>
-         <span className="text-sm font-semibold text-[#2B2B43]">AED150.00</span>
+         <span className="text-sm font-semibold text-[#2B2B43]">
+          AED{extraDetails?.pricing?.vat?.toFixed(2) || "0.00"}
+         </span>
         </div>
         <div className="flex items-center justify-between">
          <span className="text-fot-noraml leading-5 text[#545563]">
           Total (VAT incl.)
          </span>
-         <span className="text-base font-bold text-[#054A86]">AED1550.50</span>
+         <span className="text-base font-bold text-[#054A86]">
+          AED
+          {extraDetails?.pricing?.total?.toFixed(2) ||
+           orderDetails?.total_amount ||
+           "0.00"}
+         </span>
         </div>
        </div>
       </aside>
@@ -401,7 +294,7 @@ const CateringConfirmation = () => {
     </div>
    </main>
    <MobileFooterNav />
-   {/* <Footer /> */}
+   <Footer />
   </div>
  );
 };
