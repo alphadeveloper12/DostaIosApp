@@ -105,7 +105,7 @@ const LiveStationMenu: React.FC<LiveStationMenuProps> = ({
         onClick={() => {
          // Toggle existing one on/off or add new one
          toggleMenuItem({
-          id: item.id.toString(),
+          id: `live-${item.id}`,
           name: item.name,
           course: "Live Station",
           // @ts-ignore
@@ -146,7 +146,7 @@ const LiveStationMenu: React.FC<LiveStationMenuProps> = ({
         <div className="flex justify-between items-start mb-2">
          <h4 className="font-bold text-[#2B2B43] text-lg">{item.name}</h4>
          <span className="font-bold text-primary text-sm whitespace-nowrap">
-          {item.price} AED / PP
+          {item.price} AED / per head
          </span>
         </div>
 
