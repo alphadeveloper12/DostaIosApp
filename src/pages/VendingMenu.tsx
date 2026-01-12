@@ -28,16 +28,20 @@ interface FoodItem {
 const MenuItemCard = ({
   data,
   onClick,
+  quantity,
 }: {
   data: FoodItem;
   onClick: () => void;
+  quantity?: number;
 }) => {
   const [imageLoaded, setImageLoaded] = useState(false);
+  const isSoldOut = quantity !== undefined && quantity <= 0;
 
   return (
     <div
       onClick={onClick}
-      className="w-full border border-[#EDEEF2] max-w-[354px] bg-neutral-white rounded-[16px] px-3 pt-3 pb-5 sm:px-4 sm:pt-4 sm:pb-6 overflow-hidden cursor-pointer hover:shadow-lg transition-shadow">
+      className={`relative w-full border border-[#EDEEF2] max-w-[354px] bg-neutral-white rounded-[16px] px-3 pt-3 pb-5 sm:px-4 sm:pt-4 sm:pb-6 overflow-hidden cursor-pointer hover:shadow-lg transition-shadow ${isSoldOut ? "opacity-60 grayscale-[0.5]" : ""}`}>
+
       {/* Image Container with Shimmer */}
       <div className="relative w-full md:h-[180px] h-[180px] rounded-[12px] sm:rounded-[16px] overflow-hidden z-[1]">
         {!imageLoaded && (
@@ -52,6 +56,14 @@ const MenuItemCard = ({
           className={`block w-full h-full object-cover transition-opacity duration-500 ${imageLoaded ? "opacity-100" : "opacity-0"
             }`}
         />
+
+        {isSoldOut && (
+          <div className="absolute inset-0 flex items-center justify-center z-20 bg-black/20">
+            <div className="bg-red-500 text-white px-4 py-1 rounded-full font-bold text-sm shadow-lg transform -rotate-12">
+              SOLD OUT
+            </div>
+          </div>
+        )}
       </div>
 
       <h3 className="text-[24px] pt-3 pb-1 leading-[32px] font-[700] tracking-[0.1px] text-[#2B2B43]">
@@ -63,6 +75,12 @@ const MenuItemCard = ({
       <h4 className="text-[16px] pt-2 leading-[24px] font-[700] tracking-[0.1px] text-[#2B2B43]">
         AED {data.price}
       </h4>
+
+      {quantity !== undefined && !isSoldOut && quantity < 5 && (
+        <div className="absolute top-4 right-4 z-10 bg-orange-500 text-white text-[10px] font-bold px-2 py-1 rounded-full shadow-sm">
+          Only {quantity} left
+        </div>
+      )}
     </div>
   );
 };
@@ -77,6 +95,7 @@ const VendingMenu = () => {
   const [weeklyMenu, setWeeklyMenu] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [machineGoods, setMachineGoods] = useState<any[] | null>(null);
+  const [machineShelves, setMachineShelves] = useState<any[] | null>(null);
 
   // Fetch Weekly Menu on Mount
   useEffect(() => {
@@ -128,11 +147,12 @@ const VendingMenu = () => {
         const cachedData = localStorage.getItem(cacheKey);
 
         if (cachedData) {
-          const { goods, timestamp } = JSON.parse(cachedData);
+          const { goods, shelves, timestamp } = JSON.parse(cachedData);
           const isExpired = Date.now() - timestamp > 5 * 60 * 1000; // 5 min cache
 
           if (goods && goods.length > 0) {
             setMachineGoods(goods);
+            if (shelves) setMachineShelves(shelves);
             if (!isExpired) return;
           }
         }
@@ -145,11 +165,13 @@ const VendingMenu = () => {
         if (data?.data) {
           const allGoods = data.data.flatMap((category: any) => category.goodsList || []);
           setMachineGoods(allGoods);
+          if (data.shelves) setMachineShelves(data.shelves);
 
           localStorage.setItem(
             cacheKey,
             JSON.stringify({
               goods: allGoods,
+              shelves: data.shelves || null,
               timestamp: Date.now(),
             })
           );
@@ -198,8 +220,8 @@ const VendingMenu = () => {
   const normalizeName = (name: string) => (name || "").replace(/[^a-zA-Z0-9]/g, "").toLowerCase();
 
   // Get items for the selected day with filtering logic
-  const currentDayItems = useMemo(() => {
-    if (!weeklyMenu || !days[tab]) return [];
+  const { currentDayItems, shelfData, totalAvailableCount } = useMemo(() => {
+    if (!weeklyMenu || !days[tab]) return { currentDayItems: [], shelfData: [] };
 
     const selectedDayName = days[tab].day; // e.g., "Monday"
     const dayData = weeklyMenu[selectedDayName];
@@ -208,34 +230,44 @@ const VendingMenu = () => {
     // Determine current day
     const today = new Date().toLocaleDateString('en-US', { weekday: 'long' });
 
-    // If selected tab is TODAY, filter by machine availability
-    if (selectedDayName === today && machineGoods) {
-      const availableItems = items.filter((item: any) => {
-        const normalizedItemName = normalizeName(item.name);
-        return machineGoods.some((good: any) => {
-          const rawName = typeof good === "string" ? good : good?.goodsName || "";
-          return normalizeName(rawName) === normalizedItemName;
-        });
+    // If selected tab is TODAY, process shelves
+    if (selectedDayName === today && machineShelves) {
+      // Create a lookup for items by normalized name
+      const itemLookup = new Map<string, any>();
+      items.forEach((item: any) => {
+        itemLookup.set(normalizeName(item.name), item);
       });
 
-      // Attach vendingGoodUuid
-      return availableItems.map((item: any) => {
-        const normalizedItemName = normalizeName(item.name);
-        const match = machineGoods.find((good: any) => {
-          const rawName = typeof good === "string" ? good : good?.goodsName || "";
-          return normalizeName(rawName) === normalizedItemName;
-        });
+      const processedShelves = machineShelves.map(shelf => ({
+        ...shelf,
+        spots: shelf.spots.map((spot: any) => {
+          if (!spot.goods) return { ...spot, enrichedItem: null };
 
-        return {
-          ...item,
-          vendingGoodUuid: match?.uuid
-        };
-      });
+          const normalizedName = normalizeName(spot.goods.goodsName);
+          const menuItem = itemLookup.get(normalizedName);
+
+          if (menuItem) {
+            return {
+              ...spot,
+              enrichedItem: {
+                ...menuItem,
+                vendingGoodUuid: spot.goods.uuid,
+                price: parseFloat(spot.goods.goodsPrice).toFixed(2),
+                quantity: spot.presentNumber,
+                image_url: menuItem.image_url || "/images/placeholder_food.png"
+              }
+            };
+          }
+          return { ...spot, enrichedItem: null };
+        }).filter((spot: any) => spot.enrichedItem !== null)
+      })).filter(shelf => shelf.spots.length > 0);
+      const totalAvailableCount = processedShelves.reduce((acc, shelf) => acc + shelf.spots.length, 0);
+      return { currentDayItems: processedShelves.length > 0 ? [] : items, shelfData: processedShelves, totalAvailableCount };
     }
 
     // Otherwise return all items for that day
-    return items;
-  }, [weeklyMenu, tab, machineGoods]);
+    return { currentDayItems: items, shelfData: [], totalAvailableCount: items.length };
+  }, [weeklyMenu, tab, machineGoods, machineShelves]);
 
   // Function to handle card click and open the item details in the sidebar
   const handleCardClick = (item: FoodItem) => {
@@ -285,6 +317,28 @@ const VendingMenu = () => {
       // 2. Prepare Items List
       const newItemId = selectedItem.id;
 
+      // Calculate total available stock for this item across all slots
+      let totalAvailable = 0;
+      if (shelfData && shelfData.length > 0) {
+        shelfData.forEach((shelf: any) => {
+          shelf.spots.forEach((spot: any) => {
+            if (spot.enrichedItem && normalizeName(spot.enrichedItem.name) === normalizeName(selectedItem.name)) {
+              totalAvailable += spot.presentNumber;
+            }
+          });
+        });
+      } else if (machineGoods) {
+        const normalizedItemName = normalizeName(selectedItem.name);
+        machineGoods.forEach((good: any) => {
+          const rawName = typeof good === "string" ? good : good?.goodsName || "";
+          if (normalizeName(rawName) === normalizedItemName) {
+            totalAvailable += (good.presentNumber || 1);
+          }
+        });
+      } else {
+        totalAvailable = 3;
+      }
+
       // Map existing items to simple format
       let updatedItems = existingItems.map((i: any) => ({
         menu_item_id: i.menu_item.id,
@@ -297,19 +351,27 @@ const VendingMenu = () => {
       const existingIndex = updatedItems.findIndex((i: any) => i.menu_item_id === newItemId);
 
       if (existingIndex >= 0) {
-        // Increment quantity if < 3
-        if (updatedItems[existingIndex].quantity < 3) {
+        // Increment quantity if < totalAvailable
+        if (updatedItems[existingIndex].quantity < totalAvailable) {
           updatedItems[existingIndex].quantity += 1;
+        } else {
+          alert(`Only ${totalAvailable} items available in stock.`);
+          return;
         }
       } else {
         // Add new item
-        updatedItems.push({
-          menu_item_id: newItemId,
-          quantity: 1,
-          day_of_week: null,
-          week_number: null,
-          vending_good_uuid: selectedItem.vendingGoodUuid || null
-        });
+        if (totalAvailable > 0) {
+          updatedItems.push({
+            menu_item_id: newItemId,
+            quantity: 1,
+            day_of_week: null,
+            week_number: null,
+            vending_good_uuid: selectedItem.vendingGoodUuid || null
+          });
+        } else {
+          alert("Item is sold out.");
+          return;
+        }
       }
 
       // 3. Post Cart
@@ -371,7 +433,7 @@ const VendingMenu = () => {
           <div className="main-container">
             <div className="md:flex hidden justify-between items-center py-4 md:flex-row flex-col gap-2">
               <h2 className="md:text-[24px] text-[18px] leading-[24px] text-[#2B2B43] md:leading-[32px] font-[700] tracking-[0.1px]">
-                Browse our daily menu of {currentDayItems.length} chef-prepared meals
+                Browse our daily menu of {totalAvailableCount} chef-prepared meals
               </h2>
               <Button className="bg-[#054A86] max-md:w-full hidden md:block">
                 Start Your Order
@@ -435,28 +497,65 @@ const VendingMenu = () => {
         {/* Display menu items for the selected day */}
         <div className="w-full h-full pb-[100px] pt-6">
           <LazyLoad>
-            <div className="main-container flex gap-[24px] flex-wrap">
+            <div className="main-container">
               {loading ? (
                 <div className="w-full">
                   <Shrimmer />
                 </div>
+              ) : shelfData.length > 0 ? (
+                <div className="space-y-12 w-full">
+                  {shelfData.map((shelf: any) => (
+                    <div key={shelf.shelfIndex} className="bg-white/50 rounded-[24px] p-6 md:p-8 border border-gray-100">
+                      <div className="flex items-center gap-3 mb-6">
+                        <div className="w-2 h-8 bg-[#054A86] rounded-full"></div>
+                        <h3 className="text-[24px] font-bold text-[#054A86]">{shelf.shelfName}</h3>
+                      </div>
+                      <div className="flex gap-[24px] flex-wrap">
+                        {shelf.spots.map((spot: any, index: number) => {
+                          const data = spot.enrichedItem;
+                          return (
+                            <div key={index} className="relative">
+                              <div className="absolute -top-2 -left-2 z-10 bg-[#054A86] text-white text-[10px] font-bold px-2 py-1 rounded-full shadow-sm">
+                                Spot {spot.arrivalName}
+                              </div>
+                              <MenuItemCard
+                                data={{
+                                  ...data,
+                                  imgAlt: data.name,
+                                  image_url: data.image_url || "/images/placeholder_food.png"
+                                }}
+                                quantity={spot.presentNumber}
+                                onClick={() => handleCardClick({
+                                  ...data,
+                                  imgAlt: data.name,
+                                  image_url: data.image_url || "/images/placeholder_food.png"
+                                })}
+                              />
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  ))}
+                </div>
               ) : currentDayItems.length > 0 ? (
-                currentDayItems.map((data: any, index: number) => (
-                  <MenuItemCard
-                    key={index}
-                    data={{
-                      ...data,
-                      // Map API fields to FoodItem interface if needed
-                      imgAlt: data.name,
-                      image_url: data.image_url || "/images/placeholder_food.png"
-                    }}
-                    onClick={() => handleCardClick({
-                      ...data,
-                      imgAlt: data.name,
-                      image_url: data.image_url || "/images/placeholder_food.png"
-                    })}
-                  />
-                ))
+                <div className="flex gap-[24px] flex-wrap">
+                  {currentDayItems.map((data: any, index: number) => (
+                    <MenuItemCard
+                      key={index}
+                      data={{
+                        ...data,
+                        imgAlt: data.name,
+                        image_url: data.image_url || "/images/placeholder_food.png"
+                      }}
+                      onClick={() => handleCardClick({
+                        ...data,
+                        imgAlt: data.name,
+                        image_url: data.image_url || "/images/placeholder_food.png"
+                      })}
+                    />
+                  ))}
+                </div>
               ) : (
                 <div className="w-full text-center py-10 text-gray-500">
                   No items available for {days[tab].day}.

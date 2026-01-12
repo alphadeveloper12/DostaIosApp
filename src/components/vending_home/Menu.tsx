@@ -29,6 +29,7 @@ interface MenuProps {
     orderNowMenuFunc?: any; // Added optional prop for orderNowMenuFunc
     initialCart?: SelectedFoodItem[]; // NEW: Accept initial state
     machineGoods?: any[]; // NEW: Machine goods for filtering
+    machineShelves?: any[]; // NEW: Machine shelves for structured display
 }
 
 const Menu: React.FC<MenuProps> = ({
@@ -36,6 +37,7 @@ const Menu: React.FC<MenuProps> = ({
     orderNowMenuFunc,
     initialCart = [],
     machineGoods,
+    machineShelves,
 }) => {
     const [openDialouge, setOpenDialouge] = useState(false);
     const [scrolled, setScrolled] = useState(false);
@@ -58,31 +60,55 @@ const Menu: React.FC<MenuProps> = ({
         (name || "").replace(/[^a-zA-Z0-9]/g, "").toLowerCase();
 
     // --- NEW: Split items into Available and Others ---
-    const { availableItems, otherItems } = React.useMemo(() => {
+    const { availableItems, otherItems, shelfData, totalAvailableCount } = React.useMemo(() => {
         // If machineGoods is null (still loading), show everything in 'others' for now
         if (machineGoods === null) {
-            return { availableItems: [], otherItems: foodData };
+            return { availableItems: [], otherItems: foodData, shelfData: [] };
         }
 
         // If machineGoods is empty array (loaded but no items), show everything in 'others'
         if (machineGoods && machineGoods.length === 0) {
-            return { availableItems: [], otherItems: foodData };
+            return { availableItems: [], otherItems: foodData, shelfData: [] };
         }
 
         const available: FoodItem[] = [];
         const others: FoodItem[] = [];
 
-        console.log("🔍 Menu Matching Debug (Full List):");
-        console.log(
-            "📦 Vending Machine Menu (Machine Goods):",
-            JSON.stringify(machineGoods, null, 2)
-        );
-        console.log(
-            "🍱 Order Now Menu (Full Food Data):",
-            JSON.stringify(foodData, null, 2)
-        );
-        console.log("Machine Goods Count:", machineGoods?.length);
-        console.log("Food Data Count (Full):", foodData.length);
+        // Create a lookup for foodData by normalized name
+        const foodLookup = new Map<string, FoodItem>();
+        foodData.forEach(item => {
+            foodLookup.set(normalizeName(item.heading), item);
+        });
+
+        // Process shelves if available
+        const processedShelves = (machineShelves || []).map(shelf => ({
+            ...shelf,
+            spots: shelf.spots.map((spot: any) => {
+                if (!spot.goods) return { ...spot, enrichedItem: null };
+
+                const normalizedName = normalizeName(spot.goods.goodsName);
+                const menuItem = foodLookup.get(normalizedName);
+
+                if (menuItem) {
+                    return {
+                        ...spot,
+                        enrichedItem: {
+                            ...menuItem,
+                            vendingGoodUuid: spot.goods.uuid,
+                            price: `AED ${parseFloat(spot.goods.goodsPrice).toFixed(2)}`,
+                            // Use machine quantity
+                            quantity: spot.presentNumber
+                        }
+                    };
+                }
+
+                // If not in daily menu, do not show it
+                return {
+                    ...spot,
+                    enrichedItem: null
+                };
+            })
+        })).filter(shelf => shelf.spots.some((spot: any) => spot.enrichedItem !== null));
 
         foodData.forEach((item) => {
             const normalizedItemName = normalizeName(item.heading);
@@ -97,9 +123,6 @@ const Menu: React.FC<MenuProps> = ({
                 // Log matches for debugging
                 if (normalizedGoodName === normalizedItemName) {
                     matchedUuid = typeof good === "object" ? good.uuid : undefined;
-                    console.log(
-                        `✅ Match Found: "${item.heading}" (normalized: "${normalizedItemName}") matched with machine good "${rawName}" (normalized: "${normalizedGoodName}") with Good UUID: ${matchedUuid}`
-                    );
                     return true;
                 }
                 return false;
@@ -114,17 +137,11 @@ const Menu: React.FC<MenuProps> = ({
             }
         });
 
-        console.log(
-            `📊 Full List Results -> Available: ${available.length}, Others: ${others.length}`
-        );
-
-        // --- NEW: Deduplicate while prioritizing available items ---
-        // 1. Deduplicate available items
+        // Deduplicate
         const uniqueAvailable = Array.from(
             new Map(available.map((item) => [item.heading, item])).values()
         );
 
-        // 2. Deduplicate 'others' items, but ONLY if they aren't already in 'uniqueAvailable'
         const availableNames = new Set(uniqueAvailable.map((item) => item.heading));
         const uniqueOthers = Array.from(
             new Map(
@@ -134,14 +151,17 @@ const Menu: React.FC<MenuProps> = ({
             ).values()
         );
 
-        console.log("📋 Unique Available Items:", JSON.stringify(uniqueAvailable, null, 2));
-        console.log("📋 Unique Other Items:", JSON.stringify(uniqueOthers, null, 2));
-        console.log(
-            `📊 Final Deduplicated Results -> Available: ${uniqueAvailable.length}, Others: ${uniqueOthers.length}`
-        );
+        const totalAvailableCount = processedShelves.length > 0
+            ? processedShelves.reduce((acc, shelf) => acc + shelf.spots.filter((s: any) => s.enrichedItem !== null).length, 0)
+            : uniqueAvailable.length;
 
-        return { availableItems: uniqueAvailable, otherItems: uniqueOthers };
-    }, [foodData, machineGoods]);
+        return {
+            availableItems: processedShelves.length > 0 ? [] : uniqueAvailable,
+            otherItems: uniqueOthers,
+            shelfData: processedShelves,
+            totalAvailableCount
+        };
+    }, [foodData, machineGoods, machineShelves]);
 
     const handleCardClick = (item: FoodItem) => {
         setSelectedItem(item);
@@ -261,6 +281,31 @@ const Menu: React.FC<MenuProps> = ({
         delta: number
     ) => {
         e.stopPropagation();
+
+        // Calculate total available stock for this item across all slots
+        let totalAvailable = 0;
+        if (shelfData && shelfData.length > 0) {
+            shelfData.forEach((shelf: any) => {
+                shelf.spots.forEach((spot: any) => {
+                    if (spot.enrichedItem && normalizeName(spot.enrichedItem.heading) === normalizeName(item.heading)) {
+                        totalAvailable += spot.presentNumber;
+                    }
+                });
+            });
+        } else if (machineGoods) {
+            // Fallback for non-shelf view if needed
+            const normalizedItemName = normalizeName(item.heading);
+            machineGoods.forEach((good: any) => {
+                const rawName = typeof good === "string" ? good : good?.goodsName || "";
+                if (normalizeName(rawName) === normalizedItemName) {
+                    totalAvailable += (good.presentNumber || 1); // Fallback to 1 if presentNumber missing
+                }
+            });
+        } else {
+            // If no machine data, default to a reasonable limit or 0
+            totalAvailable = 3;
+        }
+
         setCart((prevCart) => {
             const existingItem = prevCart.find((i) => i.imgAlt === item.imgAlt);
             let newCart: SelectedFoodItem[];
@@ -269,8 +314,8 @@ const Menu: React.FC<MenuProps> = ({
                 const newQuantity = existingItem.quantity + delta;
                 if (newQuantity <= 0) {
                     newCart = prevCart.filter((i) => i.imgAlt !== item.imgAlt);
-                } else if (newQuantity > 3) {
-                    // Limit to 3
+                } else if (newQuantity > totalAvailable) {
+                    // Limit to total available stock
                     newCart = prevCart;
                 } else {
                     newCart = prevCart.map((i) =>
@@ -278,7 +323,11 @@ const Menu: React.FC<MenuProps> = ({
                     );
                 }
             } else if (delta > 0) {
-                newCart = [...prevCart, { ...item, quantity: delta }];
+                if (delta > totalAvailable) {
+                    newCart = prevCart;
+                } else {
+                    newCart = [...prevCart, { ...item, quantity: delta }];
+                }
             } else {
                 newCart = prevCart;
             }
@@ -306,7 +355,7 @@ const Menu: React.FC<MenuProps> = ({
                                 Choose Your Meal
                             </h2>
                             <p className="text-[#545563] text-[14px] leading-[20px] font-[400] tracking-[0.1px]">
-                                Choose your meal from our daily menu of {availableItems.length} chef-prepared meals
+                                Choose your meal from our daily menu of {totalAvailableCount} chef-prepared meals
                             </p>
                             {machineGoods === null && (
                                 <div className="flex items-center gap-2 mt-1">
@@ -358,7 +407,7 @@ const Menu: React.FC<MenuProps> = ({
                         Choose Your Meal
                     </h2>
                     <p className="text-[#545563] text-[14px] leading-[20px]">
-                        Choose your meal from our daily menu of {availableItems.length} chef-prepared meals
+                        Choose your meal from our daily menu of {totalAvailableCount} chef-prepared meals
                     </p>
                     {machineGoods === null && (
                         <div className="flex items-center gap-2 mt-1">
@@ -384,25 +433,54 @@ const Menu: React.FC<MenuProps> = ({
 
                     {!loading && !error && (
                         <>
-                            {/* Available Menu Section */}
-                            {availableItems.length > 0 ? (
-                                <div className="mb-8">
-                                    <div className="grid grid-cols-12 md:flex md:gap-[24px] gap-[12px] flex-wrap">
-                                        {availableItems.map((data, index) => {
-                                            const itemInCart = cart.find(
-                                                (item) => item.imgAlt === data.imgAlt
-                                            );
-                                            return (
-                                                <MenuCard
-                                                    key={data.id || index}
-                                                    data={data}
-                                                    itemInCart={itemInCart}
-                                                    handleCardClick={handleCardClick}
-                                                    handleQuantityChange={handleQuantityChange}
-                                                />
-                                            );
-                                        })}
-                                    </div>
+                            {/* Shelf-wise Menu Section */}
+                            {shelfData.length > 0 ? (
+                                <div className="space-y-12">
+                                    {shelfData.map((shelf: any) => (
+                                        <div key={shelf.shelfIndex} className="bg-gray-50/50 rounded-[24px] p-6 md:p-8 border border-gray-100">
+                                            <div className="flex items-center gap-3 mb-6">
+                                                <div className="w-2 h-8 bg-[#054A86] rounded-full"></div>
+                                                <h3 className="text-[24px] font-bold text-[#054A86]">{shelf.shelfName}</h3>
+                                            </div>
+                                            <div className="grid grid-cols-12 md:flex md:gap-[24px] gap-[12px] flex-wrap">
+                                                {shelf.spots.filter((spot: any) => spot.enrichedItem !== null).map((spot: any, index: number) => {
+                                                    const data = spot.enrichedItem;
+                                                    const itemInCart = cart.find(
+                                                        (item) => item.imgAlt === data.imgAlt
+                                                    );
+                                                    const isSoldOut = spot.presentNumber <= 0;
+
+                                                    return (
+                                                        <div key={index} className="relative">
+                                                            <div className="absolute -top-2 -left-2 z-10 bg-[#054A86] text-white text-[10px] font-bold px-2 py-1 rounded-full shadow-sm">
+                                                                Spot {spot.arrivalName}
+                                                            </div>
+                                                            <div className={isSoldOut ? "opacity-60 grayscale-[0.5]" : ""}>
+                                                                <MenuCard
+                                                                    data={data}
+                                                                    itemInCart={itemInCart}
+                                                                    handleCardClick={handleCardClick}
+                                                                    handleQuantityChange={handleQuantityChange}
+                                                                />
+                                                            </div>
+                                                            {isSoldOut && (
+                                                                <div className="absolute inset-0 flex items-center justify-center z-20 pointer-events-none">
+                                                                    <div className="bg-red-500 text-white px-4 py-1 rounded-full font-bold text-sm shadow-lg transform -rotate-12">
+                                                                        SOLD OUT
+                                                                    </div>
+                                                                </div>
+                                                            )}
+                                                            {!isSoldOut && spot.presentNumber < 5 && (
+                                                                <div className="absolute top-2 right-2 z-10 bg-orange-500 text-white text-[10px] font-bold px-2 py-1 rounded-full shadow-sm">
+                                                                    Only {spot.presentNumber} left
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    );
+                                                })}
+                                            </div>
+                                        </div>
+                                    ))}
                                 </div>
                             ) : (
                                 machineGoods !== null && (

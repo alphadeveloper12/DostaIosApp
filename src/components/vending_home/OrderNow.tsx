@@ -230,6 +230,7 @@ const OrderNow = () => {
 
   // machine goods (smart grab / stock matching)
   const [machineGoods, setMachineGoods] = useState<any[] | null>(null);
+  const [machineShelves, setMachineShelves] = useState<any[] | null>(null);
   const [originalOrderNowMenu, setOriginalOrderNowMenu] = useState<any[]>([]);
   const [originalSmartGrabMenu, setOriginalSmartGrabMenu] = useState<any[]>([]);
 
@@ -374,11 +375,12 @@ const OrderNow = () => {
         const cachedData = localStorage.getItem(cacheKey);
 
         if (cachedData) {
-          const { goods, timestamp } = JSON.parse(cachedData);
+          const { goods, shelves, timestamp } = JSON.parse(cachedData);
           const isExpired = Date.now() - timestamp > 5 * 60 * 1000;
 
           if (goods && goods.length > 0) {
             setMachineGoods(goods);
+            if (shelves) setMachineShelves(shelves);
             if (!isExpired) return;
           }
         }
@@ -391,11 +393,15 @@ const OrderNow = () => {
         if (data?.data) {
           const allGoods = data.data.flatMap((category: any) => category.goodsList || []);
           setMachineGoods(allGoods);
+          if (data.shelves) {
+            setMachineShelves(data.shelves);
+          }
 
           localStorage.setItem(
             cacheKey,
             JSON.stringify({
               goods: allGoods,
+              shelves: data.shelves || null,
               timestamp: Date.now(),
             })
           );
@@ -1008,6 +1014,7 @@ const OrderNow = () => {
                         orderNowMenuFunc={orderNowMenuFunc}
                         initialCart={orderNowMenu}
                         machineGoods={machineGoods}
+                        machineShelves={machineShelves}
                       />
                     </div>
                   )}
