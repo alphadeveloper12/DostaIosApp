@@ -418,24 +418,34 @@ const OrderNow = () => {
   }, [baseUrl]);
 
   // normalize name for matching
-  const normalizeName = (name: string) => (name || "").replace(/[^a-zA-Z0-9]/g, "").toLowerCase();
+  const normalizeName = (name: string) => {
+    if (!name) return "";
+    let normalized = name.replace(/&/g, "and");
+    return normalized.replace(/[^a-zA-Z0-9]/g, "").toLowerCase();
+  };
 
   // smart grab available items from machine goods
   const smartGrabAvailableItems = useMemo(() => {
     if (!machineGoods || machineGoods.length === 0) return [];
-    return machineGoods.map((good: any) => ({
-      id: good.uuid,
-      heading: (good.goodsName || "").replace(/\*/g, "").trim(),
-      price: good.goodsPrice,
-      imgSrc: good.goodsUrl
-        ? `http://pic.hnzczy.cn/${good.goodsUrl}`
-        : "/images/placeholder-food.png",
-      imgAlt: good.goodsName,
-      description: good.goodsDesc || "",
-      vendingGoodUuid: good.uuid,
-      machinePrice: good.goodsPrice,
-      machineStock: true,
-    }));
+    return machineGoods
+      .filter((good: any) => {
+        // Filter out items with no stock if presentNumber is available
+        if (good.presentNumber !== undefined && good.presentNumber <= 0) return false;
+        return true;
+      })
+      .map((good: any) => ({
+        id: good.uuid,
+        heading: (good.goodsName || "").replace(/\*/g, "").trim(),
+        price: good.goodsPrice,
+        imgSrc: good.goodsUrl
+          ? `http://pic.hnzczy.cn/${good.goodsUrl}`
+          : "/images/placeholder-food.png",
+        imgAlt: good.goodsName,
+        description: good.goodsDesc || "",
+        vendingGoodUuid: good.uuid,
+        machinePrice: good.goodsPrice,
+        machineStock: true,
+      }));
   }, [machineGoods]);
 
   // OPTION APIs
@@ -681,6 +691,8 @@ const OrderNow = () => {
       items: itemsToSend,
       current_step: nextStep,
     };
+
+    console.log("🛒 Confirming Order Payload:", JSON.stringify(payload, null, 2));
 
     try {
       await axios.post(`${baseUrl}/api/vending/cart/`, payload, authHeaders);
@@ -1477,8 +1489,9 @@ const OrderNow = () => {
 
                 <div className="p-4 flex flex-col sm:flex-row gap-3">
                   <button
-                    className="w-full bg-[#054A86] text-white rounded-lg py-2 font-medium"
+                    className={`w-full rounded-lg py-2 font-medium ${time ? "bg-[#054A86] text-white" : "bg-gray-300 text-gray-500 cursor-not-allowed"}`}
                     onClick={handleConfirmStep}
+                    disabled={!time}
                   >
                     Confirm
                   </button>

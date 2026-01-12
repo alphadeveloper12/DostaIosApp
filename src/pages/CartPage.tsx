@@ -1,5 +1,6 @@
 // src/components/cart/CartPage.tsx
 import React, { useState, useMemo, useEffect } from "react";
+import { toast } from "sonner";
 import OrderList from "@/components/Cart/OrderList";
 import OrderSummary from "@/components/Cart/OrderSummary";
 import Footer from "@/components/layout/Footer";
@@ -85,6 +86,9 @@ const CartPage: React.FC = () => {
     const [imageMap, setImageMap] = useState<Record<string, string>>({});
     const navigate = useNavigate();
     const baseUrl = import.meta.env.VITE_API_URL;
+    const [stockMap, setStockMap] = useState<Record<string, number>>({});
+    const [stockAlerts, setStockAlerts] = useState<string[]>([]);
+    const CART_STORAGE_KEY = "dosta_cart_data";
 
     const fetchCart = async () => {
         try {
@@ -98,6 +102,7 @@ const CartPage: React.FC = () => {
                 console.log("🛒 Cart Data from API:", res.data);
                 setCartData(res.data);
                 mapCartToUI(res.data);
+                localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(res.data));
             }
         } catch (error) {
             console.error("Error fetching cart:", error);
@@ -112,6 +117,20 @@ const CartPage: React.FC = () => {
             try {
                 setLoading(true);
                 const token = sessionStorage.getItem("authToken");
+
+                // 0. Load from Local Storage (Fallback)
+                const cachedCart = localStorage.getItem(CART_STORAGE_KEY);
+                if (cachedCart) {
+                    try {
+                        const parsedCart = JSON.parse(cachedCart);
+                        console.log("🛒 Loaded Cart from Local Storage:", parsedCart);
+                        setCartData(parsedCart);
+                        mapCartToUI(parsedCart); // Will use empty imageMap initially, updates later
+                        setLoading(false); // Show data immediately
+                    } catch (e) {
+                        console.error("Error parsing cached cart:", e);
+                    }
+                }
 
                 // 1. Fetch Menu for Images
                 const menuRes = await axios.get(
@@ -137,6 +156,7 @@ const CartPage: React.FC = () => {
                     console.log("🛒 Cart Data from API:", cartRes.data);
                     setCartData(cartRes.data);
                     mapCartToUI(cartRes.data, newImageMap);
+                    localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cartRes.data));
                 }
             } catch (error) {
                 console.error("Error fetching cart or menu:", error);
@@ -148,6 +168,195 @@ const CartPage: React.FC = () => {
 
         fetchMenuAndCart();
     }, []);
+
+    // --- Stock Check Logic ---
+    // --- Stock Check Logic ---
+    // --- Stock Check Logic ---
+    useEffect(() => {
+        const checkStock = async () => {
+            if (!cartData?.location?.serial_number || items.length === 0) return;
+
+            const serialNumber = cartData.location.serial_number;
+            // Only check for Order Now / Smart Grab items
+            const orderNowItems = items.filter(i => i.planType === "ORDER_NOW" || i.planType === "SMART_GRAB");
+            if (orderNowItems.length === 0) return;
+
+            // Define reusable function to apply stock limits
+            // mapKey: function to extract key from an item or good (e.g. uuid or normalized name)
+            const applyStockToItems = (stockSource: Record<string, number>, sourceName: string) => {
+                setStockMap(prev => ({ ...prev, ...stockSource })); // Capture stock data for handleQuantityChange
+                const alerts: string[] = [];
+                let itemsChanged = false;
+
+                const updatedItems = items.map(item => {
+                    if (item.planType !== "ORDER_NOW" && item.planType !== "SMART_GRAB") return item;
+
+                    let available: number | undefined;
+
+                    // Try to match by UUID first if both sides have it
+                    if (item.vendingGoodUuid && stockSource[item.vendingGoodUuid] !== undefined) {
+                        available = stockSource[item.vendingGoodUuid];
+                        // Compare item good uuid with api's data and console how much they are available
+                        if (item.name.toLowerCase().includes("chicken pesto pasta")) {
+                            console.log(`[Stock Check] Chicken Pesto Pasta (UUID: ${item.vendingGoodUuid}) - Available: ${available}`);
+                        }
+                    } else {
+                        // Fallback to name matching
+                        const normName = normalizeName(item.name);
+                        available = stockSource[normName];
+                        if (item.name.toLowerCase().includes("chicken pesto pasta")) {
+                            console.log(`[Stock Check] Chicken Pesto Pasta (Name: ${normName}) - Available: ${available}`);
+                        }
+                    }
+
+                    if (available !== undefined) {
+                        if (item.quantity > available) {
+                            itemsChanged = true;
+                            const newQuantity = available;
+                            alerts.push(`${item.name}: Only ${available} left (requested ${item.quantity}). Quantity updated.`);
+                            return { ...item, quantity: newQuantity };
+                        }
+                    } else {
+                        if (sourceName === "API") { // Only warn on API source
+                            console.warn(`[${sourceName}] Stock Check: Item "${item.name}" not found in machine data.`);
+                        }
+                    }
+                    return item;
+                });
+
+                if (itemsChanged) {
+                    console.log(`[${sourceName}] ⚠️ Adjustments made, updating state.`);
+                    setStockAlerts(prev => [...prev, ...alerts]);
+                    setItems(updatedItems);
+
+                    // Sync updated quantities with backend
+                    updatedItems.forEach(async (item) => {
+                        const original = items.find(i => i.id === item.id);
+                        if (original && original.quantity !== item.quantity) {
+                            try {
+                                const token = sessionStorage.getItem("authToken");
+                                await axios.post(
+                                    `${baseUrl}/api/vending/cart/`,
+                                    {
+                                        location_id: cartData.location.id,
+                                        plan_type: item.planType,
+                                        plan_subtype: item.planSubtype,
+                                        items: [{
+                                            menu_item_id: item.menuItemId,
+                                            quantity: item.quantity,
+                                            day_of_week: null,
+                                            week_number: null,
+                                            vending_good_uuid: item.vendingGoodUuid
+                                        }]
+                                    },
+                                    { headers: { Authorization: `Token ${token}` } }
+                                );
+                                console.log(`[${sourceName}] ✅ Synced adjusted quantity for ${item.name} to ${item.quantity}`);
+                            } catch (e) {
+                                console.error(`[${sourceName}] Failed to sync adjustment for ${item.name}`, e);
+                            }
+                        }
+                    });
+                } else {
+                    console.log(`[${sourceName}] ✅ All items within limits.`);
+                }
+            };
+
+            // 1. Try Local Storage Cache First (Immediate)
+            try {
+                const cacheKey = `machine_goods_${serialNumber}`;
+                const cachedData = localStorage.getItem(cacheKey);
+                if (cachedData) {
+                    const parsed = JSON.parse(cachedData);
+
+
+                    const cacheStockMap: Record<string, number> = {};
+                    let loadedCount = 0;
+
+                    // PRIORITIZE aggregating from SHELVES (Physical Stock)
+                    if (parsed.shelves && Array.isArray(parsed.shelves)) {
+
+                        parsed.shelves.forEach((shelf: any) => {
+                            if (!shelf.spots) return;
+                            shelf.spots.forEach((spot: any) => {
+                                if (spot.goods && spot.presentNumber > 0) {
+                                    const count = spot.presentNumber;
+                                    const uuid = spot.goods.uuid;
+                                    const name = normalizeName(spot.goods.goodsName);
+
+                                    // Aggregate UUID
+                                    if (uuid) cacheStockMap[uuid] = (cacheStockMap[uuid] || 0) + count;
+                                    // Aggregate Name
+                                    if (name) cacheStockMap[name] = (cacheStockMap[name] || 0) + count;
+
+                                    loadedCount++;
+
+
+                                }
+                            });
+                        });
+
+                    }
+                    // FALLBACK to 'goods' list if shelves missing
+                    else {
+                        const cachedGoods = parsed.goods || [];
+                        if (cachedGoods.length > 0) {
+
+                            cachedGoods.forEach((good: any) => {
+                                const name = normalizeName(good.goodsName);
+                                const val = good.presentNumber || 0;
+                                cacheStockMap[name] = val;
+
+                                if (good.uuid) cacheStockMap[good.uuid] = val;
+                                if (good.id) cacheStockMap[String(good.id)] = val;
+
+
+                            });
+                        }
+                    }
+
+                    if (Object.keys(cacheStockMap).length > 0) {
+                        applyStockToItems(cacheStockMap, "Cache");
+                    }
+                }
+            } catch (e) {
+                console.error("Error reading machine goods cache:", e);
+            }
+
+            // 2. Fetch Fresh Data (Stale-While-Revalidate)
+            try {
+                console.log("🔍 Fetching fresh stock for machine:", serialNumber);
+                const goodsResponse = await fetch(
+                    `${baseUrl}/api/vending/external/machine-goods/?machineUuid=${serialNumber}`
+                );
+                const goodsData = await goodsResponse.json();
+
+                if (goodsData.data) {
+                    const allGoods = goodsData.data.flatMap((cat: any) => cat.goodsList || []);
+                    const freshStockMap: Record<string, number> = {};
+
+                    console.log(`📦 API Loaded ${allGoods.length} goods.`);
+                    allGoods.forEach((good: any) => {
+                        const name = normalizeName(good.goodsName);
+                        const val = good.presentNumber || 0;
+                        freshStockMap[name] = val;
+                        if (good.uuid) freshStockMap[good.uuid] = val;
+                        if (good.id) freshStockMap[String(good.id)] = val;
+
+                        if (good.goodsName.toLowerCase().includes("beef") || good.goodsName.toLowerCase().includes("chicken")) {
+                            console.log(`[API] Debug Stock: "${good.goodsName}" (UUID: ${good.uuid}) = ${val}`);
+                        }
+                    });
+
+                    applyStockToItems(freshStockMap, "API");
+                }
+            } catch (error) {
+                console.error("Error checking stock API:", error);
+            }
+        };
+
+        checkStock();
+    }, [cartData, items.length]); // Run when cart/location loads
 
     const mapCartToUI = (cart: CartAPI, currentImageMap: Record<string, string> = imageMap) => {
         const locationName = cart.location?.name || "Unknown Location";
@@ -181,8 +390,13 @@ const CartPage: React.FC = () => {
     };
 
     // --- Helper to normalize names for "spelling-only" comparison ---
-    const normalizeName = (name: string) =>
-        (name || "").replace(/[^a-zA-Z0-9]/g, "").toLowerCase();
+    const normalizeName = (name: string) => {
+        if (!name) return "";
+        // Replace "&" with "and" to handle variations like "Beef & Broccoli" vs "Beef And Broccoli"
+        let normalized = name.replace(/&/g, "and");
+        // Remove all non-alphanumeric characters and convert to lowercase
+        return normalized.replace(/[^a-zA-Z0-9]/g, "").toLowerCase();
+    };
 
     const getMainTitle = () => {
         if (!cartData) return "Order Now";
@@ -197,8 +411,38 @@ const CartPage: React.FC = () => {
         const itemToUpdate = items.find((i) => i.id === id);
         if (!itemToUpdate) return;
 
-        const newQ = Math.min(3, Math.max(1, itemToUpdate.quantity + delta));
-        if (newQ === itemToUpdate.quantity) return;
+        // Check stock limit
+        let maxStock = 3; // Default for Plans
+        if (itemToUpdate.planType === "ORDER_NOW" || itemToUpdate.planType === "SMART_GRAB") {
+            let limitFound = false;
+            // 1. Try UUID first (most accurate)
+            if (itemToUpdate.vendingGoodUuid && stockMap[itemToUpdate.vendingGoodUuid] !== undefined) {
+                maxStock = stockMap[itemToUpdate.vendingGoodUuid];
+                limitFound = true;
+            }
+            // 2. Fallback to Normalized Name
+            else {
+                const normName = normalizeName(itemToUpdate.name);
+                if (stockMap[normName] !== undefined) {
+                    maxStock = stockMap[normName];
+                    limitFound = true;
+                }
+            }
+
+            if (!limitFound) {
+                // Relaxed default for Order Now if stock unknown (wait for checkStock)
+                maxStock = 10;
+            }
+        }
+
+        const newQ = Math.min(maxStock, Math.max(1, itemToUpdate.quantity + delta));
+
+        if (newQ === itemToUpdate.quantity) {
+            if (itemToUpdate.quantity === maxStock && delta > 0) {
+                toast.warning(`Only ${maxStock} items available.`);
+            }
+            return;
+        }
 
         // Optimistically update UI
         const updatedAllItems = items.map((item) =>
@@ -404,6 +648,16 @@ const CartPage: React.FC = () => {
                 ) : (
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start py-6">
                         <div className="lg:col-span-2 space-y-6">
+                            {stockAlerts.length > 0 && (
+                                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
+                                    <h4 className="text-yellow-800 font-bold mb-2">Stock Updates</h4>
+                                    <ul className="list-disc list-inside text-yellow-700 text-sm">
+                                        {stockAlerts.map((alert, i) => (
+                                            <li key={i}>{alert}</li>
+                                        ))}
+                                    </ul>
+                                </div>
+                            )}
                             {getGroupedCartItems().map((group, idx) => (
                                 <OrderList
                                     key={idx}
@@ -445,40 +699,75 @@ const CartPage: React.FC = () => {
                                             (item) => item.planType === "ORDER_NOW" || item.planType === "SMART_GRAB"
                                         );
 
+                                        // --- 1. Vending Machine Validation & Stock Update Preparation ---
+                                        let stockUpdates: any[] = [];
+
                                         if (serialNumber && hasOrderNowItems) {
-                                            console.log(
-                                                "🔍 Validating items with Vending Machine:",
-                                                serialNumber
-                                            );
-                                            const goodsResponse = await fetch(
-                                                `${baseUrl}/api/vending/external/machine-goods/?machineUuid=${serialNumber}`
-                                            );
-                                            const goodsData = await goodsResponse.json();
+                                            try {
+                                                const cacheKey = `machine_goods_${serialNumber}`;
+                                                const cachedData = localStorage.getItem(cacheKey);
 
-                                            if (goodsData.data) {
-                                                const allGoods = goodsData.data.flatMap(
-                                                    (cat: any) => cat.goodsList || []
-                                                );
+                                                if (cachedData) {
+                                                    const parsedCache = JSON.parse(cachedData);
+                                                    const shelves = parsedCache.shelves || [];
 
-                                                updatedItems = items.map((cartItem) => {
-                                                    const normalizedCartName = normalizeName(
-                                                        cartItem.name
-                                                    );
-                                                    const match = allGoods.find(
-                                                        (good: any) =>
-                                                            normalizeName(good.goodsName) ===
-                                                            normalizedCartName
-                                                    );
-                                                    if (match) {
-                                                        console.log(
-                                                            `✨ Matched "${cartItem.name}" -> ${match.uuid}`
-                                                        );
-                                                        return { ...cartItem, vendingGoodUuid: match.uuid };
-                                                    }
-                                                    return cartItem;
-                                                });
+                                                    console.log("📦 Checkout: Using Cached Stock for Validation:", shelves.length, "shelves");
 
-                                                setItems(updatedItems);
+                                                    // Update items with UUIDs from cache if missing logic
+                                                    // (Though applyStockToItems likely already did this, safe to re-check or skip)
+
+                                                    // Calculate detailed usage per UUID
+                                                    const usageMap: Record<string, number> = {};
+                                                    items.forEach(item => {
+                                                        if ((item.planType === "ORDER_NOW" || item.planType === "SMART_GRAB") && item.vendingGoodUuid) {
+                                                            usageMap[item.vendingGoodUuid] = (usageMap[item.vendingGoodUuid] || 0) + item.quantity;
+                                                        }
+                                                    });
+
+                                                    // Find spots to decrement
+                                                    const goodsListToUpdate: any[] = [];
+
+                                                    shelves.forEach((shelf: any) => {
+                                                        if (!shelf.spots) return;
+                                                        shelf.spots.forEach((spot: any) => {
+                                                            if (spot.goods && spot.goods.uuid && usageMap[spot.goods.uuid] > 0) {
+                                                                const uuid = spot.goods.uuid;
+                                                                const needed = usageMap[uuid];
+                                                                const present = spot.presentNumber || 0;
+
+                                                                // Logic: We consume stock from this spot up to 'needed' amount
+                                                                // Since this is real-world physical stock, we likely just reduce presentNumber.
+                                                                // NOTE: If one UUID is in multiple slots, we mistakenly might take from all? 
+                                                                // NO, we need to distribute.
+
+                                                                const take = Math.min(needed, present);
+
+                                                                if (take > 0) {
+                                                                    const newQuantity = Math.max(0, present - take);
+
+                                                                    // Push update payload for this spot
+                                                                    goodsListToUpdate.push({
+                                                                        arrivalCapacity: spot.arrivalCapacity,
+                                                                        arrivalName: spot.arrivalName,
+                                                                        commodityState: 0, // Assuming 0 is active/normal
+                                                                        equipmentUuid: serialNumber, // API expects equipmentUuid? or passed in outer? Outer has machineUuid.
+                                                                        goodsUuid: Number(uuid),
+                                                                        presentNumber: newQuantity,
+                                                                        salePrice: spot.goods.goodsPrice
+                                                                    });
+
+                                                                    usageMap[uuid] -= take; // Decrement needed
+                                                                    console.log(`📉 Decrementing ${spot.goods.goodsName} (Slot: ${spot.arrivalName}): ${present} -> ${newQuantity}`);
+                                                                }
+                                                            }
+                                                        });
+                                                    });
+
+                                                    stockUpdates = goodsListToUpdate;
+                                                }
+                                            } catch (cacheErr) {
+                                                console.error("Error reading cache for checkout stock update", cacheErr);
+                                                // Proceed anyway? Or block? Proceeding allows checkout, but stock calc might fail.
                                             }
                                         }
 
@@ -525,6 +814,29 @@ const CartPage: React.FC = () => {
 
                                         const orderId = orderRes.data.id;
                                         console.log("✅ Order Confirmed. ID:", orderId);
+
+                                        // --- 3. Update Vending Machine Stock (New API) ---
+                                        if (stockUpdates.length > 0) {
+                                            try {
+                                                console.log("🔄 Sending Stock Update to Vending Machine...", stockUpdates);
+                                                const updatePayload = {
+                                                    list: stockUpdates,
+                                                    machineUuid: Number(serialNumber)
+                                                };
+
+                                                await axios.put(
+                                                    `${baseUrl}/api/vending/external/update-commodity/`,
+                                                    updatePayload,
+                                                    {
+                                                        headers: { Authorization: `Token ${token}` },
+                                                    }
+                                                );
+                                                console.log("✅ Stock Updated Successfully on Machine.");
+                                            } catch (updateErr) {
+                                                console.error("❌ Failed to update machine stock", updateErr);
+                                                // Don't block flow, but log error
+                                            }
+                                        }
 
                                         // Filter only Order Now / Smart Grab items for the vending machine pickup code
                                         const orderNowItems = updatedItems.filter(

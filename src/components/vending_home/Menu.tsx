@@ -96,19 +96,21 @@ const Menu: React.FC<MenuProps> = ({
                             ...menuItem,
                             vendingGoodUuid: spot.goods.uuid,
                             price: `AED ${parseFloat(spot.goods.goodsPrice).toFixed(2)}`,
-                            // Use machine quantity
-                            quantity: spot.presentNumber
+                            // Initialize quantity to 1 for cart addition
+                            quantity: 1,
+                            // Track total available stock for this spot
+                            availableQuantity: spot.presentNumber
                         }
                     };
                 }
 
-                // If not in daily menu, do not show it
+                // If not in daily menu or sold out, do not show it
                 return {
                     ...spot,
                     enrichedItem: null
                 };
             })
-        })).filter(shelf => shelf.spots.some((spot: any) => spot.enrichedItem !== null));
+        })).filter(shelf => shelf.spots.some((spot: any) => spot.enrichedItem !== null && spot.presentNumber > 0));
 
         foodData.forEach((item) => {
             const normalizedItemName = normalizeName(item.heading);
@@ -123,6 +125,10 @@ const Menu: React.FC<MenuProps> = ({
                 // Log matches for debugging
                 if (normalizedGoodName === normalizedItemName) {
                     matchedUuid = typeof good === "object" ? good.uuid : undefined;
+                    // Check if item is in stock (if presentNumber is available)
+                    if (typeof good === "object" && good.presentNumber !== undefined && good.presentNumber <= 0) {
+                        return false;
+                    }
                     return true;
                 }
                 return false;
@@ -152,7 +158,7 @@ const Menu: React.FC<MenuProps> = ({
         );
 
         const totalAvailableCount = processedShelves.length > 0
-            ? processedShelves.reduce((acc, shelf) => acc + shelf.spots.filter((s: any) => s.enrichedItem !== null).length, 0)
+            ? processedShelves.reduce((acc, shelf) => acc + shelf.spots.filter((s: any) => s.enrichedItem !== null && s.presentNumber > 0).length, 0)
             : uniqueAvailable.length;
 
         return {
@@ -302,8 +308,8 @@ const Menu: React.FC<MenuProps> = ({
                 }
             });
         } else {
-            // If no machine data, default to a reasonable limit or 0
-            totalAvailable = 3;
+            // If no machine data, use item's own availableQuantity if present, else default
+            totalAvailable = (item as any).availableQuantity ?? 3;
         }
 
         setCart((prevCart) => {

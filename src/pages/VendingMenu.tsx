@@ -253,13 +253,17 @@ const VendingMenu = () => {
                 ...menuItem,
                 vendingGoodUuid: spot.goods.uuid,
                 price: parseFloat(spot.goods.goodsPrice).toFixed(2),
-                quantity: spot.presentNumber,
+                // Initialize quantity to 1 for cart addition
+                quantity: 1,
+                // Track total available stock for this spot
+                availableQuantity: spot.presentNumber,
                 image_url: menuItem.image_url || "/images/placeholder_food.png"
               }
             };
           }
           return { ...spot, enrichedItem: null };
-        }).filter((spot: any) => spot.enrichedItem !== null)
+          return { ...spot, enrichedItem: null };
+        }).filter((spot: any) => spot.enrichedItem !== null && spot.presentNumber > 0)
       })).filter(shelf => shelf.spots.length > 0);
       const totalAvailableCount = processedShelves.reduce((acc, shelf) => acc + shelf.spots.length, 0);
       return { currentDayItems: processedShelves.length > 0 ? [] : items, shelfData: processedShelves, totalAvailableCount };
@@ -381,6 +385,8 @@ const VendingMenu = () => {
         plan_subtype: "NONE",
         items: updatedItems
       };
+
+      console.log("🛒 Adding to Cart Payload:", JSON.stringify(payload, null, 2));
 
       const postRes = await fetch(`${baseUrl}/api/vending/cart/`, {
         method: "POST",
