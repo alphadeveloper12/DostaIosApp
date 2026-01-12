@@ -54,7 +54,11 @@ const BookingSummary: React.FC<BookingSummaryProps> = ({
    .includes("platter");
 
   if (isPlatters) {
-   const baseTotal = selectedMenuItems.length * 600;
+   const budgetPrice = selectedBudget.price_range
+    ? parseFloat(selectedBudget.price_range.replace("AED", "").trim())
+    : 0;
+   const totalPerHead = budgetPrice * selectedMenuItems.length;
+   const baseTotal = totalPerHead * guestCount;
    const vat = baseTotal * 0.15;
    const total = baseTotal + vat;
    return { baseTotal, vat, total };
@@ -408,34 +412,50 @@ const BookingSummary: React.FC<BookingSummaryProps> = ({
        </h3>
 
        <div className="space-y-3 mb-6">
-        {selectedServiceStyles?.name?.toLowerCase().includes("live station") ? (
+        {selectedServiceStyles?.name?.toLowerCase().includes("live station") ||
+        selectedServiceStyles?.name?.toLowerCase().includes("platter") ? (
          <>
-          {selectedMenuItems
-           .filter((item) => item.course === "Live Station")
-           .map((item) => {
-            const price = Number(item.price) || 0;
-            const itemTotal = price * guestCount;
-            return (
-             <div key={item.id} className="flex justify-between text-sm">
-              <span
-               style={{
-                fontSize: "14px",
-                fontWeight: "400",
-                color: "#545563",
-               }}>
-               {item.name} ({price} x {guestCount})
-              </span>
-              <span
-               style={{
-                fontSize: "14px",
-                fontWeight: "600",
-                color: "#2B2B43",
-               }}>
-               AED{itemTotal.toFixed(2)}
-              </span>
-             </div>
-            );
-           })}
+          {selectedMenuItems.map((item) => {
+           // Filter if we strictly want only specific courses, but for Platter all items are Platter usually
+           if (
+            !selectedServiceStyles?.name
+             ?.toLowerCase()
+             .includes("live station") &&
+            !selectedServiceStyles?.name?.toLowerCase().includes("platter")
+           )
+            return null; // Fallback
+
+           // Dynamic Price Logic
+           let price = Number(item.price) || 0;
+           if (selectedServiceStyles?.name?.toLowerCase().includes("platter")) {
+            // Platter uses Budget Price for calculation display
+            price = selectedBudget.price_range
+             ? parseFloat(selectedBudget.price_range.replace("AED", "").trim())
+             : 0;
+           }
+
+           const itemTotal = price * guestCount;
+           return (
+            <div key={item.id} className="flex justify-between text-sm">
+             <span
+              style={{
+               fontSize: "14px",
+               fontWeight: "400",
+               color: "#545563",
+              }}>
+              {item.name} ({price} x {guestCount})
+             </span>
+             <span
+              style={{
+               fontSize: "14px",
+               fontWeight: "600",
+               color: "#2B2B43",
+              }}>
+              AED{itemTotal.toFixed(2)}
+             </span>
+            </div>
+           );
+          })}
           <div className="border-t border-gray-100 my-2"></div>
          </>
         ) : (
