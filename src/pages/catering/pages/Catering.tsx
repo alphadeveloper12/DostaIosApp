@@ -32,6 +32,7 @@ const Catering = () => {
  const [selectedEvent, setSelectedEvent] = useState<{
   id: string | null;
   name: string | null;
+  description?: string;
  } | null>(null);
  const [selectedDetailedEventName, setSelectedDetailedEventName] = useState<{
   id: string | null;
@@ -344,7 +345,6 @@ const Catering = () => {
          selectedPax={selectedPax}
          setSelectedPax={setSelectedPax}
          selectedServiceStyles={selectedServiceStyles}
-         selectedMenuDescription={selectedMenuDescription}
          selectedCuisines={selectedCuisines}
          guestCount={guestCount}
         />
