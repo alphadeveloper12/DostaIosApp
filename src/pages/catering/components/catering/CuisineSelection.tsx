@@ -178,6 +178,7 @@ const CuisineSelection: React.FC<CuisineSelectionProps> = ({
         <img
          src={cuisine.image_url}
          alt={cuisine.name}
+         className="rounded-[12px]"
          style={{
           width: "60px",
           height: "60px",
