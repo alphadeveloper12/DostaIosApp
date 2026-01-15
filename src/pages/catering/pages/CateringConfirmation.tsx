@@ -155,6 +155,11 @@ const CateringConfirmation = () => {
             <ItemLink>
              {orderDetails?.service_style || "Service Style"}
             </ItemLink>
+            {extraDetails?.eventType?.description && (
+             <div className="text-sm text-[#545563] font-normal">
+              {extraDetails.eventType.description}
+             </div>
+            )}
            </div>
           }
          />
@@ -193,42 +198,72 @@ const CateringConfirmation = () => {
               },
               {}
              )
-            ).map(([course, items]: any) => (
-             <div key={course} className="mb-4 last:mb-0">
-              <h4
-               style={{
-                fontSize: "16px",
-                fontWeight: "700",
-                color: "#056AC1",
-                marginBottom: "4px",
-               }}>
-               {course}
-              </h4>
-              <ul className="pl-0 space-y-1">
-               {items.map((item: any) => (
-                <li
-                 key={item.name}
-                 style={{
-                  fontSize: "14px",
-                  fontWeight: "400",
-                  color: "#545563",
-                 }}>
-                 <span className="font-semibold">{item.name}</span>
-                 {item.quantity > 1 && (
-                  <span className="text-xs text-gray-500 ml-1">
-                   (x{item.quantity})
-                  </span>
-                 )}
-                 {item.description && (
-                  <p className="text-xs text-gray-500 mt-0.5">
-                   {item.description}
-                  </p>
-                 )}
-                </li>
-               ))}
-              </ul>
-             </div>
-            ))}
+            )
+             .sort(([courseA], [courseB]) => {
+              const getPriority = (c: string) => {
+               const name = c.toLowerCase();
+
+               // High Priority (Start)
+               if (name.includes("salad")) return 10;
+               if (name.includes("cold appetizer")) return 20;
+               if (name.includes("hot appetizer")) return 30;
+               if (name.includes("starter") || name.includes("appetizer"))
+                return 40;
+               if (name.includes("soup")) return 50;
+
+               // Low Priority (End - Strict)
+               if (name.includes("main")) return 100;
+               if (name.includes("dessert")) return 110;
+               if (name.includes("beverage") || name.includes("drink"))
+                return 120;
+
+               // Medium Priority (Middle)
+               return 60;
+              };
+
+              const pA = getPriority(courseA as string);
+              const pB = getPriority(courseB as string);
+
+              if (pA !== pB) return pA - pB;
+
+              return (courseA as string).localeCompare(courseB as string);
+             })
+             .map(([course, items]: any) => (
+              <div key={course} className="mb-4 last:mb-0">
+               <h4
+                style={{
+                 fontSize: "16px",
+                 fontWeight: "700",
+                 color: "#056AC1",
+                 marginBottom: "4px",
+                }}>
+                {course}
+               </h4>
+               <ul className="pl-0 space-y-1">
+                {items.map((item: any) => (
+                 <li
+                  key={item.name}
+                  style={{
+                   fontSize: "14px",
+                   fontWeight: "400",
+                   color: "#545563",
+                  }}>
+                  <span className="font-semibold">{item.name}</span>
+                  {item.quantity > 1 && (
+                   <span className="text-xs text-gray-500 ml-1">
+                    (x{item.quantity})
+                   </span>
+                  )}
+                  {item.description && (
+                   <p className="text-xs text-gray-500 mt-0.5">
+                    {item.description}
+                   </p>
+                  )}
+                 </li>
+                ))}
+               </ul>
+              </div>
+             ))}
            </div>
           ) : (
            <div className="text-base text-[#545563]">Not Selected</div>
