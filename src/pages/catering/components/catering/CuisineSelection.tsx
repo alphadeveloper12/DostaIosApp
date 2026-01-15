@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { Button } from "../ui/button";
 import Shrimmer from "@/components/ui/Shrimmer";
+import ImageWithShimmer from "@/components/ui/ImageWithShimmer";
 import LazyLoad from "@/components/ui/LazyLoad";
 
 interface Cuisine {
@@ -175,10 +176,10 @@ const CuisineSelection: React.FC<CuisineSelectionProps> = ({
          alignItems: "center",
          justifyContent: "flex-start",
         }}>
-        <img
+        <ImageWithShimmer
          src={cuisine.image_url}
          alt={cuisine.name}
-         className="rounded-[12px]"
+         wrapperClassName="rounded-[12px] shrink-0"
          style={{
           width: "60px",
           height: "60px",

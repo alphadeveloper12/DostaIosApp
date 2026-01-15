@@ -4,6 +4,7 @@ import { Button } from "../ui/button";
 import LazyLoad from "@/components/ui/LazyLoad";
 import { ChevronRight, Check } from "lucide-react";
 import Shrimmer from "@/components/ui/Shrimmer";
+import ImageWithShimmer from "@/components/ui/ImageWithShimmer";
 
 interface CoffeeBreakItem {
  id: number;
@@ -233,10 +234,11 @@ const CoffeeBreakMenu: React.FC<CoffeeBreakMenuProps> = ({
                                 `}>
               {/* Image Placeholder */}
               <div className="relative aspect-[4/3] rounded-xl overflow-hidden mb-3 bg-gray-200">
-               <img
+               <ImageWithShimmer
                 src={imageUrl}
                 alt={item.name}
                 className="w-full h-full object-cover"
+                wrapperClassName="w-full h-full"
                />
                <div
                 className="absolute top-0 left-0 bg-[#8BC34A] text-primary-dark text-[10px] font-bold h-8 w-[75px] flex items-center justify-center rounded-br-[12px]"

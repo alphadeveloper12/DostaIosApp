@@ -3,6 +3,7 @@ import axios from "axios";
 import { Button } from "../ui/button";
 import LazyLoad from "@/components/ui/LazyLoad";
 import Shrimmer from "@/components/ui/Shrimmer";
+import ImageWithShimmer from "@/components/ui/ImageWithShimmer";
 
 interface MenuItem {
  id: string;
@@ -231,7 +232,7 @@ const CoursesMenu: React.FC<CoursesMenuProps> = ({
      if (!groups[courseId]) {
       groups[courseId] = {
        id: courseId,
-       title: coursesMap.get(courseId) || `Course ${courseId}`,
+       title: (coursesMap.get(courseId) as string) || `Course ${courseId}`,
        items: [],
       };
      }
@@ -326,11 +327,12 @@ const CoursesMenu: React.FC<CoursesMenuProps> = ({
                           `}>
             {/* Image Placeholder */}
             <div className="relative aspect-[4/3] rounded-xl overflow-hidden mb-3 bg-gray-200">
-             <img
+             <ImageWithShimmer
               src={item.image_url}
               alt={item.name}
               className="w-full h-full object-cover"
-              onError={(e) => {
+              wrapperClassName="w-full h-full"
+              onError={(e: any) => {
                (e.target as HTMLImageElement).src =
                 "https://placehold.co/400x300?text=Menu+Item"; // Fallback
               }}

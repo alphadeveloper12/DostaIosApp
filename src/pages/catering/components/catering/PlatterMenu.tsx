@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import Shrimmer from "@/components/ui/Shrimmer";
+import ImageWithShimmer from "@/components/ui/ImageWithShimmer";
 import { Button } from "@/components/ui/button";
 
 interface PlatterItem {
@@ -109,11 +110,12 @@ const PlatterMenu: React.FC<PlatterMenuProps> = ({
         `}>
         {/* Image Placeholder */}
         <div className="relative aspect-[4/3] rounded-xl overflow-hidden mb-3 bg-gray-200">
-         <img
+         <ImageWithShimmer
           src={item.image_url || "https://placehold.co/400x300?text=Platter"}
           alt={item.name}
           className="w-full h-full object-cover"
-          onError={(e) => {
+          wrapperClassName="w-full h-full"
+          onError={(e: any) => {
            (e.target as HTMLImageElement).src =
             "https://placehold.co/400x300?text=Menu+Item"; // Fallback
           }}
