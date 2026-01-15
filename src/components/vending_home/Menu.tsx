@@ -408,11 +408,11 @@ const Menu: React.FC<MenuProps> = ({
                 </div>
 
                 {/* --- Static Header (Mobile) --- */}
-                <div className="md:hidden mb-6 px-1">
-                    <h2 className="text-[22px] font-bold text-[#054A86] mb-1">
+                <div className="md:hidden mb-4 px-1">
+                    <h2 className="text-[20px] font-bold text-[#054A86] mb-0.5">
                         Choose Your Meal
                     </h2>
-                    <p className="text-[#545563] text-[14px] leading-[20px]">
+                    <p className="text-[#545563] text-[13px] leading-[18px]">
                         Choose your meal from our daily menu of {totalAvailableCount} chef-prepared meals
                     </p>
                     {machineGoods === null && (
@@ -443,12 +443,12 @@ const Menu: React.FC<MenuProps> = ({
                             {shelfData.length > 0 ? (
                                 <div className="space-y-12">
                                     {shelfData.map((shelf: any) => (
-                                        <div key={shelf.shelfIndex} className="bg-gray-50/50 rounded-[24px] p-6 md:p-8 border border-gray-100">
+                                        <div key={shelf.shelfIndex} className="bg-gray-50/50 rounded-[24px] p-4 md:p-8 border border-gray-100">
                                             <div className="flex items-center gap-3 mb-6">
                                                 <div className="w-2 h-8 bg-[#054A86] rounded-full"></div>
                                                 <h3 className="text-[24px] font-bold text-[#054A86]">{shelf.shelfName}</h3>
                                             </div>
-                                            <div className="grid grid-cols-12 md:flex md:gap-[24px] gap-[12px] flex-wrap">
+                                            <div className="grid grid-cols-2 md:flex md:gap-[24px] gap-[12px] flex-wrap">
                                                 {shelf.spots.filter((spot: any) => spot.enrichedItem !== null).map((spot: any, index: number) => {
                                                     const data = spot.enrichedItem;
                                                     const itemInCart = cart.find(
@@ -458,7 +458,7 @@ const Menu: React.FC<MenuProps> = ({
 
                                                     return (
                                                         <div key={index} className="relative">
-                                                            <div className="absolute -top-2 -left-2 z-10 bg-[#054A86] text-white text-[10px] font-bold px-2 py-1 rounded-full shadow-sm">
+                                                            <div className="absolute -top-1.5 -left-1.5 z-10 bg-[#054A86] text-white text-[9px] md:text-[10px] font-bold px-1.5 py-0.5 md:px-2 md:py-1 rounded-full shadow-sm">
                                                                 Spot {spot.arrivalName}
                                                             </div>
                                                             <div className={isSoldOut ? "opacity-60 grayscale-[0.5]" : ""}>
@@ -477,7 +477,7 @@ const Menu: React.FC<MenuProps> = ({
                                                                 </div>
                                                             )}
                                                             {!isSoldOut && spot.presentNumber < 5 && (
-                                                                <div className="absolute top-2 right-2 z-10 bg-orange-500 text-white text-[10px] font-bold px-2 py-1 rounded-full shadow-sm">
+                                                                <div className="absolute top-1.5 right-1.5 z-10 bg-orange-500 text-white text-[9px] md:text-[10px] font-bold px-1.5 py-0.5 md:px-2 md:py-1 rounded-full shadow-sm">
                                                                     Only {spot.presentNumber} left
                                                                 </div>
                                                             )}
@@ -506,16 +506,16 @@ const Menu: React.FC<MenuProps> = ({
                 </div>
 
                 {/* --- Sticky Footer (Mobile) --- */}
-                <div className="fixed bottom-[98px] left-4 right-4 z-40 md:hidden">
-                    <div className="bg-white p-5 shadow-[0_-10px_40px_rgba(0,0,0,0.15)] rounded-[24px] border border-gray-100">
+                <div className="fixed bottom-[94px] left-4 right-4 z-40 md:hidden">
+                    <div className="bg-white p-4 shadow-[0_-10px_40px_rgba(0,0,0,0.15)] rounded-[20px] border border-gray-100">
                         <div className="flex flex-col gap-4">
                             <div className="flex justify-between items-end px-1">
                                 <div className="flex flex-col gap-0.5">
-                                    <span className="text-[12px] text-gray-400 font-bold uppercase tracking-wider">
+                                    <span className="text-[11px] text-gray-400 font-bold uppercase tracking-wider">
                                         {totalMeals === 0 ? "No selected meals" : `${totalMeals} Selected`}
                                     </span>
-                                    <span className="text-[22px] font-bold text-[#054A86]">
-                                        Total: {totalMeals} Meals
+                                    <span className="text-[18px] font-bold text-[#054A86]">
+                                        Total: {totalMeals} {totalMeals === 1 ? 'Meal' : 'Meals'}
                                     </span>
                                 </div>
                                 {cart.length > 0 && (
@@ -528,13 +528,13 @@ const Menu: React.FC<MenuProps> = ({
                             </div>
                             {cart.length > 0 ? (
                                 <Button
-                                    className="bg-[#054A86] hover:bg-[#054A86]/90 text-white w-full py-7 rounded-[16px] text-[18px] font-bold shadow-lg shadow-[#054A86]/30 transition-all active:scale-[0.98]"
+                                    className="bg-[#054A86] hover:bg-[#054A86]/90 text-white w-full py-5 rounded-[12px] text-[16px] font-bold shadow-lg shadow-[#054A86]/30 transition-all active:scale-[0.98]"
                                     onClick={() => handleConfirmStep()}>
                                     Confirm and review
                                 </Button>
                             ) : (
                                 <Button
-                                    className="bg-[#F7F7F9] text-[#C7C8D2] w-full py-7 rounded-[16px] text-[18px] font-bold cursor-not-allowed"
+                                    className="bg-[#F7F7F9] text-[#C7C8D2] w-full py-5 rounded-[12px] text-[16px] font-bold cursor-not-allowed"
                                     disabled>
                                     Confirm and review
                                 </Button>

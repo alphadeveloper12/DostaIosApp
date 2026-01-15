@@ -276,6 +276,7 @@ const PlanWeekly: React.FC<MenuProps> = ({
       const menu = item.menu_item || {};
 
       const mappedItem: SelectedFoodItem = {
+        id: menu.id,
         imgSrc: menu.image_url,
         heading: menu.name,
         imgAlt: `food-${menu.id}`,
@@ -342,8 +343,8 @@ const PlanWeekly: React.FC<MenuProps> = ({
                     key={index} // Added key for list rendering
                     onClick={() => setTab1(index)}
                     className={` ${tab1 === index
-                        ? "bg-[#EAF5FF]  border-[#054A86]"
-                        : "bg-neutral-white border-[#C7C8D2]"
+                      ? "bg-[#EAF5FF]  border-[#054A86]"
+                      : "bg-neutral-white border-[#C7C8D2]"
                       } md:h-[56px] w-full md:w-[50%] h-auto max-md:py-[11px]  cursor-pointer text-center inline-flex items-center  justify-center rounded-[8px]  md:rounded-[16px] border-2 `}>
                     <span className="md:text-[16px] text-[14px] leading-[20px] font-[600] md:leading-[24px] md:font-[400]">
                       {data.feature}
@@ -385,8 +386,8 @@ const PlanWeekly: React.FC<MenuProps> = ({
                       key={index}
                       onClick={() => setTab(index)}
                       className={` ${tab === index
-                          ? "bg-[#EAF5FF] border-[#054A86]"
-                          : "bg-white border-[#C7C8D2]"
+                        ? "bg-[#EAF5FF] border-[#054A86]"
+                        : "bg-white border-[#C7C8D2]"
                         } md:h-[56px] h-[26px] cursor-pointer text-center inline-flex items-center w-full justify-center md:max-w-[153px] max-w-[80px] rounded-[8px] md:rounded-[16px] border-2 `}>
                       <span className="md:text-[16px] text-[12px] leading-[18px] md:leading-[24px] font-[400]">
                         {week?.day}
@@ -435,7 +436,7 @@ const PlanWeekly: React.FC<MenuProps> = ({
 
         {/* ... (Unchanged JSX for food grid) ... */}
         <div className="w-full h-full pb-4">
-          <div className="md:px-[30px] grid grid-cols-12  md:flex md:gap-[24px] gap-[12px] flex-wrap">
+          <div className="md:px-[30px] grid grid-cols-2 md:flex md:gap-[24px] gap-[12px] flex-wrap">
             {(menuByDay[currentDay] || []).map((data, index) => {
               const selectedItemData = currentDayItems.find(
                 (item) => item.imgAlt === data.imgAlt
@@ -446,16 +447,16 @@ const PlanWeekly: React.FC<MenuProps> = ({
                   key={index}
                   onClick={() => handleCardClick(data)}
                   className={`w-full border ${selectedItemData ? "border-[#054A86]" : "border-[#EDEEF2]"
-                    } max-w-[306px] max-md:col-span-6 bg-neutral-white rounded-[16px] px-3 pt-3 pb-5 sm:px-4 sm:pt-4 sm:pb-6 overflow-hidden cursor-pointer hover:shadow-lg transition-shadow`}>
+                    } max-w-[306px] bg-neutral-white rounded-[12px] md:rounded-[16px] px-2 pt-2 pb-4 sm:px-4 sm:pt-4 sm:pb-6 overflow-hidden cursor-pointer hover:shadow-lg transition-shadow`}>
                   <img
                     src={data.imgSrc}
                     alt={data.imgAlt}
                     className="block w-full md:h-auto h-[120px] rounded-[12px] sm:rounded-[16px] object-cover"
                   />
-                  <h3 className="text-[16px] leading-[24px] md:text-[24px] pt-3 pb-1 md:leading-[32px] font-[700] tracking-[0.1px] text-[#2B2B43]">
+                  <h3 className="text-[14px] leading-[20px] md:text-[24px] pt-2 pb-0.5 md:pt-3 md:pb-1 md:leading-[32px] font-[700] tracking-[0.1px] text-[#2B2B43] line-clamp-1">
                     {data.heading}
                   </h3>
-                  <p className="text-[14px] line-clamp-2 leading-[20px] font-[400] tracking-[0.2px] text-[#83859C]">
+                  <p className="text-[11px] md:text-[14px] line-clamp-2 leading-[16px] md:leading-[20px] font-[400] tracking-[0.2px] text-[#83859C]">
                     {data.description}
                   </p>
                   <div className="flex justify-between items-center pt-2">
@@ -465,19 +466,19 @@ const PlanWeekly: React.FC<MenuProps> = ({
 
                     {selectedItemData ? (
                       <>
-                        <div className="flex items-center">
+                        <div className="flex items-center bg-[#EDEEF2] rounded-[6px] md:rounded-[8px] p-0.5">
                           <button
                             onClick={(e) => handleQuantityChange(e, data, -1)}
-                            className="p-1 text-black bg-[#EDEEF2] rounded-[8px]">
-                            <MinusIcon className="w-3 h-3" />
+                            className="p-0.5 md:p-1 text-black">
+                            <MinusIcon className="w-2.5 h-2.5 md:w-3 h-3" />
                           </button>
-                          <span className="md:px-3 px-2 md:text-lg text-sm font-medium">
+                          <span className="px-1.5 md:px-3 text-[12px] md:text-lg font-[700] md:font-medium">
                             {selectedItemData.quantity}
                           </span>
                           <button
                             onClick={(e) => handleQuantityChange(e, data, 1)}
-                            className="p-1 text-black bg-[#EDEEF2] rounded-[8px]">
-                            <PlusIcon className="w-3 h-3" />
+                            className="p-0.5 md:p-1 text-black">
+                            <PlusIcon className="w-2.5 h-2.5 md:w-3 h-3" />
                           </button>
                         </div>
                       </>
@@ -714,8 +715,8 @@ const PlanWeekly: React.FC<MenuProps> = ({
                         <div
                           key={plan.id}
                           className={` ${selectedPlan?.id === plan.id
-                              ? "bg-[#EAF5FF]  border border-[#054A86]"
-                              : "border border-[#EDEEF2]"
+                            ? "bg-[#EAF5FF]  border border-[#054A86]"
+                            : "border border-[#EDEEF2]"
                             } py-[10px] cursor-pointer  px-4 my-2  rounded-[8px]`}
                           onClick={() => setSelectedPlan(plan)} // Store the whole plan object
                         >

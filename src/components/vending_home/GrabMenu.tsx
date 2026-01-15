@@ -96,7 +96,7 @@ function MenuCard({
       <div
          onClick={() => onCardClick(data)}
          className={`w-full border ${itemInCart ? "border-[#054A86]" : "border-[#EDEEF2]"
-            } max-w-[306px] bg-neutral-white max-md:col-span-6 rounded-[16px] px-3 pt-3 pb-5 sm:px-4 sm:pt-4 sm:pb-6 overflow-hidden cursor-pointer hover:shadow-lg transition-shadow`}
+            } max-w-[306px] bg-neutral-white rounded-[12px] md:rounded-[16px] px-2 pt-2 pb-4 sm:px-4 sm:pt-4 sm:pb-6 overflow-hidden cursor-pointer hover:shadow-lg transition-shadow`}
       >
          <img
             src={data.imgSrc}
@@ -104,11 +104,11 @@ function MenuCard({
             className="block w-full md:h-auto h-[120px] rounded-[12px] sm:rounded-[16px] object-cover"
          />
 
-         <h3 className="text-[16px] leading-[24px] md:text-[24px] pt-3 pb-1 md:leading-[32px] font-[700] tracking-[0.1px] text-[#2B2B43]">
+         <h3 className="text-[14px] leading-[20px] md:text-[24px] pt-2 pb-0.5 md:pt-3 md:pb-1 md:leading-[32px] font-[700] tracking-[0.1px] text-[#2B2B43] line-clamp-1">
             {data.heading}
          </h3>
 
-         <p className="text-[14px] line-clamp-2 leading-[20px] font-[400] tracking-[0.2px] text-[#83859C]">
+         <p className="text-[11px] md:text-[14px] line-clamp-2 leading-[16px] md:leading-[20px] font-[400] tracking-[0.2px] text-[#83859C]">
             {data.description}
          </p>
 
@@ -118,25 +118,25 @@ function MenuCard({
             </h4>
 
             {qty > 0 ? (
-               <div className="flex items-center">
+               <div className="flex items-center bg-[#EDEEF2] rounded-[6px] md:rounded-[8px] p-0.5">
                   <button
                      onClick={(e) => onChangeQty(e, data, -1)}
-                     className="p-1 text-black bg-[#EDEEF2] rounded-[8px]"
+                     className="p-0.5 md:p-1 text-black"
                      aria-label="Decrease"
                   >
-                     <MinusIcon className="w-3 h-3" />
+                     <MinusIcon className="w-2.5 h-2.5 md:w-3 h-3" />
                   </button>
 
-                  <span className="md:px-3 px-2 md:text-lg text-sm font-medium">
+                  <span className="px-1.5 md:px-3 text-[12px] md:text-lg font-[700] md:font-medium">
                      {qty}
                   </span>
 
                   <button
                      onClick={(e) => onChangeQty(e, data, +1)}
-                     className="p-1 text-black bg-[#EDEEF2] rounded-[8px]"
+                     className="p-0.5 md:p-1 text-black"
                      aria-label="Increase"
                   >
-                     <PlusIcon className="w-3 h-3" />
+                     <PlusIcon className="w-2.5 h-2.5 md:w-3 h-3" />
                   </button>
                </div>
             ) : (
@@ -284,7 +284,7 @@ const GrabMenu: React.FC<GrabMenuProps> = ({
             {/* Cards */}
             <div className="w-full h-full pb-4">
                {itemsToDisplay.length > 0 ? (
-                  <div className="md:px-[30px] grid grid-cols-12 md:flex md:gap-[24px] gap-[12px] flex-wrap">
+                  <div className="md:px-[30px] grid grid-cols-2 md:flex md:gap-[24px] gap-[12px] flex-wrap">
                      {itemsToDisplay.map((data, index) => {
                         const itemInCart = cart.find((i) => i.imgAlt === data.imgAlt);
                         return (

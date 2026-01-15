@@ -71,6 +71,7 @@ export interface CartItemType {
     imageUrl: string;
     quantity: number;
     price: number;
+    dayOfWeek: string | null; // NEW: Day of week
     weekNumber: number | null; // For grouping
     vendingGoodUuid: string | null; // NEW: Good UUID
     planType: string;
@@ -244,8 +245,8 @@ const CartPage: React.FC = () => {
                                         items: [{
                                             menu_item_id: item.menuItemId,
                                             quantity: item.quantity,
-                                            day_of_week: null,
-                                            week_number: null,
+                                            day_of_week: item.dayOfWeek,
+                                            week_number: item.weekNumber,
                                             vending_good_uuid: item.vendingGoodUuid
                                         }]
                                     },
@@ -331,25 +332,53 @@ const CartPage: React.FC = () => {
                 );
                 const goodsData = await goodsResponse.json();
 
-                if (goodsData.data) {
-                    const allGoods = goodsData.data.flatMap((cat: any) => cat.goodsList || []);
-                    const freshStockMap: Record<string, number> = {};
+                // Use the same logic as cache: Prioritize Shelves
+                const freshStockMap: Record<string, number> = {};
+                let loadedCount = 0;
 
-                    console.log(`📦 API Loaded ${allGoods.length} goods.`);
+                if (goodsData.shelves && Array.isArray(goodsData.shelves)) {
+                    // CACHE THE FRESH DATA for Checkout usage
+                    const cacheKey = `machine_goods_${serialNumber}`;
+                    localStorage.setItem(cacheKey, JSON.stringify(goodsData));
+                    console.log("💾 Updated Local Cache with fresh API data.");
+
+                    goodsData.shelves.forEach((shelf: any) => {
+                        if (!shelf.spots) return;
+                        shelf.spots.forEach((spot: any) => {
+                            if (spot.goods && spot.presentNumber > 0) {
+                                const count = spot.presentNumber;
+                                const uuid = spot.goods.uuid;
+                                const name = normalizeName(spot.goods.goodsName);
+
+                                if (uuid) freshStockMap[uuid] = (freshStockMap[uuid] || 0) + count;
+                                if (name) freshStockMap[name] = (freshStockMap[name] || 0) + count;
+                                loadedCount++;
+                            }
+                        });
+                    });
+                    console.log(`📦 API Loaded ${loadedCount} spots from shelves.`);
+                }
+
+                // Fallback or merge with legacy data if needed (usually shelves is enough)
+                if (loadedCount === 0 && goodsData.data) {
+                    const allGoods = goodsData.data.flatMap((cat: any) => cat.goodsList || []);
+                    console.log(`📦 API Fallback: Loaded ${allGoods.length} goods from legacy list.`);
                     allGoods.forEach((good: any) => {
                         const name = normalizeName(good.goodsName);
+                        // In new API, presentNumber might correspond to SINGLE items or be missing in this list
                         const val = good.presentNumber || 0;
                         freshStockMap[name] = val;
                         if (good.uuid) freshStockMap[good.uuid] = val;
                         if (good.id) freshStockMap[String(good.id)] = val;
-
-                        if (good.goodsName.toLowerCase().includes("beef") || good.goodsName.toLowerCase().includes("chicken")) {
-                            console.log(`[API] Debug Stock: "${good.goodsName}" (UUID: ${good.uuid}) = ${val}`);
-                        }
                     });
-
-                    applyStockToItems(freshStockMap, "API");
                 }
+
+                // Log specific item for debugging
+                if (freshStockMap["1064051"]) {
+                    console.log(`[API] Debug Stock: Beef And Broccoli (UUID: 1064051) = ${freshStockMap["1064051"]}`);
+                }
+
+                applyStockToItems(freshStockMap, "API");
             } catch (error) {
                 console.error("Error checking stock API:", error);
             }
@@ -379,6 +408,7 @@ const CartPage: React.FC = () => {
                 imageUrl: currentImageMap[apiItem.menu_item.name] || "/images/icons/food-placeholder.svg",
                 quantity: apiItem.quantity,
                 price: parseFloat(apiItem.menu_item.price),
+                dayOfWeek: apiItem.day_of_week,
                 weekNumber: apiItem.week_number,
                 vendingGoodUuid: apiItem.vending_good_uuid,
                 planType: apiItem.plan_type,
@@ -461,7 +491,7 @@ const CartPage: React.FC = () => {
             const apiItems = samePlanItems.map((i) => ({
                 menu_item_id: i.menuItemId,
                 quantity: i.quantity,
-                day_of_week: i.notes.startsWith("Meal for ") ? i.notes.replace("Meal for ", "") : null,
+                day_of_week: i.dayOfWeek,
                 week_number: i.weekNumber,
                 vending_good_uuid: i.vendingGoodUuid,
             }));
@@ -504,7 +534,7 @@ const CartPage: React.FC = () => {
             const apiItems = samePlanItems.map((i) => ({
                 menu_item_id: i.menuItemId,
                 quantity: i.quantity,
-                day_of_week: i.notes.startsWith("Meal for ") ? i.notes.replace("Meal for ", "") : null,
+                day_of_week: i.dayOfWeek,
                 week_number: i.weekNumber,
                 vending_good_uuid: i.vendingGoodUuid,
             }));
@@ -724,6 +754,9 @@ const CartPage: React.FC = () => {
                                                         }
                                                     });
 
+                                                    console.log("🛒 Checkout Usage Map:", JSON.stringify(usageMap));
+                                                    console.log("🛒 Items in Cart:", JSON.stringify(items.map(i => ({ name: i.name, qty: i.quantity, uuid: i.vendingGoodUuid }))));
+
                                                     // Find spots to decrement
                                                     const goodsListToUpdate: any[] = [];
 
@@ -757,7 +790,7 @@ const CartPage: React.FC = () => {
                                                                     });
 
                                                                     usageMap[uuid] -= take; // Decrement needed
-                                                                    console.log(`📉 Decrementing ${spot.goods.goodsName} (Slot: ${spot.arrivalName}): ${present} -> ${newQuantity}`);
+                                                                    console.log(`📉 Decrementing ${spot.goods.goodsName} (Slot: ${spot.arrivalName}): Present ${present} - Take ${take} = New ${newQuantity}. Remaining Needed: ${usageMap[uuid]}`);
                                                                 }
                                                             }
                                                         });
@@ -773,13 +806,10 @@ const CartPage: React.FC = () => {
 
                                         // --- 2. Backend Order Confirmation ---
                                         const checkoutItems = updatedItems.map((uiItem) => {
-                                            const original = cartData.items.find(
-                                                (api) => api.id === uiItem.id
-                                            );
                                             return {
                                                 menu_item_id: uiItem.menuItemId,
                                                 quantity: uiItem.quantity,
-                                                day_of_week: original?.day_of_week || null,
+                                                day_of_week: uiItem.dayOfWeek,
                                                 week_number: uiItem.weekNumber,
                                                 vending_good_uuid: uiItem.vendingGoodUuid || null,
                                             };
@@ -860,12 +890,18 @@ const CartPage: React.FC = () => {
 
                                             if (matchedGoods.length > 0) {
                                                 console.log("🚀 Requesting Pickup Code for:", matchedGoods);
+                                                // Generate UAE time (UTC+4) for the external API
+                                                const now = new Date();
+                                                const uaeOffset = 4 * 60; // 4 hours in minutes
+                                                const uaeTime = new Date(now.getTime() + (now.getTimezoneOffset() + uaeOffset) * 60000);
+                                                const orderTimeStr = uaeTime.toISOString();
+
                                                 const pickPayload = {
                                                     goodsList: matchedGoods,
                                                     goodsNumber: totalGoodsCount,
                                                     machineUuid: serialNumber,
                                                     orderNo: orderId.toString(),
-                                                    orderTime: "",
+                                                    orderTime: orderTimeStr,
                                                     timeOut: 1,
                                                     lock: 0,
                                                 };

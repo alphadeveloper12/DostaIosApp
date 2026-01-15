@@ -115,6 +115,13 @@ const MyOrders = () => {
     return () => clearInterval(interval);
   }, [baseUrl, selectedOrder?.id]); // Keeping dependency simple
 
+  // Helper to normalize names for "spelling-only" comparison
+  const normalizeName = (name: string) => {
+    if (!name) return "";
+    let normalized = name.replace(/&/g, "and");
+    return normalized.replace(/[^a-zA-Z0-9]/g, "").toLowerCase();
+  };
+
   // Fetch Menu for Images
   useEffect(() => {
     const fetchMenu = async () => {
@@ -126,8 +133,10 @@ const MyOrders = () => {
         const newImageMap: Record<string, string> = {};
         res.data.menus?.forEach((menu: any) => {
           menu.items?.forEach((it: any) => {
-            if (it.image_url && !newImageMap[it.name]) {
+            if (it.image_url) {
+              // Map both raw logic and normalized logic to be safe
               newImageMap[it.name] = it.image_url;
+              newImageMap[normalizeName(it.name)] = it.image_url;
             }
           });
         });
@@ -203,6 +212,7 @@ const MyOrders = () => {
         imageUrl:
           apiItem.menu_item.image_url ||
           imageMap[apiItem.menu_item.name] ||
+          imageMap[normalizeName(apiItem.menu_item.name)] ||
           "/images/vending_home/food.svg",
         quantity: apiItem.quantity,
         price: parseFloat(apiItem.menu_item.price),
