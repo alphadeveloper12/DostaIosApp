@@ -183,7 +183,7 @@ const CuisineSelection: React.FC<CuisineSelectionProps> = ({
          style={{
           width: "60px",
           height: "60px",
-          marginRight: "8px",
+          marginRight: "",
          }}
         />
         <span style={{ textAlign: "left" }}>{cuisine.name}</span>
