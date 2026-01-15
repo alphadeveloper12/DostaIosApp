@@ -6,9 +6,17 @@ import Shrimmer from "@/components/ui/Shrimmer";
 import LazyLoad from "@/components/ui/LazyLoad";
 
 interface EventTypeSelectionProps {
- selectedEvent: { id: string | null; name: string | null };
+ selectedEvent: {
+  id: string | null;
+  name: string | null;
+  description?: string;
+ };
  setSelectedEvent: React.Dispatch<
-  React.SetStateAction<{ id: string | null; name: string | null }>
+  React.SetStateAction<{
+   id: string | null;
+   name: string | null;
+   description?: string;
+  }>
  >;
  guestCount: number;
  setGuestCount: React.Dispatch<React.SetStateAction<number>>;
@@ -32,7 +40,7 @@ const EventTypeSelection: React.FC<EventTypeSelectionProps> = ({
  setGuestCount,
 }) => {
  const [eventTypes, setEventTypes] = useState<
-  { id: number; name: string; image_url: string }[]
+  { id: number; name: string; image_url: string; description: string }[]
  >([]);
  const [loading, setLoading] = useState<boolean>(true);
  const baseUrl = import.meta.env.VITE_API_URL;
@@ -60,8 +68,16 @@ const EventTypeSelection: React.FC<EventTypeSelectionProps> = ({
  }, [baseUrl, authToken]);
 
  // Handle selecting an event
- const handleEventSelection = (eventId: string, eventName: string) => {
-  setSelectedEvent({ id: eventId, name: eventName });
+ const handleEventSelection = (
+  eventId: string,
+  eventName: string,
+  eventDescription: string
+ ) => {
+  setSelectedEvent({
+   id: eventId,
+   name: eventName,
+   description: eventDescription,
+  });
  };
  if (loading) {
   return (
@@ -95,7 +111,9 @@ const EventTypeSelection: React.FC<EventTypeSelectionProps> = ({
        image={event.image_url}
        title={event.name}
        selected={selectedEvent?.id === String(event.id)} // Use optional chaining here
-       onClick={() => handleEventSelection(String(event.id), event.name)}
+       onClick={() =>
+        handleEventSelection(String(event.id), event.name, event.description)
+       }
       />
      ))}
     </div>

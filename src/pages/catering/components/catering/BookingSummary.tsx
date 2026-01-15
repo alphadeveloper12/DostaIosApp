@@ -3,7 +3,11 @@ import { Button } from "../ui/button";
 import { useNavigate } from "react-router-dom"; // Import the useNavigate hook
 
 interface BookingSummaryProps {
- eventType: { id: string | null; name: string | null };
+ eventType: {
+  id: string | null;
+  name: string | null;
+  description?: string;
+ } | null;
  guestCount: number;
  selectedDateTime: string;
  selectedProvider: { id: string | null; name: string | null };
@@ -284,7 +288,9 @@ const BookingSummary: React.FC<BookingSummaryProps> = ({
         <p className="text-blue-600 font-medium">
          {selectedServiceStyles ? selectedServiceStyles.name : "Not Selected"}
         </p>
-        {(selectedMenuDescription || selectedServiceStyles?.description) && (
+        {(eventType?.description ||
+         selectedMenuDescription ||
+         selectedServiceStyles?.description) && (
          <>
           <h4
            style={{
@@ -297,7 +303,9 @@ const BookingSummary: React.FC<BookingSummaryProps> = ({
            Description:
           </h4>
           <p className="text-sm text-neutral-gray">
-           {selectedMenuDescription || selectedServiceStyles?.description}
+           {eventType?.description ||
+            selectedMenuDescription ||
+            selectedServiceStyles?.description}
           </p>
          </>
         )}
@@ -351,37 +359,79 @@ const BookingSummary: React.FC<BookingSummaryProps> = ({
             acc[item.course].push(item);
             return acc;
            }, {} as Record<string, typeof selectedMenuItems>)
-          ).map(([course, items]) => (
-           <div key={course} className="mb-4 last:mb-0">
-            <h4
-             style={{
-              fontSize: "16px",
-              fontWeight: "700",
-              color: "#056AC1",
-              marginBottom: "4px",
-             }}>
-             {course}
-            </h4>
-            <ul className="pl-0 space-y-1">
-             {items.map((item) => (
-              <li
-               key={item.id}
-               style={{
-                fontSize: "14px",
-                fontWeight: "400",
-                color: "#545563",
-               }}>
-               <span className="font-semibold">{item.name}</span>
-               {item.description && (
-                <p className="text-xs text-gray-500 mt-0.5">
-                 {item.description}
-                </p>
-               )}
-              </li>
-             ))}
-            </ul>
-           </div>
-          ))}
+          )
+           .sort(([courseA], [courseB]) => {
+            const startOrder = [
+             "Salads",
+             "Salads & Antipasto",
+             "Cold Appetizers",
+             "Hot Appetizers",
+             "Starters",
+             "Appetizers",
+             "Soup",
+            ];
+
+            const getPriority = (c: string) => {
+             const name = c.toLowerCase();
+
+             // High Priority (Start)
+             if (name.includes("salad")) return 10;
+             if (name.includes("cold appetizer")) return 20;
+             if (name.includes("hot appetizer")) return 30;
+             if (name.includes("starter") || name.includes("appetizer"))
+              return 40;
+             if (name.includes("soup")) return 50;
+
+             // Low Priority (End - Strict)
+             if (name.includes("main")) return 100;
+             if (name.includes("dessert")) return 110;
+             if (name.includes("beverage") || name.includes("drink"))
+              return 120;
+
+             // Medium Priority (Middle) - e.g. Sides, Sandwiches, Welcome Drink (if not drink?)
+             // User said "all the other extra courses will comes under the salads and appetizers"
+             // which implies they are before Mains.
+             return 60;
+            };
+
+            const pA = getPriority(courseA as string);
+            const pB = getPriority(courseB as string);
+
+            if (pA !== pB) return pA - pB;
+
+            return (courseA as string).localeCompare(courseB as string);
+           })
+           .map(([course, items]) => (
+            <div key={course} className="mb-4 last:mb-0">
+             <h4
+              style={{
+               fontSize: "16px",
+               fontWeight: "700",
+               color: "#056AC1",
+               marginBottom: "4px",
+              }}>
+              {course}
+             </h4>
+             <ul className="pl-0 space-y-1">
+              {items.map((item) => (
+               <li
+                key={item.id}
+                style={{
+                 fontSize: "14px",
+                 fontWeight: "400",
+                 color: "#545563",
+                }}>
+                <span className="font-semibold">{item.name}</span>
+                {item.description && (
+                 <p className="text-xs text-gray-500 mt-0.5">
+                  {item.description}
+                 </p>
+                )}
+               </li>
+              ))}
+             </ul>
+            </div>
+           ))}
          </div>
         ) : (
          <p className="text-blue-600 font-medium">Not Selected</p>

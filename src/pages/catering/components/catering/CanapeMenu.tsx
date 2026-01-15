@@ -26,6 +26,11 @@ interface CanapeMenuProps {
   label: string | null;
   price_range: string | null;
  };
+ setSelectedMenuItems: React.Dispatch<
+  React.SetStateAction<
+   { id: string; name: string; course: string; description?: string }[]
+  >
+ >;
 }
 
 const CanapeMenu: React.FC<CanapeMenuProps> = ({
@@ -34,6 +39,7 @@ const CanapeMenu: React.FC<CanapeMenuProps> = ({
  handleGoBack,
  handleContinue,
  selectedBudget,
+ setSelectedMenuItems,
 }) => {
  const [items, setItems] = useState<CanapeItem[]>([]);
  const [loading, setLoading] = useState<boolean>(true);
@@ -57,6 +63,66 @@ const CanapeMenu: React.FC<CanapeMenuProps> = ({
   };
   fetchItems();
  }, [baseUrl, authToken]);
+
+ // --- ADDED VALIDATION LOGIC ---
+ useEffect(() => {
+  // If no price range selected yet, do nothing (or clear everything?)
+  if (!selectedBudget.price_range) return;
+
+  // 1. Parse current limits from selectedBudget
+  const price = parseInt(selectedBudget.price_range.match(/\d+/)?.[0] || "0");
+
+  let limits = { food: 3, coldBev: 1, hotBev: 1 };
+  if (price >= 135) limits = { food: 12, coldBev: 2, hotBev: 2 };
+  else if (price >= 120) limits = { food: 10, coldBev: 2, hotBev: 2 };
+  else if (price >= 100) limits = { food: 8, coldBev: 1, hotBev: 1 };
+  else if (price >= 85) limits = { food: 5, coldBev: 1, hotBev: 1 };
+
+  // 2. Filter out non-canape items so we don't lose them
+  // Assumption: "course" field contains "Canape" for canape items
+  const nonCanapeItems = selectedMenuItems.filter(
+   (item) => !item.course.includes("Canape")
+  );
+
+  const canapeItems = selectedMenuItems.filter((item) =>
+   item.course.includes("Canape")
+  );
+
+  // Group by "course" (which holds the exact category string like "Cold Canape")
+  const groupedSelections: Record<string, typeof canapeItems> = {};
+  canapeItems.forEach((item) => {
+   if (!groupedSelections[item.course]) groupedSelections[item.course] = [];
+   groupedSelections[item.course].push(item);
+  });
+
+  let hasChanges = false;
+  const newCanapeSelections: typeof canapeItems = [];
+
+  // 3. Prune per category
+  // Categories: "Cold Canape", "Hot Canape", "Arabic Canape", "Sweet Canape", "Vegetarian Canape"
+  // "Cold Beverages Canape", "Hot Beverages Canape"
+
+  Object.keys(groupedSelections).forEach((categoryCourse) => {
+   const items = groupedSelections[categoryCourse];
+   let limit = limits.food;
+
+   if (categoryCourse.includes("Cold Beverages")) limit = limits.coldBev;
+   else if (categoryCourse.includes("Hot Beverages")) limit = limits.hotBev;
+
+   if (items.length > limit) {
+    // Keep only the first 'limit' items
+    newCanapeSelections.push(...items.slice(0, limit));
+    hasChanges = true;
+   } else {
+    newCanapeSelections.push(...items);
+   }
+  });
+
+  // 4. Update if needed
+  if (hasChanges) {
+   setSelectedMenuItems([...nonCanapeItems, ...newCanapeSelections]);
+  }
+ }, [selectedBudget.price_range, selectedMenuItems]);
 
  const getConstraints = () => {
   const price = selectedBudget.price_range
