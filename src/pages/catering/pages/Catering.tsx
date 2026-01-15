@@ -421,6 +421,7 @@ const Catering = () => {
          handleGoBack={handleGoBack}
          handleContinue={handleContinue}
          selectedBudget={selectedBudget}
+         setSelectedMenuItems={setSelectedMenuItems}
         />
        </LazyLoad>
       )}
