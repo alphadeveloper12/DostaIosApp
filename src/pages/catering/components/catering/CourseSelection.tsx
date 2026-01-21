@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { Button } from "../ui/button";
 import Shrimmer from "@/components/ui/Shrimmer";
+import ImageWithShimmer from "@/components/ui/ImageWithShimmer";
 import LazyLoad from "@/components/ui/LazyLoad";
 
 interface Course {
@@ -192,9 +193,10 @@ const CourseSelection: React.FC<CourseSelectionProps> = ({
          lineHeight: "1.2",
          textAlign: "left",
         }}>
-        <img
+        <ImageWithShimmer
          src={course.image_url}
          alt={course.name}
+         wrapperClassName="rounded-[12px] shrink-0"
          style={{
           width: "60px",
           height: "60px",

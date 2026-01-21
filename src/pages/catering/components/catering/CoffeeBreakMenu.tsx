@@ -4,6 +4,7 @@ import { Button } from "../ui/button";
 import LazyLoad from "@/components/ui/LazyLoad";
 import { ChevronRight, Check } from "lucide-react";
 import Shrimmer from "@/components/ui/Shrimmer";
+import ImageWithShimmer from "@/components/ui/ImageWithShimmer";
 
 interface CoffeeBreakItem {
  id: number;
@@ -217,12 +218,12 @@ const CoffeeBreakMenu: React.FC<CoffeeBreakMenuProps> = ({
             const itemId = item.id.toString();
             const selected = true; // Always selected
 
-            // Construct image URL (mock or real)
-            const imageUrl =
-             item.image_url ||
-             `https://placehold.co/400x300?text=${encodeURIComponent(
-              item.name
-             )}`;
+            // Construct image URL (prioritize backend, then local, then placeholder)
+            const localImage = `/images/catering/coffee-break/${
+             activeRotation.name
+            }/${encodeURIComponent(item.name).replace(/%2B/g, "+")}.png`;
+
+            const imageUrl = item.image_url || localImage;
 
             return (
              <div
@@ -233,10 +234,19 @@ const CoffeeBreakMenu: React.FC<CoffeeBreakMenuProps> = ({
                                 `}>
               {/* Image Placeholder */}
               <div className="relative aspect-[4/3] rounded-xl overflow-hidden mb-3 bg-gray-200">
-               <img
+               <ImageWithShimmer
                 src={imageUrl}
                 alt={item.name}
                 className="w-full h-full object-cover"
+                wrapperClassName="w-full h-full"
+                onError={(e: any) => {
+                 if (
+                  !e.target.src.includes("placehold.co") &&
+                  !e.target.src.includes("Menu+Item")
+                 ) {
+                  e.target.src = "https://placehold.co/400x300?text=Menu+Item";
+                 }
+                }}
                />
                <div
                 className="absolute top-0 left-0 bg-[#8BC34A] text-primary-dark text-[10px] font-bold h-8 w-[75px] flex items-center justify-center rounded-br-[12px]"

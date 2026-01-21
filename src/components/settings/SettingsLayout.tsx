@@ -60,7 +60,7 @@ export default function SettingsLayout() {
   <div className="min-h-screen bg-neutral-white">
    <Header />
 
-   <div className="main-container !py-6 max-md:mb-[60px]">
+   <div className="main-container lg:py-6 max-md:pb-[120px]">
     <div className="flex flex-col lg:flex-row md:gap-6 gap-12">
      {/* Sidebar */}
      <aside className="w-full lg:w-80">
@@ -80,17 +80,17 @@ export default function SettingsLayout() {
            "w-full flex items-center gap-4 p-4 rounded-[16px] transition-all text-left",
            isActive
             ? "bg-accent text-accent-foreground shadow-sm border-2 border-[#054A86]"
-            : "md:border border-2 border-[#EDEEF2] "
+            : "md:border border-2 border-[#EDEEF2] ",
           )}>
           <div
            className={cn(
             "w-10 h-10 rounded-[12px] flex items-center justify-center flex-shrink-0",
-            isActive ? "bg-[#054A86]" : "bg-[#EDEEF2]"
+            isActive ? "bg-[#054A86]" : "bg-[#EDEEF2]",
            )}>
            <Icon
             className={cn(
              "w-5 h-5",
-             isActive ? "text-neutral-white" : "text-muted-foreground"
+             isActive ? "text-neutral-white" : "text-muted-foreground",
             )}
            />
           </div>
@@ -99,7 +99,7 @@ export default function SettingsLayout() {
            <div
             className={cn(
              "text-xs",
-             isActive ? "text-accent-foreground/70" : "text-muted-foreground"
+             isActive ? "text-accent-foreground/70" : "text-muted-foreground",
             )}>
             {item.description}
            </div>

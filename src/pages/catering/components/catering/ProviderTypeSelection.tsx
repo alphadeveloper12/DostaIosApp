@@ -79,7 +79,7 @@ const ProviderTypeSelection: React.FC<ProviderTypeSelectionProps> = ({
     requests.push(
      axios.get(`${baseUrl}${styleEndpoint}`, {
       headers: { Authorization: `Token ${authToken}` },
-     })
+     }),
     );
 
     // 2. Event Names (only if non-corporate)
@@ -87,7 +87,7 @@ const ProviderTypeSelection: React.FC<ProviderTypeSelectionProps> = ({
      requests.push(
       axios.get(`${baseUrl}/api/catering/event-names/`, {
        headers: { Authorization: `Token ${authToken}` },
-      })
+      }),
      );
     }
 
@@ -127,7 +127,7 @@ const ProviderTypeSelection: React.FC<ProviderTypeSelectionProps> = ({
  }
 
  const selectedStyleObj = serviceStyles.find(
-  (s) => s.id === selectedServiceStyles?.id
+  (s) => s.id === selectedServiceStyles?.id,
  );
 
  const isPrivateChef = selectedEvent?.name
@@ -168,7 +168,7 @@ const ProviderTypeSelection: React.FC<ProviderTypeSelectionProps> = ({
       <h3 className="text-primary-text md:text-xl text-lg font-bold mb-4">
        Select Event Name
       </h3>
-      <div className="grid md:grid-cols-4 gap-6 max-w-5xl">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 max-w-5xl">
        {eventNames.map((event) => (
         <Button
          key={event.id}
@@ -184,7 +184,7 @@ const ProviderTypeSelection: React.FC<ProviderTypeSelectionProps> = ({
           fontWeight: "400",
           borderRadius: "16px",
           padding: "16px",
-          width: "245px",
+          width: "100%", // Responsive width
           border:
            selectedDetailedEventName?.id === event.id
             ? "1px solid #054A86"
@@ -202,7 +202,12 @@ const ProviderTypeSelection: React.FC<ProviderTypeSelectionProps> = ({
 
     {/* --- Service Style Section --- */}
     <div className="md:ml-12">
-     <div className="grid md:grid-cols-4 gap-6 max-w-5xl">
+     {showEventNameSelection && (
+      <h3 className="text-primary-text md:text-xl text-lg font-bold mb-4">
+       Select Service Style
+      </h3>
+     )}
+     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 max-w-5xl">
       {serviceStyles.map((style) => {
        let isDisabled = false;
        let tooltipContent = "";
@@ -221,7 +226,7 @@ const ProviderTypeSelection: React.FC<ProviderTypeSelectionProps> = ({
 
        return (
         <Tippy key={style.id} content={tooltipContent} disabled={!isDisabled}>
-         <div className="inline-block">
+         <div className="inline-block w-full">
           {" "}
           {/* Wrapper for Tippy on disabled button */}
           <Button
@@ -240,13 +245,13 @@ const ProviderTypeSelection: React.FC<ProviderTypeSelectionProps> = ({
             backgroundColor: isDisabled
              ? "#F5F5F5"
              : selectedServiceStyles?.id === style.id
-             ? "#EAF5FF"
-             : "#fff",
+               ? "#EAF5FF"
+               : "#fff",
             color: isDisabled ? "#A0A0A0" : "#2B2B43",
             fontWeight: "400",
             borderRadius: "16px",
             padding: "16px",
-            width: "245px",
+            width: "100%", // Changed to 100%
             border:
              selectedServiceStyles?.id === style.id
               ? "1px solid #054A86"

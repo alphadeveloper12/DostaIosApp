@@ -3,6 +3,7 @@ import axios from "axios";
 import { Button } from "../ui/button";
 import LazyLoad from "@/components/ui/LazyLoad";
 import Shrimmer from "@/components/ui/Shrimmer";
+import ImageWithShimmer from "@/components/ui/ImageWithShimmer";
 import Tippy from "@tippyjs/react";
 import "tippy.js/dist/tippy.css";
 
@@ -166,19 +167,16 @@ const AmericanMenuSelection: React.FC<AmericanMenuSelectionProps> = ({
             className="rounded-2xl border p-3 bg-white border-[#EBEBEB] hover:border-[#C7C8D2] transition-all duration-200">
             {/* Image Placeholder */}
             <div className="relative aspect-[4/3] rounded-xl overflow-hidden mb-3 bg-gray-200">
-             {item.image_url ? (
-              <img
-               src={item.image_url}
-               alt={item.name}
-               className="w-full h-full object-cover"
-              />
-             ) : (
-              <img
-               src="https://placehold.co/400x300?text=Menu+Item"
-               alt={item.name}
-               className="w-full h-full object-cover opacity-50"
-              />
-             )}
+             <ImageWithShimmer
+              src={
+               item.image_url || "https://placehold.co/400x300?text=Menu+Item"
+              }
+              alt={item.name}
+              className={`w-full h-full object-cover ${
+               !item.image_url ? "opacity-50" : ""
+              }`}
+              wrapperClassName="w-full h-full"
+             />
              <div
               className="absolute top-0 left-0 bg-[#8BC34A] text-primary-dark text-[10px] font-bold h-8 px-3 flex items-center justify-center rounded-br-[12px]"
               style={{ letterSpacing: "0.5px" }}>

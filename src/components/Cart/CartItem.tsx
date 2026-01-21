@@ -3,6 +3,8 @@ import React from "react";
 import { CartItemType } from "@/pages/CartPage";
 import { PlusIcon, MinusIcon, TrashIcon } from "@heroicons/react/24/outline";
 
+import ImageWithShimmer from "../ui/ImageWithShimmer";
+
 interface CartItemProps {
     item: CartItemType;
     onQuantityChange: (id: number, delta: number) => void;
