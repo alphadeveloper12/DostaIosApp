@@ -86,11 +86,11 @@ const BookingSummary: React.FC<BookingSummaryProps> = ({
   if (isLiveStation) {
    // Sum up prices of all selected Live Station items
    const liveStationItems = selectedMenuItems.filter(
-    (item) => item.course === "Live Station"
+    (item) => item.course === "Live Station",
    );
    const totalPerPax = liveStationItems.reduce(
     (sum, item) => sum + (Number(item.price) || 0),
-    0
+    0,
    );
 
    const baseTotal = guestCount * totalPerPax;
@@ -182,17 +182,15 @@ const BookingSummary: React.FC<BookingSummaryProps> = ({
     })),
    };
 
-   const response = await fetch(
-    "http://127.0.0.1:8000/api/catering/orders/create/",
-    {
-     method: "POST",
-     headers: {
-      "Content-Type": "application/json",
-      Authorization: `Token ${token}`, // Adjust based on your auth scheme (Bearer vs Token)
-     },
-     body: JSON.stringify(orderData),
-    }
-   );
+   const baseUrl = import.meta.env.VITE_API_URL;
+   const response = await fetch(`${baseUrl}/api/catering/orders/create/`, {
+    method: "POST",
+    headers: {
+     "Content-Type": "application/json",
+     Authorization: `Token ${token}`, // Adjust based on your auth scheme (Bearer vs Token)
+    },
+    body: JSON.stringify(orderData),
+   });
 
    if (response.ok) {
     const data = await response.json();
@@ -242,7 +240,7 @@ const BookingSummary: React.FC<BookingSummaryProps> = ({
    selectedCourses,
    selectedLocation,
    selectedBudget,
-  })
+  }),
  );
 
  return (
@@ -352,13 +350,16 @@ const BookingSummary: React.FC<BookingSummaryProps> = ({
         {selectedMenuItems && selectedMenuItems.length > 0 ? (
          <div className="mt-2">
           {Object.entries(
-           selectedMenuItems.reduce((acc, item) => {
-            if (!acc[item.course]) {
-             acc[item.course] = [];
-            }
-            acc[item.course].push(item);
-            return acc;
-           }, {} as Record<string, typeof selectedMenuItems>)
+           selectedMenuItems.reduce(
+            (acc, item) => {
+             if (!acc[item.course]) {
+              acc[item.course] = [];
+             }
+             acc[item.course].push(item);
+             return acc;
+            },
+            {} as Record<string, typeof selectedMenuItems>,
+           ),
           )
            .sort(([courseA], [courseB]) => {
             const startOrder = [

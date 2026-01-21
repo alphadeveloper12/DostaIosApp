@@ -72,7 +72,7 @@ const Header = () => {
      {/* Right side (Desktop) */}
      <div className="hidden md:flex items-center gap-4 lg:gap-6 relative">
       <select
-        defaultValue={document.cookie.includes("googtrans=/en/ar") ? "ar" : "en"}
+       defaultValue={document.cookie.includes("googtrans=/en/ar") ? "ar" : "en"}
        onChange={(e) => {
         const lang = e.target.value;
         if (lang === "en") {
@@ -148,7 +148,7 @@ const Header = () => {
        {isDropdownOpen && isLoggedIn && (
         <div className="absolute top-16 right-0 w-[256px] bg-white rounded-[16px] shadow-lg py-[10px]">
          <div className="hover:bg-primary-light py-[8px] px-[16px] rounded-t-[4px]">
-          <Link to="/orders">My Orders</Link>
+          <Link to="/vending-home/my-orders">My Orders</Link>
          </div>
          <div className="hover:bg-primary-light py-[8px] px-[16px]">
           <Link to="/settings">Account Settings</Link>
@@ -202,19 +202,30 @@ const Header = () => {
        {/* Menu Items */}
        <div className="flex flex-col items-center justify-center flex-grow gap-6 pt-[68px]">
         <Link
-         to="/orders"
+         to="/vending-home/my-orders"
          className="text-[24px] leading-[32px] font-[700] tracking-[0.1px] text-neutral-black">
          My Orders
         </Link>
 
         <Link
-         to="/account"
+         to="/settings"
          className="text-[24px] leading-[32px] font-[700] tracking-[0.1px] text-neutral-black">
          Account Settings
         </Link>
 
-        <button className="text-[24px] leading-[32px] font-[700] tracking-[0.1px] text-neutral-black">
-         العربية
+        <button
+         onClick={() => {
+          const isArabic = document.cookie.includes("googtrans=/en/ar");
+          if (isArabic) {
+           document.cookie =
+            "googtrans=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC";
+          } else {
+           document.cookie = "googtrans=/en/ar; path=/";
+          }
+          window.location.reload();
+         }}
+         className="text-[24px] leading-[32px] font-[700] tracking-[0.1px] text-neutral-black">
+         {document.cookie.includes("googtrans=/en/ar") ? "English" : "العربية"}
         </button>
 
         <button

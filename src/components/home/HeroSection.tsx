@@ -56,7 +56,7 @@ const HeroSection = () => {
  const navigate = useNavigate();
 
  return (
-  <section className="relative  lg:min-h-[623px] sm:min-h-[732px] max-md:pt-[15px] max-md:pb-48 flex items-start  justify-center  sm:py-0 bg-primary-dark">
+  <section className="relative  lg:min-h-[623px] sm:min-h-[732px] md:min-h-[653px] max-md:pt-[15px] max-md:pb-48 flex items-start  justify-center  sm:py-0 bg-primary-dark">
    {/* React Slick Carousel */}
    <Slider {...sliderSettings} className=" main-container max-md:px-4">
     {/* Render the same card 4 times for now */}
@@ -64,9 +64,9 @@ const HeroSection = () => {
      <div
       key={index}
       className="relative z-10 w-full lg:mt-[52px]  sm:mt-0 px-4">
-      <div className="w-full flex flex-col-reverse md:flex-row items-center justify-between md:gap-[80px] gap-[20px] px-0 sm:px-0 md:px-0 py-0 sm:py-0">
-       <div className="w-auto md:w-[50%] lg:max-w-[490px] ">
-        <h1 className=" pt-[22px] max-md:text-center md:pt-0  text-[40px] leading-[56px] font-[800] tracking-[0.1px] text-neutral-white pb-[16px]">
+      <div className="w-full flex flex-col-reverse md:flex-row md:pt-[40px] md:pb-[20px] lg:pt-0 items-center justify-between md:gap-[80px] gap-[20px] px-0 sm:px-0 md:px-0 py-0 sm:py-0">
+       <div className="w-auto md:w-[50%] ">
+        <h1 className=" pt-[22px] max-md:text-center md:pt-0 lg:text-[40px] md:text-[36px]  text-[36px] lg:leading-[56px] md:leading-[46px] leading-[42px] font-[800] tracking-[0.1px] text-neutral-white pb-[16px]">
          {item.title}
         </h1>
         <p className="text-[16px] max-md:text-center leading-[24px] tracking-[0.1px] font-[700] text-neutral-white pb-[32px]">
@@ -81,7 +81,7 @@ const HeroSection = () => {
         </div>
        </div>
 
-       <div className="relative lg:min-w-[540px] rounded-[24px]">
+       <div className="relative md:w-[50%] lg:min-w-[540px] rounded-[24px]">
         <div className="overflow-hidden hidden md:block rounded-[24px]">
          <img
           src={item.image}

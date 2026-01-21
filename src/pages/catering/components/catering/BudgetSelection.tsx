@@ -74,7 +74,7 @@ const BudgetSelection: React.FC<BudgetSelectionProps> = ({
     // Expected format: "10-20" or "50+" or "100"
     const range = pax.number.replace(/\s/g, ""); // remove spaces
     console.log(
-     `Checking Pax: ${pax.label} (${pax.number}) -> Range: ${range}`
+     `Checking Pax: ${pax.label} (${pax.number}) -> Range: ${range}`,
     );
 
     if (range.includes("+")) {
@@ -87,7 +87,7 @@ const BudgetSelection: React.FC<BudgetSelectionProps> = ({
      const max = parseInt(parts[1]);
      const result = guestCount >= min && guestCount <= max;
      console.log(
-      `  Range Check: ${min} <= ${guestCount} <= ${max} ? ${result}`
+      `  Range Check: ${min} <= ${guestCount} <= ${max} ? ${result}`,
      );
      return result;
     }
@@ -144,7 +144,7 @@ const BudgetSelection: React.FC<BudgetSelectionProps> = ({
        return match ? parseInt(match[0]) : 0;
       };
       return getPrice(a.price_range) - getPrice(b.price_range);
-     })
+     }),
     );
     setPaxOptions(paxRes.data);
     setLoading(false); // Stop loading after data is fetched
@@ -220,7 +220,7 @@ const BudgetSelection: React.FC<BudgetSelectionProps> = ({
     </div>
 
     <div className="md:ml-12">
-     <div className="grid md:grid-cols-4 gap-6 max-w-5xl">
+     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 max-w-5xl">
       {budgetOptions.map((budget) => (
        <Button
         key={budget.id}
@@ -239,7 +239,7 @@ const BudgetSelection: React.FC<BudgetSelectionProps> = ({
          fontWeight: "400",
          borderRadius: "16px",
          padding: "16px",
-         width: "245px",
+         width: "100%", // Responsive width
          border:
           selectedBudget?.id === budget.id // Use optional chaining here as well
            ? "1px solid #054A86"
@@ -270,7 +270,7 @@ const BudgetSelection: React.FC<BudgetSelectionProps> = ({
     </div>
 
     <div className="md:ml-12">
-     <div className="grid md:grid-cols-4 gap-6 max-w-5xl">
+     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 max-w-5xl">
       {paxOptions.map((pax) => (
        <Button
         key={pax.id}
@@ -284,7 +284,7 @@ const BudgetSelection: React.FC<BudgetSelectionProps> = ({
          fontWeight: "400",
          borderRadius: "16px",
          padding: "16px",
-         width: "245px",
+         width: "100%", // Responsive width
          border:
           selectedPax?.id === pax.id
            ? "1px solid #054A86"

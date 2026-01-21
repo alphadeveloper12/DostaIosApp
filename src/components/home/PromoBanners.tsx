@@ -19,16 +19,16 @@ const PromoBanners = () => {
  ];
 
  return (
-  <section className="bg-neutral-white md:pt-[120px] pt-[24px] pb-[48px]">
+  <section className="bg-neutral-white lg:pt-[120px]  pt-[24px] pb-[48px]">
    <div className="main-container">
-    <div className="w-full flex flex-col md:flex-row justify-center items-center gap-[20px] md:gap-[30px]">
+    <div className="w-full flex flex-col md:flex-row justify-center items-center md:items-stretch gap-[20px] md:gap-[30px]">
      {promoData.map((promo, index) => (
       <div
        key={index}
-       className={`w-full max-w-[540px] md:h-[152px] md:w-[540px] rounded-xl overflow-hidden shadow-lg md:min-h-[180px]`}
+       className={`w-full max-w-[540px] lg:min-h-[180px] md:h-auto flex items-center md:w-[540px] rounded-xl overflow-hidden shadow-lg md:min-h-[180px]`}
        style={{ backgroundColor: promo.bgColor }}>
        <div className="flex items-center h-full ">
-        <div className="flex-1 p-4  md:w-[316px] md:pt-[17px] md:pl-[32px]">
+        <div className="flex-1 p-4  md:w-[50%] md:pt-[17px] md:pl-[32px]">
          <h3 className="text-lg md:text-[24px] md:leading-[32px] md:font-[800] font-bold text-neutral-white mb-1">
           {promo.title}
          </h3>
@@ -42,11 +42,11 @@ const PromoBanners = () => {
           {promo.buttonText}
          </Button>
         </div>
-        <div className="w-[120px] md:w-[244px] h-full flex items-center flex-shrink-0">
+        <div className="w-[120px] md:w-[50%] h-full flex items-center flex-shrink-0">
          <img
           src={promo.image}
           alt={promo.title}
-          className="w-full h-full object-cover rounded-l-lg"
+          className="w-full h-full object-fit rounded-l-lg"
          />
         </div>
        </div>

@@ -1,116 +1,116 @@
 import { Link, useNavigate } from "react-router-dom"; // Import useNavigate
 
 const steps = [
-    // Commented out - Delivery card
-    // {
-    //   icon: "images/header/card1.svg", // Replace with your actual image path
-    //   title: "25 Restaurants, One Easy Order",
-    //   description:
-    //     "Freshly prepared dishes delivered straight to your home or workspace",
-    //   tag: "DOSTA DELIVERY",
-    //   button: "Browse Menus",
-    //   link: "/coming-soon", // Link for this button
-    // },
-    {
-        icon: "images/header/card2.svg", // Replace with your actual image path
-        title: "Meals on Your Schedule",
-        description:
-            "Plan your week with nutritious meals placed in vending stations near you",
-        tag: "DOSTA VENDING",
-        button: "Start Planning",
-        link: "/vending-home", // Link for this button
-    },
-    // Commented out - Wellness card
-    // {
-    //   icon: "images/header/card3.svg", // Replace with your actual image path
-    //   title: "Wellness Meets Convenience",
-    //   description:
-    //     "Balanced meal plans tailored for your health goals, delivered or picked up.",
-    //   tag: "DOSTA WELLNESS",
-    //   button: "Explore Plans",
-    //   link: "/coming-soon", // Link for this button
-    // },
-    {
-        icon: "images/header/card4.svg", // Replace with your actual image path
-        title: "Flavorful Catering for Any Event",
-        description:
-            "From private gatherings to grand celebrations, we craft unforgettable meals",
-        tag: "DOSTA CATERING",
-        button: "Book Your Event",
-        link: "/catering", // Special link for catering
-    },
-    // Commented out - Corporate card
-    // {
-    //   icon: "images/header/card5.svg", // Replace with your actual image path
-    //   title: "Fuel Your Team, Elevate Productivity",
-    //   description:
-    //     "Office catering that's both delicious and professionally executed",
-    //   tag: "DOSTA CORPORATE",
-    //   button: "Order for Your Team",
-    //   link: "/coming-soon", // Link for this button
-    // },
-    // Commented out - Giving card
-    // {
-    //   icon: "images/header/card6.svg", // Replace with your actual image path
-    //   title: "Food with Heart and Purpose",
-    //   description:
-    //     "Partner with us to support food drives, community events, and local causes.",
-    //   tag: "DOSTA GIVING",
-    //   button: "Support the Mission",
-    //   link: "/coming-soon", // Link for this button
-    // },
+ // Commented out - Delivery card
+ // {
+ //   icon: "images/header/card1.svg", // Replace with your actual image path
+ //   title: "25 Restaurants, One Easy Order",
+ //   description:
+ //     "Freshly prepared dishes delivered straight to your home or workspace",
+ //   tag: "DOSTA DELIVERY",
+ //   button: "Browse Menus",
+ //   link: "/coming-soon", // Link for this button
+ // },
+ {
+  icon: "images/header/card2.svg", // Replace with your actual image path
+  title: "Meals on Your Schedule",
+  description:
+   "Plan your week with nutritious meals placed in vending stations near you",
+  tag: "DOSTA VENDING",
+  button: "Start Planning",
+  link: "/vending-home", // Link for this button
+ },
+ // Commented out - Wellness card
+ // {
+ //   icon: "images/header/card3.svg", // Replace with your actual image path
+ //   title: "Wellness Meets Convenience",
+ //   description:
+ //     "Balanced meal plans tailored for your health goals, delivered or picked up.",
+ //   tag: "DOSTA WELLNESS",
+ //   button: "Explore Plans",
+ //   link: "/coming-soon", // Link for this button
+ // },
+ {
+  icon: "images/header/card4.svg", // Replace with your actual image path
+  title: "Flavorful Catering for Any Event",
+  description:
+   "From private gatherings to grand celebrations, we craft unforgettable meals",
+  tag: "DOSTA CATERING",
+  button: "Book Your Event",
+  link: "/catering", // Special link for catering
+ },
+ // Commented out - Corporate card
+ // {
+ //   icon: "images/header/card5.svg", // Replace with your actual image path
+ //   title: "Fuel Your Team, Elevate Productivity",
+ //   description:
+ //     "Office catering that's both delicious and professionally executed",
+ //   tag: "DOSTA CORPORATE",
+ //   button: "Order for Your Team",
+ //   link: "/coming-soon", // Link for this button
+ // },
+ // Commented out - Giving card
+ // {
+ //   icon: "images/header/card6.svg", // Replace with your actual image path
+ //   title: "Food with Heart and Purpose",
+ //   description:
+ //     "Partner with us to support food drives, community events, and local causes.",
+ //   tag: "DOSTA GIVING",
+ //   button: "Support the Mission",
+ //   link: "/coming-soon", // Link for this button
+ // },
 ];
 
 const ShowCase = () => {
-    const navigate = useNavigate(); // Initialize useNavigate
+ const navigate = useNavigate(); // Initialize useNavigate
 
-    const handleNavigation = (link: any) => {
-        navigate(link); // Navigate to the specified link
-    };
+ const handleNavigation = (link: any) => {
+  navigate(link); // Navigate to the specified link
+ };
 
-    return (
-        <section className="WebCards pb-[24px] pt-[48px] lg:h-[450px] h-[1050px] bg-[#F7F7F9] w-full">
-            <div className="main-container  relative flex justify-center items-center">
-                {/* Steps */}
-                <div className="absolute lg:px-0 px-[15px] -top-[145px] flex justify-center w-full">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-6 my-[24px]">
-                        {steps.map((step, index) => {
-                            return (
-                                <Link key={index} to={step.link}>
-                                    <div className="relative   md:max-w-[350px] w-full h-auto md:h-[478px] shadow-xl bg-neutral-white rounded-[16px] flex flex-col justify-between overflow-hidden">
-                                        <div className="relative w-full h-[224px] md:h-[224px]">
-                                            <img
-                                                src={step.icon}
-                                                alt="logo"
-                                                className="w-full h-full object-cover rounded-t-[16px]"
-                                            />
-                                            <span className="text-primary-dark absolute bottom-[-14px] left-4 z-10 text-[10px] md:text-[11px] leading-4 font-[700] tracking-[0.6px] rounded-[16px] bg-[#A7CF38] py-[6px] px-[12px]">
-                                                {step.tag}
-                                            </span>
-                                        </div>
+ return (
+  <section className="WebCards pb-[24px] pt-[48px] bg-[#F7F7F9] w-full">
+   <div className="main-container relative flex justify-center items-center">
+    {/* Steps */}
+    <div className="lg:px-0 px-[15px] -mt-[145px] flex justify-center w-full">
+     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-6 my-[24px]">
+      {steps.map((step, index) => {
+       return (
+        <Link key={index} to={step.link}>
+         <div className="relative   md:max-w-[350px] w-full h-auto md:h-[478px] shadow-xl bg-neutral-white rounded-[16px] flex flex-col justify-between overflow-hidden">
+          <div className="relative w-full h-[224px] md:h-[224px]">
+           <img
+            src={step.icon}
+            alt="logo"
+            className="w-full h-full object-cover rounded-t-[16px]"
+           />
+           <span className="text-primary-dark absolute bottom-[-14px] left-4 z-10 text-[10px] md:text-[11px] leading-4 font-[700] tracking-[0.6px] rounded-[16px] bg-[#A7CF38] py-[6px] px-[12px]">
+            {step.tag}
+           </span>
+          </div>
 
-                                        <div className="max-md:flex-1 max-md:flex flex-col md:flex-none  justify-between pt-[24px] md:pt-[32px] px-[16px] md:px-[24px] pb-[24px] md:pb-[24px]">
-                                            <h2 className=" text-[28px] leading-[36px]  tracking-[0.1px] font-[700] text-primary mb-2">
-                                                {step.title}
-                                            </h2>
-                                            <p className="text-neutral-gray-dark text-[14px] leading-[20px] font-[400] pb-[24px]">
-                                                {step.description}
-                                            </p>
-                                            <button
-                                                className="py-3 px-4 border text-[14px]  w-fit text-primary-dark leading-[20px] tracking-[0.3px] border-[#054A86] rounded-[8px]"
-                                                onClick={() => handleNavigation(step.link)}>
-                                                {step.button}
-                                            </button>
-                                        </div>
-                                    </div>
-                                </Link>
-                            );
-                        })}
-                    </div>
-                </div>
-            </div>
-        </section>
-    );
+          <div className="max-md:flex-1 max-md:flex flex-col md:flex-none  justify-between pt-[24px] md:pt-[32px] px-[16px] md:px-[24px] pb-[24px] md:pb-[24px]">
+           <h2 className=" text-[28px] leading-[36px]  tracking-[0.1px] font-[700] text-primary mb-2">
+            {step.title}
+           </h2>
+           <p className="text-neutral-gray-dark text-[14px] leading-[20px] font-[400] pb-[24px]">
+            {step.description}
+           </p>
+           <button
+            className="py-3 px-4 border text-[14px]  w-fit text-primary-dark leading-[20px] tracking-[0.3px] border-[#054A86] rounded-[8px]"
+            onClick={() => handleNavigation(step.link)}>
+            {step.button}
+           </button>
+          </div>
+         </div>
+        </Link>
+       );
+      })}
+     </div>
+    </div>
+   </div>
+  </section>
+ );
 };
 
 export default ShowCase;

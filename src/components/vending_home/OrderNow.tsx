@@ -4,6 +4,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
+import { fetchCartData } from "@/redux/slices/cartSlice";
 
 import { motion, AnimatePresence } from "framer-motion";
 import { Check, X } from "lucide-react";
@@ -575,6 +576,87 @@ const OrderNow = () => {
   };
 
   fetchMenuData();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+ }, [orderType, planType, baseUrl]);
+
+ // --- NEW: Restore state from backend cart on mount ---
+ useEffect(() => {
+  const fetchCartState = async () => {
+   try {
+    if (orderType !== "Start a Plan") return;
+
+    const res = await axios.get(`${baseUrl}/api/vending/cart/`, authHeaders);
+    const cart = res.data;
+
+    if (cart && cart.items && cart.items.length > 0) {
+     const items = cart.items;
+
+     // Helper to map backend cart item to UI expected format
+     const mapBack = (cartItem: any) => ({
+      id: cartItem.menu_item.id,
+      imgSrc: cartItem.menu_item.image_url,
+      heading: cartItem.menu_item.name,
+      imgAlt: `food-${cartItem.menu_item.id}`,
+      description: cartItem.menu_item.description,
+      price: `AED ${parseFloat(cartItem.menu_item.price).toFixed(2)}`,
+      quantity: cartItem.quantity,
+      vendingGoodUuid: cartItem.vending_good_uuid,
+     });
+
+     // Check persistent plan type
+     if (cart.plan_type === "START_PLAN") {
+      const sub = String(cart.plan_subtype).toUpperCase();
+
+      if (sub === "WEEKLY") {
+       const restored: any = {};
+       items.forEach((it: any) => {
+        const day = it.day_of_week;
+        if (!restored[day]) restored[day] = [];
+        restored[day].push(mapBack(it));
+       });
+       setWeekMenu(restored);
+      } else if (sub === "MONTHLY") {
+       const w1: any = {};
+       const w2: any = {};
+       const w3: any = {};
+       const w4: any = {};
+
+       items.forEach((it: any) => {
+        const day = it.day_of_week;
+        const wNum = it.week_number;
+        const mapped = mapBack(it);
+
+        if (wNum === 1) {
+         if (!w1[day]) w1[day] = [];
+         w1[day].push(mapped);
+        }
+        if (wNum === 2) {
+         if (!w2[day]) w2[day] = [];
+         w2[day].push(mapped);
+        }
+        if (wNum === 3) {
+         if (!w3[day]) w3[day] = [];
+         w3[day].push(mapped);
+        }
+        if (wNum === 4) {
+         if (!w4[day]) w4[day] = [];
+         w4[day].push(mapped);
+        }
+       });
+
+       setWeekMenu1(w1);
+       setWeekMenu2(w2);
+       setWeekMenu3(w3);
+       setWeekMenu4(w4);
+      }
+     }
+    }
+   } catch (error) {
+    console.error("Error restoring cart state:", error);
+   }
+  };
+
+  fetchCartState();
   // eslint-disable-next-line react-hooks/exhaustive-deps
  }, [orderType, planType, baseUrl]);
 

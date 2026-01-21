@@ -71,7 +71,7 @@ const EventTypeSelection: React.FC<EventTypeSelectionProps> = ({
  const handleEventSelection = (
   eventId: string,
   eventName: string,
-  eventDescription: string
+  eventDescription: string,
  ) => {
   setSelectedEvent({
    id: eventId,
@@ -139,7 +139,7 @@ const EventTypeSelection: React.FC<EventTypeSelectionProps> = ({
        </button>
        <input
         type="number"
-        value={guestCount}
+        value={guestCount || ""} // Prevent leading zero ("09") by showing empty string if 0
         onChange={(e) => setGuestCount(Number(e.target.value))}
         style={{
          height: "44px",
@@ -223,7 +223,8 @@ const EventTypeSelection: React.FC<EventTypeSelectionProps> = ({
         variant="default"
         size="default"
         style={{ boxShadow: "0px 8px 20px 0px #4E60FF29" }}
-        onClick={handleSelectDateTime}>
+        onClick={handleSelectDateTime}
+        disabled={!guestCount}>
         Select Date and Time
        </Button>
       )}

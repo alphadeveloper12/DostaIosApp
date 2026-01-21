@@ -108,7 +108,7 @@ const CuisineSelection: React.FC<CuisineSelectionProps> = ({
   // Let's allow deselecting if clicked again, otherwise replace.
 
   const isSelected = selectedCuisines.some(
-   (selectedCuisine) => selectedCuisine.id === cuisine.id
+   (selectedCuisine) => selectedCuisine.id === cuisine.id,
   );
 
   if (isSelected) {
@@ -147,7 +147,7 @@ const CuisineSelection: React.FC<CuisineSelectionProps> = ({
      </p>
 
      {/* Grid of buttons */}
-     <div className="grid md:grid-cols-4 gap-6">
+     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
       {cuisineTypes.map((cuisine) => (
        <Button
         key={cuisine.id}
@@ -158,7 +158,7 @@ const CuisineSelection: React.FC<CuisineSelectionProps> = ({
          fontSize: "16px",
          height: "80px",
          backgroundColor: selectedCuisines.some(
-          (selectedCuisine) => selectedCuisine.id === cuisine.id
+          (selectedCuisine) => selectedCuisine.id === cuisine.id,
          )
           ? "#EAF5FF"
           : "#fff",
@@ -166,9 +166,9 @@ const CuisineSelection: React.FC<CuisineSelectionProps> = ({
          fontWeight: "400",
          borderRadius: "16px",
          padding: "10px",
-         width: "245px",
+         width: "100%", // Changed to 100%
          border: selectedCuisines.some(
-          (selectedCuisine) => selectedCuisine.id === cuisine.id
+          (selectedCuisine) => selectedCuisine.id === cuisine.id,
          )
           ? "1px solid #054A86"
           : "1px solid #C7C8D2",
@@ -183,10 +183,10 @@ const CuisineSelection: React.FC<CuisineSelectionProps> = ({
          style={{
           width: "60px",
           height: "60px",
-          marginRight: "",
+          marginRight: "10px",
          }}
         />
-        <span style={{ textAlign: "left" }}>{cuisine.name}</span>
+        <span style={{ textAlign: "left", flex: 1 }}>{cuisine.name}</span>
        </Button>
       ))}
      </div>

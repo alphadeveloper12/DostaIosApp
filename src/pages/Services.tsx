@@ -8,8 +8,8 @@ const Services = () => {
   <div className="min-h-screen flex flex-col relative">
    <Header />
 
-   <main className="flex-1 relative">
-    <ServicesContent /> 
+   <main className="flex-1 relative overflow-hidden">
+    <ServicesContent />
    </main>
    <MobileFooterNav />
    <Footer />

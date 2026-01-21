@@ -97,37 +97,38 @@ const LocationSelection: React.FC<LocationSelectionProps> = ({
      </h2>
     </div>
 
-    <div className="md:ml-12">
-     <div className="grid md:grid-cols-3 gap-6 max-w-3xl">
+    <div className="mt-8 md:ml-12">
+     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 md:gap-6 max-w-3xl">
       {locations.map((location) => (
        <Button
-        key={location.id} // Use the location id as the key
-        onClick={() => handleLocationSelection(location)} // Pass the location object
+        key={location.id}
+        onClick={() => handleLocationSelection(location)}
         style={{
          fontSize: "16px",
          height: "56px",
          backgroundColor:
-          selectedLocation?.id === location.id ? "#EAF5FF" : "#fff", // Optional chaining used here
+          selectedLocation?.id === location.id ? "#EAF5FF" : "#fff",
          color: "#2B2B43",
          fontWeight: "400",
          borderRadius: "16px",
          padding: "12px 16px",
-         width: "245px",
+         width: "100%", // Changed to 100% to fill grid cell
          border:
           selectedLocation?.id === location.id
            ? "1px solid #054A86"
-           : "1px solid #C7C8D2", // Optional chaining used here
+           : "1px solid #C7C8D2",
          display: "flex",
          alignItems: "center",
          justifyContent: "center",
-        }}>
-        {location.name} {/* Render the location name */}
+        }}
+        className="">
+        {location.name}
        </Button>
       ))}
      </div>
     </div>
 
-    <div className="flex justify-between mt-8">
+    <div className="flex justify-between mt-8 w-full">
      <Button
       onClick={handleGoBack}
       style={{
@@ -143,10 +144,10 @@ const LocationSelection: React.FC<LocationSelectionProps> = ({
      </Button>
      <Button
       onClick={handleContinue}
-      disabled={!selectedLocation?.id} // Disable continue button if no location is selected (using optional chaining)
+      disabled={!selectedLocation?.id}
       className={`bg-[#054A86] text-white hover:bg-[#054A86] hover:bg-opacity-70 ${
        !selectedLocation?.id ? "cursor-not-allowed" : ""
-      }`} // Optional chaining here too
+      }`}
       style={{
        padding: "12px 16px",
        borderRadius: "8px",
