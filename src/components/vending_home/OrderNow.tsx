@@ -90,6 +90,7 @@ const buildConfirmPayload = ({
   timeSlots,
   menuData,
   activeStep,
+  dayPickupSlots,
 }: any) => {
   const plan_type_map: any = {
     "Order Now": "ORDER_NOW",
@@ -122,6 +123,7 @@ const buildConfirmPayload = ({
             day_of_week: day,
             week_number: 1,
             vending_good_uuid: item.vendingGoodUuid || null,
+            pickup_slot_id: dayPickupSlots?.[`1-${day}`] || null,
           });
         });
       });
@@ -143,6 +145,7 @@ const buildConfirmPayload = ({
             day_of_week: day,
             week_number,
             vending_good_uuid: item.vendingGoodUuid || null,
+            pickup_slot_id: dayPickupSlots?.[`${week_number}-${day}`] || null,
           });
         });
       });
@@ -217,6 +220,7 @@ const OrderNow = () => {
   const [weekMenu2, setWeekMenu2] = useState<any>(defaultProgress.weekMenu2);
   const [weekMenu3, setWeekMenu3] = useState<any>(defaultProgress.weekMenu3);
   const [weekMenu4, setWeekMenu4] = useState<any>(defaultProgress.weekMenu4);
+  const [dayPickupSlots, setDayPickupSlots] = useState<Record<string, number>>({});
 
   // --- OPTIONS FROM API ---
   const [planTypeOptions, setPlanTypeOptions] = useState<any[]>([]);
@@ -230,6 +234,10 @@ const OrderNow = () => {
 
   // machine goods (smart grab / stock matching)
   const [machineGoods, setMachineGoods] = useState<any[] | null>(null);
+
+  const defaultSlotId = useMemo(() => {
+    return timeSlots.find((s: any) => s.label === time)?.id || null;
+  }, [time, timeSlots]);
   const [machineShelves, setMachineShelves] = useState<any[] | null>(null);
   const [originalOrderNowMenu, setOriginalOrderNowMenu] = useState<any[]>([]);
   const [originalSmartGrabMenu, setOriginalSmartGrabMenu] = useState<any[]>([]);
@@ -319,6 +327,17 @@ const OrderNow = () => {
             });
             setWeekMenu(weekObj);
           }
+
+          // restore slots
+          const restoredSlots: Record<string, number> = {};
+          (cart.items || []).forEach((it: any) => {
+            if (it.pickup_slot) {
+              const slotId = typeof it.pickup_slot === 'object' ? it.pickup_slot.id : it.pickup_slot;
+              const key = `${it.week_number || 1}-${it.day_of_week}`;
+              restoredSlots[key] = slotId;
+            }
+          });
+          setDayPickupSlots(restoredSlots);
         }
       } catch (err) {
         // ignore: no active cart
@@ -635,6 +654,7 @@ const OrderNow = () => {
               day_of_week: day,
               week_number: weekNum,
               vending_good_uuid: item.vendingGoodUuid || null,
+              pickup_slot_id: dayPickupSlots?.[`${weekNum}-${day}`] || null,
             });
           });
         });
@@ -667,6 +687,7 @@ const OrderNow = () => {
         timeSlots,
         menuData: isMonthly ? (activeStep === 4 ? weekMenu1 : activeStep === 5 ? weekMenu2 : activeStep === 6 ? weekMenu3 : weekMenu4) : currentMenuData,
         activeStep,
+        dayPickupSlots,
       });
 
       itemsToSend = payloadTemp.items || [];
@@ -1149,6 +1170,11 @@ const OrderNow = () => {
                         savedPlanData={weekMenu}
                         allSavedPlans={allSavedPlans}
                         apiMenuData={apiWeeklyMenu}
+                        timeSlots={timeSlots}
+                        dayPickupSlots={dayPickupSlots}
+                        setDayPickupSlots={setDayPickupSlots}
+                        weekNumber={1}
+                        defaultSlotId={defaultSlotId}
                       />
                     </div>
                   )}
@@ -1219,6 +1245,11 @@ const OrderNow = () => {
                             savedPlanData={weekMenu1}
                             allSavedPlans={allSavedPlans}
                             apiMenuData={apiMonthlyMenu?.[0]?.menu}
+                            timeSlots={timeSlots}
+                            dayPickupSlots={dayPickupSlots}
+                            setDayPickupSlots={setDayPickupSlots}
+                            weekNumber={1}
+                            defaultSlotId={defaultSlotId}
                           />
                         </div>
                       )}
@@ -1286,6 +1317,11 @@ const OrderNow = () => {
                             savedPlanData={weekMenu2}
                             allSavedPlans={allSavedPlans}
                             apiMenuData={apiMonthlyMenu?.[1]?.menu}
+                            timeSlots={timeSlots}
+                            dayPickupSlots={dayPickupSlots}
+                            setDayPickupSlots={setDayPickupSlots}
+                            weekNumber={2}
+                            defaultSlotId={defaultSlotId}
                           />
                         </div>
                       )}
@@ -1353,6 +1389,11 @@ const OrderNow = () => {
                             savedPlanData={weekMenu3}
                             allSavedPlans={allSavedPlans}
                             apiMenuData={apiMonthlyMenu?.[2]?.menu}
+                            timeSlots={timeSlots}
+                            dayPickupSlots={dayPickupSlots}
+                            setDayPickupSlots={setDayPickupSlots}
+                            weekNumber={3}
+                            defaultSlotId={defaultSlotId}
                           />
                         </div>
                       )}
@@ -1420,6 +1461,11 @@ const OrderNow = () => {
                             savedPlanData={weekMenu4}
                             allSavedPlans={allSavedPlans}
                             apiMenuData={apiMonthlyMenu?.[3]?.menu}
+                            timeSlots={timeSlots}
+                            dayPickupSlots={dayPickupSlots}
+                            setDayPickupSlots={setDayPickupSlots}
+                            weekNumber={4}
+                            defaultSlotId={defaultSlotId}
                           />
                         </div>
                       )}

@@ -349,7 +349,9 @@ const VendingMenu = () => {
         quantity: i.quantity,
         day_of_week: null,
         week_number: null,
-        vending_good_uuid: i.vending_good_uuid
+        vending_good_uuid: i.vending_good_uuid,
+        plan_type: i.plan_type || "ORDER_NOW",
+        plan_subtype: i.plan_subtype || "NONE"
       }));
 
       const existingIndex = updatedItems.findIndex((i: any) => i.menu_item_id === newItemId);
@@ -370,6 +372,8 @@ const VendingMenu = () => {
             quantity: 1,
             day_of_week: null,
             week_number: null,
+            plan_type: "ORDER_NOW",
+            plan_subtype: "NONE",
             vending_good_uuid: selectedItem.vendingGoodUuid || null
           });
         } else {

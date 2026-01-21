@@ -28,6 +28,10 @@ interface OrderItemAPI {
   quantity: number;
   day_of_week: string | null;
   week_number: number | null;
+  status: string;
+  pickup_code: string | null;
+  plan_type: string;
+  plan_subtype: string;
 }
 
 interface OrderAPI {
@@ -72,14 +76,18 @@ const MyOrders = () => {
   const currentStep = selectedOrder
     ? getStepFromStatus(selectedOrder.status)
     : 1;
-  const [timeRemaining, setTimeRemaining] = useState<string>("10:00");
+
   const [notificationsEnabled, setNotificationsEnabled] = useState(() => {
     return localStorage.getItem("notificationsEnabled") === "true";
   });
 
+  const [stopPolling, setStopPolling] = useState(false);
+
   // Fetch Orders with Polling
   useEffect(() => {
     const fetchOrders = async () => {
+      if (stopPolling) return; // Fail-safe: Stop fetching if terminal status hit
+
       try {
         const token = sessionStorage.getItem("authToken");
         const res = await axios.get(`${baseUrl}/api/vending/orders/`, {
@@ -90,13 +98,23 @@ const MyOrders = () => {
         setOrders(allOrders);
 
         if (allOrders.length > 0) {
-          // If we have a selected order, try to keep it selected (update it)
+          const firstOrder = allOrders[0];
+          // If the most recent order is Order Now and already READY/COMPLETED, 
+          // we can stop polling to avoid any potential "toggling" regressions.
+          const isInstant = firstOrder.plan_type === "ORDER_NOW" || firstOrder.plan_type === "SMART_GRAB";
+          const isTerminal = ["READY", "COMPLETED", "PICKED_UP"].includes(firstOrder.status);
+
+          if (isInstant && isTerminal) {
+            console.log("🛑 Order reached terminal status. Stopping polling as requested.");
+            setStopPolling(true);
+          }
+
           if (selectedOrder) {
             const updated = allOrders.find(
               (o: OrderAPI) => o.id === selectedOrder.id
             );
             if (updated) setSelectedOrder(updated);
-            else setSelectedOrder(allOrders[0]); // Fallback if selected was deleted
+            else setSelectedOrder(allOrders[0]);
           } else {
             setSelectedOrder(allOrders[0]);
           }
@@ -111,9 +129,9 @@ const MyOrders = () => {
     };
 
     fetchOrders();
-    const interval = setInterval(fetchOrders, 5000); // Poll every 5s
+    const interval = setInterval(fetchOrders, 5000);
     return () => clearInterval(interval);
-  }, [baseUrl, selectedOrder?.id]); // Keeping dependency simple
+  }, [baseUrl, selectedOrder?.id, stopPolling]);
 
   // Helper to normalize names for "spelling-only" comparison
   const normalizeName = (name: string) => {
@@ -148,36 +166,7 @@ const MyOrders = () => {
     fetchMenu();
   }, [baseUrl]);
 
-  // Timer Logic
-  useEffect(() => {
-    if (!selectedOrder || currentStep !== 1 || !selectedOrder.created_at) return;
 
-    const createdTime = new Date(selectedOrder.created_at).getTime();
-    if (isNaN(createdTime)) return;
-
-    const targetTime = createdTime + 10 * 60 * 1000; // 10 minutes
-
-    const updateTimer = () => {
-      const now = Date.now();
-      const diff = targetTime - now;
-
-      if (diff <= 0) {
-        setTimeRemaining("00:00");
-      } else {
-        const minutes = Math.floor(diff / 60000);
-        const seconds = Math.floor((diff % 60000) / 1000);
-        setTimeRemaining(
-          `${minutes.toString().padStart(2, "0")}:${seconds
-            .toString()
-            .padStart(2, "0")}`
-        );
-      }
-    };
-
-    updateTimer();
-    const timerInterval = setInterval(updateTimer, 1000);
-    return () => clearInterval(timerInterval);
-  }, [selectedOrder, currentStep]);
 
   // Helper to format date
   const formatDate = (dateString: string) => {
@@ -215,11 +204,14 @@ const MyOrders = () => {
           imageMap[normalizeName(apiItem.menu_item.name)] ||
           "/images/vending_home/food.svg",
         quantity: apiItem.quantity,
+        dayOfWeek: apiItem.day_of_week,
         price: parseFloat(apiItem.menu_item.price),
         weekNumber: apiItem.week_number,
         vendingGoodUuid: null, // Not used in MyOrders but required by type
-        planType: order.plan_type,
-        planSubtype: order.plan_subtype,
+        planType: apiItem.plan_type, // STOP fallback to order.plan_type to identify data issues
+        planSubtype: apiItem.plan_subtype,
+        status: apiItem.status,
+        pickupCode: apiItem.pickup_code,
       };
     });
   };
@@ -227,34 +219,46 @@ const MyOrders = () => {
   // Group items logic (Same as CartPage)
   const getGroupedItems = (order: OrderAPI) => {
     const items = getMappedItems(order);
-    const isMonthly = order.plan_subtype === "MONTHLY";
+    const groups: { title: string; items: CartItemType[] }[] = [];
 
-    if (!isMonthly) {
-      // Flat list for regular orders
-      return [{ title: "Order Details", items }];
-    }
-
-    // Monthly Grouping
-    const weeks = [1, 2, 3, 4];
-    const groups = [];
-
-    for (const week of weeks) {
-      const weekItems = items.filter((i) => i.weekNumber === week);
-      if (weekItems.length > 0) {
+    // 1. Group Plan Items (Weekly/Monthly)
+    const planItems = items.filter(i => i.planType === "START_PLAN");
+    if (planItems.length > 0) {
+      const planSubtype = planItems[0].planSubtype;
+      if (planSubtype === "MONTHLY") {
+        const weeks = [1, 2, 3, 4];
+        for (const week of weeks) {
+          const weekItems = planItems.filter((i) => i.weekNumber === week);
+          if (weekItems.length > 0) {
+            groups.push({
+              title: `Monthly Plan - Week ${week}`,
+              items: weekItems,
+            });
+          }
+        }
+      } else if (planSubtype === "WEEKLY") {
         groups.push({
-          title: `Week ${week}`,
-          items: weekItems,
+          title: "Weekly Plan Items",
+          items: planItems,
+        });
+      } else {
+        groups.push({
+          title: "Meal Plan Items",
+          items: planItems,
         });
       }
     }
 
-    // Extras
-    const extras = items.filter((i) => !i.weekNumber);
-    if (extras.length > 0) {
-      groups.push({ title: "Other Items", items: extras });
+    // 2. Group Order Now / Smart Grab Items
+    const instantItems = items.filter(i => i.planType !== "START_PLAN");
+    if (instantItems.length > 0) {
+      groups.push({
+        title: "Order Now Items",
+        items: instantItems,
+      });
     }
 
-    return groups;
+    return groups.length > 0 ? groups : [{ title: "Order Details", items }];
   };
 
   if (loading) {
@@ -350,28 +354,7 @@ const MyOrders = () => {
                         <p className="text-[24px] font-bold leading-8 text-#2B2B43">
                           Order ID {selectedOrder.id}
                         </p>
-                        <div className="mt-1 flex items-center gap-2">
-                          {currentStep === 1 && (
-                            <span className="h-1.5 w-1.5 rounded-full bg-[#054A86]" />
-                          )}
-                          {currentStep === 2 && (
-                            <span className="h-1.5 w-1.5 rounded-full bg-[#1ABF70]" />
-                          )}
 
-                          {currentStep === 1 && (
-                            <span className="text-sm font-semibold leading-5 text-[#054A86]">
-                              In progress{" "}
-                              <span className="text-[#83859C] font-normal ml-1">
-                                ({timeRemaining})
-                              </span>
-                            </span>
-                          )}
-                          {currentStep === 2 && (
-                            <span className="text-sm font-semibold leading-5 text-[#1ABF70]">
-                              Ready for Pickup
-                            </span>
-                          )}
-                        </div>
                       </div>
                       <div className="flex md:items-end items-start max-md:pt-4 flex-col  gap-3 w-full">
                         <div className="flex max-md:flex-row-reverse gap-2 items-center">
@@ -398,156 +381,7 @@ const MyOrders = () => {
                     </div>
                   </div>
 
-                  {/* Progress */}
-                  <div className="px-4 pt-3">
-                    {/* Desktop Layout */}
-                    <div className="hidden sm:block">
-                      <div className="flex justify-between w-full gap-2 items-center">
-                        <span
-                          className={`flex h-[32px] w-[32px] items-center justify-center rounded-full ${currentStep >= 1 ? "bg-[#1ABF70]" : "bg-[#EDEEF2]"
-                            } text-white ring-[#1ABF70]`}>
-                          <svg
-                            width="20"
-                            height="20"
-                            viewBox="0 0 20 20"
-                            fill="none"
-                            xmlns="http://www.w3.org/2000/svg">
-                            <path
-                              d="M16.6673 5.83398L7.50065 15.0007L3.33398 10.834"
-                              stroke="white"
-                              strokeWidth="2"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                            />
-                          </svg>
-                        </span>
-                        <div className="relative h-0.5 w-full overflow-hidden rounded-full bg-gray-100">
-                          <div
-                            className={`absolute left-0 top-0 h-full ${currentStep === 1
-                              ? "w-1/2"
-                              : currentStep === 2
-                                ? "w-full"
-                                : "w-0"
-                              } rounded-full bg-emerald-500`}
-                          />
-                        </div>
-                        <span
-                          className={`flex h-[32px] w-[32px] items-center justify-center rounded-full ${currentStep >= 2
-                            ? "bg-[#1ABF70]"
-                            : "bg-[#EDEEF2] text-[#2B2B43] font-semibold"
-                            } text-white ring-[#1ABF70]`}
-                          style={{ flexShrink: 0 }}>
-                          {currentStep >= 2 ? (
-                            <svg
-                              width="20"
-                              height="20"
-                              viewBox="0 0 20 20"
-                              fill="none"
-                              xmlns="http://www.w3.org/2000/svg">
-                              <path
-                                d="M16.6673 5.83398L7.50065 15.0007L3.33398 10.834"
-                                stroke="white"
-                                strokeWidth="2"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                              />
-                            </svg>
-                          ) : (
-                            "2"
-                          )}
-                        </span>
-                      </div>
-                      <div className="mt-3 flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <span className="text-base font-bold text-[#2B2B43]">
-                            Order Placed
-                          </span>
-                        </div>
-                        <span className="text-base font-bold text-[#2B2B43]">
-                          Ready for Pickup
-                        </span>
-                      </div>
-                    </div>
 
-                    {/* Mobile Layout */}
-                    <div className=" sm:hidden flex flex-col">
-                      <div className="flex items-start">
-                        <div className="flex flex-col items-center mr-4">
-                          <span
-                            className={`flex h-[32px] w-[32px] items-center justify-center rounded-full ${currentStep >= 1 ? "bg-[#1ABF70]" : "bg-[#EDEEF2]"
-                              } text-white ring-[#1ABF70]`}>
-                            <svg
-                              width="20"
-                              height="20"
-                              viewBox="0 0 20 20"
-                              fill="none"
-                              xmlns="http://www.w3.org/2000/svg">
-                              <path
-                                d="M16.6673 5.83398L7.50065 15.0007L3.33398 10.834"
-                                stroke="white"
-                                strokeWidth="2"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                              />
-                            </svg>
-                          </span>
-                          <div
-                            className={`w-0.5 h-12 transition-colors duration-500 ${currentStep >= 2 ? "bg-[#1ABF70]" : "bg-gray-200"
-                              }`}
-                          />
-                        </div>
-                        <div className="flex flex-col pt-0.5 pb-4">
-                          <span className="text-base font-bold text-[#2B2B43]">
-                            Order Placed
-                          </span>
-                        </div>
-                      </div>
-                      <div className="flex items-start">
-                        <div className="flex flex-col items-center mr-4">
-                          <span
-                            className={`flex h-[32px] w-[32px] items-center justify-center rounded-full ${currentStep >= 2
-                              ? "bg-[#1ABF70]"
-                              : "bg-[#EDEEF2] text-[#2B2B43] font-semibold"
-                              } text-white ring-[#1ABF70]`}
-                            style={{ flexShrink: 0 }}>
-                            {currentStep >= 2 ? (
-                              <svg
-                                width="20"
-                                height="20"
-                                viewBox="0 0 20 20"
-                                fill="none"
-                                xmlns="http://www.w3.org/2000/svg">
-                                <path
-                                  d="M16.6673 5.83398L7.50065 15.0007L3.33398 10.834"
-                                  stroke="white"
-                                  strokeWidth="2"
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                />
-                              </svg>
-                            ) : (
-                              "2"
-                            )}
-                          </span>
-                        </div>
-                        <div className="flex flex-col pt-0.5">
-                          <span className="text-base font-bold text-[#2B2B43]">
-                            Ready for Pickup
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Actions */}
-                    <div className="flex items-center gap-3 md:py-4 py-6">
-                      <Button
-                        onClick={() => navigate("/catering/request-custom-quote")}
-                        variant="default"
-                        size="lg">
-                        Reschedule Booking
-                      </Button>
-                    </div>
-                  </div>
 
                   {/* Info note */}
                   {/* Info note removed */}
@@ -602,7 +436,9 @@ const MyOrders = () => {
                         // Further group items by pickup code within this group
                         const itemsByCode: Record<string, CartItemType[]> = {};
                         group.items.forEach((item) => {
-                          const code = backendPickupCode || pickupCodes[`menu_${item.menuItemId}`] || "NO_CODE";
+                          // Plan items should ONLY show codes if backend explicitly provided one for that item
+                          // Order Now items can fall back to the main order pickup code
+                          const code = item.pickupCode || (item.planType !== "START_PLAN" ? backendPickupCode : null) || "NO_CODE";
                           if (!itemsByCode[code]) itemsByCode[code] = [];
                           itemsByCode[code].push(item);
                         });
@@ -623,10 +459,10 @@ const MyOrders = () => {
                                         Pickup Code: <span className="text-[14px] font-[700]">{code}</span>
                                       </span>
                                     )}
-                                    {(backendQrCode || (code !== "NO_CODE" && !backendPickupCode)) && (
+                                    {code !== "NO_CODE" && (
                                       <div className="flex items-center gap-2">
                                         <img
-                                          src={backendQrCode || `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${code}`}
+                                          src={backendQrCode && code === backendPickupCode ? backendQrCode : `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${code}`}
                                           alt="QR"
                                           className="w-10 h-10 rounded border border-gray-200 bg-white p-1"
                                         />

@@ -40,6 +40,11 @@ interface MenuProps {
   savedPlanData?: WeeklyPlan;
   allSavedPlans?: SavedPlan[];
   apiMenuData?: any; // ✅ new prop for API menu data
+  timeSlots?: any[];
+  dayPickupSlots?: Record<string, number>;
+  setDayPickupSlots?: React.Dispatch<React.SetStateAction<Record<string, number>>>;
+  weekNumber?: number;
+  defaultSlotId?: number | null;
 }
 
 const days = [
@@ -72,6 +77,11 @@ const PlanWeekly: React.FC<MenuProps> = ({
   savedPlanData,
   allSavedPlans = [],
   apiMenuData,
+  timeSlots = [],
+  dayPickupSlots = {},
+  setDayPickupSlots,
+  weekNumber = 1,
+  defaultSlotId = null,
 }) => {
   const [openDialouge, setOpenDialouge] = useState(false);
   const [scrolled, setScrolled] = useState(false);
@@ -419,17 +429,52 @@ const PlanWeekly: React.FC<MenuProps> = ({
               </div>
             </div>
 
-            <div className="flex md:flex-row justify-between flex-col gap-2 md:py-2 pt-4">
-              <p className="text-[14px] font-[400] leading-[20px] tracking-[0.2px] text-[#545563]">
-                {currentDayItems?.length === 0
-                  ? "No selected meals"
-                  : `Selected for ${currentDay} : ${currentDayItems
-                    .map((item) => `${item?.heading} (x${item.quantity})`)
-                    .join(", ")}`}
-              </p>
-              <p className="text-[14px] font-[400] leading-[20px] tracking-[0.2px] text-[#545563]">
-                Total: <span className="font-[700]">{totalMealsForDay} Meals</span>
-              </p>
+            <div className="flex md:flex-row justify-between flex-col gap-2 md:py-2 pt-4 items-center">
+              <div className="flex flex-col">
+                <p className="text-[14px] font-[400] leading-[20px] tracking-[0.2px] text-[#545563]">
+                  {currentDayItems?.length === 0
+                    ? "No selected meals"
+                    : `Selected for ${currentDay} : ${currentDayItems
+                      .map((item) => `${item?.heading} (x${item.quantity})`)
+                      .join(", ")}`}
+                </p>
+                <p className="text-[14px] font-[400] leading-[20px] tracking-[0.2px] text-[#545563]">
+                  Total: <span className="font-[700]">{totalMealsForDay} Meals</span>
+                </p>
+              </div>
+
+              {timeSlots.length > 0 && (
+                <div className="flex items-center gap-3">
+                  <span className="text-[14px] font-[600] text-[#545563]">Pickup Time:</span>
+                  <select
+                    value={dayPickupSlots[`${weekNumber}-${currentDay}`] || defaultSlotId || ""}
+                    onChange={(e) => {
+                      const val = parseInt(e.target.value, 10);
+                      if (setDayPickupSlots) {
+                        setDayPickupSlots((prev) => ({
+                          ...prev,
+                          [`${weekNumber}-${currentDay}`]: val,
+                        }));
+                      }
+                    }}
+                    className="h-[36px] px-3 text-[14px] border-2 border-[#054A86] text-[#054A86] bg-[#EAF5FF] rounded-[8px] focus:ring-[#054A86] focus:border-[#054A86] font-medium appearance-none min-w-[150px]"
+                    style={{
+                      backgroundImage:
+                        "url(\"data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23054A86' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E\")",
+                      backgroundRepeat: "no-repeat",
+                      backgroundPosition: "right 0.5rem center",
+                      backgroundSize: "1.2em",
+                    }}
+                  >
+                    <option value="">Select Time</option>
+                    {timeSlots.map((slot: any) => (
+                      <option key={slot.id} value={slot.id}>
+                        {slot.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
             </div>
           </div>
         </div>
