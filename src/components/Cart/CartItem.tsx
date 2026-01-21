@@ -3,6 +3,8 @@ import React from "react";
 import { CartItemType } from "@/pages/CartPage";
 import { PlusIcon, MinusIcon, TrashIcon } from "@heroicons/react/24/outline";
 
+import ImageWithShimmer from "../ui/ImageWithShimmer";
+
 interface CartItemProps {
  item: CartItemType;
  onQuantityChange: (id: number, delta: number) => void;
@@ -16,10 +18,10 @@ const CartItem: React.FC<CartItemProps> = ({
 }) => {
  return (
   <div className="flex flex-row md:items-end gap-3 ">
-   <img
+   <ImageWithShimmer
     src={item.imageUrl}
     alt={item.name}
-    className="md:w-[72px] md:h-[72px] h-10 w-10 md:rounded-md rounded-xl object-cover"
+    wrapperClassName="md:w-[72px] md:h-[72px] h-10 w-10 md:rounded-md rounded-xl flex-shrink-0"
    />
 
    <div className=" flex flex-col lg:flex-row lg:items-center lg:justify-between w-full">
@@ -47,7 +49,9 @@ const CartItem: React.FC<CartItemProps> = ({
        className="p-[3px] text-black bg-[#EDEEF2] rounded-[4px]">
        <MinusIcon className="w-[10px] h-[10px]" />
       </button>
-      <span className="px-2 text-[16px] leading-[24px] font-[600]">{item.quantity}</span>
+      <span className="px-2 text-[16px] leading-[24px] font-[600]">
+       {item.quantity}
+      </span>
       <button
        onClick={() => onQuantityChange(item.id, 1)}
        className="p-[3px] text-black bg-[#EDEEF2] rounded-[4px]">
