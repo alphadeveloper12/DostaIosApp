@@ -36,6 +36,25 @@ const OrderedItem: React.FC<OrderedItemProps> = ({
                                 <span className="font-[600] text-[#2B2B43]">{item.pickupLocation}</span>
                             </p>
                         </div>
+
+                        {/* Item Fulfillment Status */}
+                        <div className="mt-2 flex items-center gap-2">
+                            {item.status === "READY" ? (
+                                <span className="bg-[#E6F9F0] text-[#1ABF70] text-[10px] font-bold px-2 py-0.5 rounded-full uppercase">
+                                    Ready for Pickup
+                                </span>
+                            ) : item.status === "PREPARING" ? (
+                                <span className="bg-[#FFF8E6] text-[#FFA800] text-[10px] font-bold px-2 py-0.5 rounded-full uppercase">
+                                    Preparing in Kitchen
+                                </span>
+                            ) : (
+                                <span className="bg-[#F0F2F5] text-[#83859C] text-[10px] font-bold px-2 py-0.5 rounded-full uppercase">
+                                    {item.status || "Pending"}
+                                </span>
+                            )}
+                        </div>
+
+
                     </div>
 
                     <div className="text-right flex gap-[26px]">
@@ -47,12 +66,6 @@ const OrderedItem: React.FC<OrderedItemProps> = ({
                         </p>
                     </div>
                 </div>
-
-                {/* <div className="mt-2 text-right">
-     <span className="text-[14px] leading-[20px] font-[500] text-[#83859C]">
-      x {item.quantity}
-     </span>
-    </div> */}
             </div>
         </div>
     );

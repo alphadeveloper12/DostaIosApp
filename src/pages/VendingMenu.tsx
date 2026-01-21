@@ -143,12 +143,67 @@ const VendingMenu = () => {
      const { goods, shelves, timestamp } = JSON.parse(cachedData);
      const isExpired = Date.now() - timestamp > 5 * 60 * 1000; // 5 min cache
 
-     if (goods && goods.length > 0) {
-      setMachineGoods(goods);
-      if (shelves) setMachineShelves(shelves);
-      if (!isExpired) return;
-     }
-    }
+      // Map existing items to simple format
+      let updatedItems = existingItems.map((i: any) => ({
+        menu_item_id: i.menu_item.id,
+        quantity: i.quantity,
+        day_of_week: null,
+        week_number: null,
+        vending_good_uuid: i.vending_good_uuid,
+        plan_type: i.plan_type || "ORDER_NOW",
+        plan_subtype: i.plan_subtype || "NONE"
+      }));
+
+      const existingIndex = updatedItems.findIndex((i: any) => i.menu_item_id === newItemId);
+
+      if (existingIndex >= 0) {
+        // Increment quantity if < totalAvailable
+        if (updatedItems[existingIndex].quantity < totalAvailable) {
+          updatedItems[existingIndex].quantity += 1;
+        } else {
+          alert(`Only ${totalAvailable} items available in stock.`);
+          return;
+        }
+      } else {
+        // Add new item
+        if (totalAvailable > 0) {
+          updatedItems.push({
+            menu_item_id: newItemId,
+            quantity: 1,
+            day_of_week: null,
+            week_number: null,
+            plan_type: "ORDER_NOW",
+            plan_subtype: "NONE",
+            vending_good_uuid: selectedItem.vendingGoodUuid || null
+          });
+        } else {
+          alert("Item is sold out.");
+          return;
+        }
+      }
+
+      // 3. Post Cart
+      const payload = {
+        location_id: locationId,
+        plan_type: "ORDER_NOW",
+        plan_subtype: "NONE",
+        items: updatedItems
+      };
+
+      console.log("🛒 Adding to Cart Payload:", JSON.stringify(payload, null, 2));
+
+      const postRes = await fetch(`${baseUrl}/api/vending/cart/`, {
+        method: "POST",
+        headers: headers,
+        body: JSON.stringify(payload)
+      });
+
+      if (postRes.ok) {
+        navigate("/vending-home/cart");
+      } else {
+        console.error("Failed to update cart");
+        alert("Failed to add item to cart. Please try again.");
+      }
 
     const response = await fetch(
      `${baseUrl}/api/vending/external/machine-goods/?machineUuid=${serialNumber}`,

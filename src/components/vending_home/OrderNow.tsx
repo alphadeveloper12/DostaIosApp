@@ -87,52 +87,75 @@ const generateCartSummary = (cartData: any[]) => {
 
 /** Payload builder for /api/vending/cart/ */
 const buildConfirmPayload = ({
- locationId,
- orderType,
- planType,
- pickOrder,
- time,
- timeSlots,
- menuData,
- activeStep,
+  locationId,
+  orderType,
+  planType,
+  pickOrder,
+  time,
+  timeSlots,
+  menuData,
+  activeStep,
+  dayPickupSlots,
 }: any) => {
- const plan_type_map: any = {
-  "Order Now": "ORDER_NOW",
-  "Smart Grab": "SMART_GRAB",
-  "Start a Plan": "START_PLAN",
- };
+  const plan_type_map: any = {
+    "Order Now": "ORDER_NOW",
+    "Smart Grab": "SMART_GRAB",
+    "Start a Plan": "START_PLAN",
+  };
 
- const pickup_type_map: any = {
-  "Pickup Today": "TODAY",
-  "Pickup in 24 hours": "IN_24_HOURS",
-  "Pickup in 24": "IN_24_HOURS",
- };
+  const pickup_type_map: any = {
+    "Pickup Today": "TODAY",
+    "Pickup in 24 hours": "IN_24_HOURS",
+    "Pickup in 24": "IN_24_HOURS",
+  };
 
- const pickup_type = pickup_type_map[pickOrder] ?? "TODAY";
- const selectedSlot = timeSlots?.find((slot: any) => slot.label === time);
+  const pickup_type = pickup_type_map[pickOrder] ?? "TODAY";
+  const selectedSlot = timeSlots?.find((slot: any) => slot.label === time);
 
- const formatItems = (data: any, pType: string) => {
-  if (!data) return [];
+  const formatItems = (data: any, pType: string) => {
+    if (!data) return [];
 
-  // WEEKLY (object by day)
-  if (pType === "weekly") {
-   const days = Object.keys(data);
-   const items: any[] = [];
+    // WEEKLY (object by day)
+    if (pType === "weekly") {
+      const days = Object.keys(data);
+      const items: any[] = [];
 
-   days.forEach((day) => {
-    (data[day] || []).forEach((item: any) => {
-     items.push({
-      menu_item_id: item.id,
-      quantity: item.quantity || 1,
-      day_of_week: day,
-      week_number: 1,
-      vending_good_uuid: item.vendingGoodUuid || null,
-     });
-    });
-   });
+      days.forEach((day) => {
+        (data[day] || []).forEach((item: any) => {
+          items.push({
+            menu_item_id: item.id,
+            quantity: item.quantity || 1,
+            day_of_week: day,
+            week_number: 1,
+            vending_good_uuid: item.vendingGoodUuid || null,
+            pickup_slot_id: dayPickupSlots?.[`1-${day}`] || null,
+          });
+        });
+      });
 
-   return items;
-  }
+      return items;
+    }
+
+    // MONTHLY (object by day) - week_number derived from activeStep (4-7)
+    if (pType === "monthly") {
+      const week_number =
+        activeStep === 4 ? 1 : activeStep === 5 ? 2 : activeStep === 6 ? 3 : activeStep === 7 ? 4 : null;
+
+      const items: any[] = [];
+      Object.keys(data).forEach((day) => {
+        (data[day] || []).forEach((item: any) => {
+          items.push({
+            menu_item_id: item.id,
+            quantity: item.quantity || 1,
+            day_of_week: day,
+            week_number,
+            vending_good_uuid: item.vendingGoodUuid || null,
+            pickup_slot_id: dayPickupSlots?.[`${week_number}-${day}`] || null,
+          });
+        });
+      });
+      return items;
+    }
 
   // MONTHLY (object by day) - week_number derived from activeStep (4-7)
   if (pType === "monthly") {
@@ -193,168 +216,194 @@ const buildConfirmPayload = ({
 };
 
 const OrderNow = () => {
- const dispatch = useDispatch();
- const navigate = useNavigate();
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
 
- const baseUrl = import.meta.env.VITE_API_URL;
- const token = sessionStorage.getItem("authToken") || "";
+  const baseUrl = import.meta.env.VITE_API_URL;
+  const token = sessionStorage.getItem("authToken") || "";
 
- // IMPORTANT: Your API seems inconsistent in repo: Token vs token.
- // Most DRF uses "Token <key>". Keep it consistent:
- const authHeaders = {
-  headers: {
-   Authorization: `Token ${token}`,
-  },
- };
+  // IMPORTANT: Your API seems inconsistent in repo: Token vs token.
+  // Most DRF uses "Token <key>". Keep it consistent:
+  const authHeaders = {
+    headers: {
+      Authorization: `Token ${token}`,
+    },
+  };
 
- // --- PROGRESS STATES ---
- const [activeStep, setActiveStep] = useState(defaultProgress.activeStep);
- const [maxCompleted, setMaxCompleted] = useState(defaultProgress.maxCompleted);
+  // --- PROGRESS STATES ---
+  const [activeStep, setActiveStep] = useState(defaultProgress.activeStep);
+  const [maxCompleted, setMaxCompleted] = useState(defaultProgress.maxCompleted);
 
- const [pickupLocation, setPickupLocation] = useState("no location selected");
- const [time, setTime] = useState(defaultProgress.time);
- const [isOpen, setIsOpen] = useState<boolean>(false);
+  const [pickupLocation, setPickupLocation] = useState("no location selected");
+  const [time, setTime] = useState(defaultProgress.time);
+  const [isOpen, setIsOpen] = useState<boolean>(false);
 
- const [pickOrder, SetPickOrder] = useState(defaultProgress.pickOrder);
- const [orderType, setOrderType] = useState(defaultProgress.orderType);
- const [planType, setPlanType] = useState(defaultProgress.planType);
+  const [pickOrder, SetPickOrder] = useState(defaultProgress.pickOrder);
+  const [orderType, setOrderType] = useState(defaultProgress.orderType);
+  const [planType, setPlanType] = useState(defaultProgress.planType);
 
- // --- SAVE PLAN SIDEBAR ---
- const [savePlanMenu, setSavePlanMenu] = useState<boolean>(false);
- const [currentPlanName, setCurrentPlanName] = useState("");
- const [isDefaultPlan, setIsDefaultPlan] = useState(false);
- const [stepToSave, setStepToSave] = useState<number | null>(null);
- const [allSavedPlans, setAllSavedPlans] = useState<any[]>(
-  defaultProgress.allSavedPlans,
- );
+  // --- SAVE PLAN SIDEBAR ---
+  const [savePlanMenu, setSavePlanMenu] = useState<boolean>(false);
+  const [currentPlanName, setCurrentPlanName] = useState("");
+  const [isDefaultPlan, setIsDefaultPlan] = useState(false);
+  const [stepToSave, setStepToSave] = useState<number | null>(null);
+  const [allSavedPlans, setAllSavedPlans] = useState<any[]>(defaultProgress.allSavedPlans);
 
- // --- MENU STATES ---
- const [orderNowMenu, setOrderNowMenu] = useState<any[]>(
-  defaultProgress.orderNowMenu,
- );
- const [smartGrabMenu, setSmartGrabMenu] = useState<any[]>(
-  defaultProgress.smartGrabMenu,
- );
+  // --- MENU STATES ---
+  const [orderNowMenu, setOrderNowMenu] = useState<any[]>(defaultProgress.orderNowMenu);
+  const [smartGrabMenu, setSmartGrabMenu] = useState<any[]>(defaultProgress.smartGrabMenu);
 
- const [weekMenu, setWeekMenu] = useState<any>(defaultProgress.weekMenu);
- const [weekMenu1, setWeekMenu1] = useState<any>(defaultProgress.weekMenu1);
- const [weekMenu2, setWeekMenu2] = useState<any>(defaultProgress.weekMenu2);
- const [weekMenu3, setWeekMenu3] = useState<any>(defaultProgress.weekMenu3);
- const [weekMenu4, setWeekMenu4] = useState<any>(defaultProgress.weekMenu4);
+  const [weekMenu, setWeekMenu] = useState<any>(defaultProgress.weekMenu);
+  const [weekMenu1, setWeekMenu1] = useState<any>(defaultProgress.weekMenu1);
+  const [weekMenu2, setWeekMenu2] = useState<any>(defaultProgress.weekMenu2);
+  const [weekMenu3, setWeekMenu3] = useState<any>(defaultProgress.weekMenu3);
+  const [weekMenu4, setWeekMenu4] = useState<any>(defaultProgress.weekMenu4);
+  const [dayPickupSlots, setDayPickupSlots] = useState<Record<string, number>>({});
 
- // --- OPTIONS FROM API ---
- const [planTypeOptions, setPlanTypeOptions] = useState<any[]>([]);
- const [pickupOptions, setPickupOptions] = useState<any[]>([]);
- const [timeSlots, setTimeSlots] = useState<any[]>([]);
- const [planSubTypes, setPlanSubTypes] = useState<any[]>([]);
+  // --- OPTIONS FROM API ---
+  const [planTypeOptions, setPlanTypeOptions] = useState<any[]>([]);
+  const [pickupOptions, setPickupOptions] = useState<any[]>([]);
+  const [timeSlots, setTimeSlots] = useState<any[]>([]);
+  const [planSubTypes, setPlanSubTypes] = useState<any[]>([]);
 
- // menus from API for plan selection UI
- const [apiWeeklyMenu, setApiWeeklyMenu] = useState<any>(null);
- const [apiMonthlyMenu, setApiMonthlyMenu] = useState<any>(null);
+  // menus from API for plan selection UI
+  const [apiWeeklyMenu, setApiWeeklyMenu] = useState<any>(null);
+  const [apiMonthlyMenu, setApiMonthlyMenu] = useState<any>(null);
 
- // machine goods (smart grab / stock matching)
- const [machineGoods, setMachineGoods] = useState<any[] | null>(null);
- const [machineShelves, setMachineShelves] = useState<any[] | null>(null);
- const [originalOrderNowMenu, setOriginalOrderNowMenu] = useState<any[]>([]);
- const [originalSmartGrabMenu, setOriginalSmartGrabMenu] = useState<any[]>([]);
+  // machine goods (smart grab / stock matching)
+  const [machineGoods, setMachineGoods] = useState<any[] | null>(null);
 
- // --- Restore state from API on mount ---
- useEffect(() => {
-  const loadStateFromApi = async () => {
-   let restored = false;
+  const defaultSlotId = useMemo(() => {
+    return timeSlots.find((s: any) => s.label === time)?.id || null;
+  }, [time, timeSlots]);
+  const [machineShelves, setMachineShelves] = useState<any[] | null>(null);
+  const [originalOrderNowMenu, setOriginalOrderNowMenu] = useState<any[]>([]);
+  const [originalSmartGrabMenu, setOriginalSmartGrabMenu] = useState<any[]>([]);
 
-   try {
-    const res = await axios.get(`${baseUrl}/api/vending/cart/`, authHeaders);
-    const cart = res.data;
+  // --- Restore state from API on mount ---
+  useEffect(() => {
+    const loadStateFromApi = async () => {
+      let restored = false;
 
-    if (
-     cart &&
-     (cart.items?.length > 0 || (cart.current_step && cart.current_step > 1))
-    ) {
-     restored = true;
+      try {
+        const res = await axios.get(`${baseUrl}/api/vending/cart/`, authHeaders);
+        const cart = res.data;
 
-     if (cart.location) {
-      setPickupLocation(`${cart.location.name}, ${cart.location.info}`);
-     }
+        if (cart && (cart.items?.length > 0 || (cart.current_step && cart.current_step > 1))) {
+          restored = true;
 
-     let restoredStep = cart.current_step || 1;
-     if (
-      restoredStep === 1 &&
-      (cart.plan_type !== "NONE" ||
-       (cart.items && cart.items.length > 0) ||
-       cart.location)
-     ) {
-      restoredStep = 2;
-     }
+          if (cart.location) {
+            setPickupLocation(`${cart.location.name}, ${cart.location.info}`);
+          }
 
-     setActiveStep(restoredStep);
-     setMaxCompleted(Math.max(0, restoredStep - 1));
+          let restoredStep = cart.current_step || 1;
+          if (
+            restoredStep === 1 &&
+            (cart.plan_type !== "NONE" || (cart.items && cart.items.length > 0) || cart.location)
+          ) {
+            restoredStep = 2;
+          }
 
-     if (cart.plan_type) {
-      const typeMap: any = {
-       ORDER_NOW: "Order Now",
-       SMART_GRAB: "Smart Grab",
-       START_PLAN: "Start a Plan",
-      };
-      setOrderType(typeMap[cart.plan_type] || "");
-     }
+          setActiveStep(restoredStep);
+          setMaxCompleted(Math.max(0, restoredStep - 1));
 
-     const rawSubtype = cart.plan_subtype || cart.plan_sub_type;
-     if (rawSubtype && rawSubtype !== "NONE") {
-      setPlanType(String(rawSubtype).toLowerCase());
-     }
+          if (cart.plan_type) {
+            const typeMap: any = {
+              ORDER_NOW: "Order Now",
+              SMART_GRAB: "Smart Grab",
+              START_PLAN: "Start a Plan",
+            };
+            setOrderType(typeMap[cart.plan_type] || "");
+          }
 
-     if (cart.pickup_type) {
-      const pMap: any = {
-       TODAY: "Pickup Today",
-       IN_24_HOURS: "Pickup in 24 hours",
-      };
-      SetPickOrder(pMap[cart.pickup_type] || "");
-     }
+          const rawSubtype = cart.plan_subtype || cart.plan_sub_type;
+          if (rawSubtype && rawSubtype !== "NONE") {
+            setPlanType(String(rawSubtype).toLowerCase());
+          }
 
-     if (cart.pickup_slot) {
-      setTime(cart.pickup_slot.label);
-     }
+          if (cart.pickup_type) {
+            const pMap: any = {
+              TODAY: "Pickup Today",
+              IN_24_HOURS: "Pickup in 24 hours",
+            };
+            SetPickOrder(pMap[cart.pickup_type] || "");
+          }
 
-     // restore items
-     const restoredItems = (cart.items || []).map((item: any) => ({
-      ...item.menu_item,
-      heading: item.menu_item.name,
-      imgAlt: `food-${item.menu_item.id}`,
-      imgSrc: item.menu_item.image_url || "/images/placeholder_food.png",
-      quantity: item.quantity,
-      id: item.menu_item.id,
-      price: `AED ${parseFloat(item.menu_item.price).toFixed(2)}`,
-     }));
+          if (cart.pickup_slot) {
+            setTime(cart.pickup_slot.label);
+          }
 
-     if (cart.plan_type === "ORDER_NOW") {
-      setOrderNowMenu(restoredItems);
-     } else if (cart.plan_type === "SMART_GRAB") {
-      setSmartGrabMenu(restoredItems);
-     } else if (
-      cart.plan_type === "START_PLAN" &&
-      String(cart.plan_subtype).toUpperCase() === "WEEKLY"
-     ) {
-      const weekObj: any = {};
-      (cart.items || []).forEach((it: any) => {
-       const d = it.day_of_week;
-       if (!weekObj[d]) weekObj[d] = [];
-       weekObj[d].push({
-        ...it.menu_item,
-        heading: it.menu_item.name,
-        imgAlt: `food-${it.menu_item.id}`,
-        imgSrc: it.menu_item.image_url || "/images/placeholder_food.png",
-        quantity: it.quantity,
-        id: it.menu_item.id,
-        price: `AED ${parseFloat(it.menu_item.price).toFixed(2)}`,
-       });
-      });
-      setWeekMenu(weekObj);
-     }
-    }
-   } catch (err) {
-    // ignore: no active cart
-   }
+          // restore items
+          const restoredItems = (cart.items || []).map((item: any) => ({
+            ...item.menu_item,
+            heading: item.menu_item.name,
+            imgAlt: `food-${item.menu_item.id}`,
+            imgSrc: item.menu_item.image_url || "/images/placeholder_food.png",
+            quantity: item.quantity,
+            id: item.menu_item.id,
+            price: `AED ${parseFloat(item.menu_item.price).toFixed(2)}`,
+          }));
+
+          if (cart.plan_type === "ORDER_NOW") {
+            setOrderNowMenu(restoredItems);
+          } else if (cart.plan_type === "SMART_GRAB") {
+            setSmartGrabMenu(restoredItems);
+          } else if (cart.plan_type === "START_PLAN" && String(cart.plan_subtype).toUpperCase() === "WEEKLY") {
+            const weekObj: any = {};
+            (cart.items || []).forEach((it: any) => {
+              const d = it.day_of_week;
+              if (!weekObj[d]) weekObj[d] = [];
+              weekObj[d].push({
+                ...it.menu_item,
+                heading: it.menu_item.name,
+                imgAlt: `food-${it.menu_item.id}`,
+                imgSrc: it.menu_item.image_url || "/images/placeholder_food.png",
+                quantity: it.quantity,
+                id: it.menu_item.id,
+                price: `AED ${parseFloat(it.menu_item.price).toFixed(2)}`,
+              });
+            });
+            setWeekMenu(weekObj);
+          }
+
+          // restore slots
+          const restoredSlots: Record<string, number> = {};
+          (cart.items || []).forEach((it: any) => {
+            if (it.pickup_slot) {
+              const slotId = typeof it.pickup_slot === 'object' ? it.pickup_slot.id : it.pickup_slot;
+              const key = `${it.week_number || 1}-${it.day_of_week}`;
+              restoredSlots[key] = slotId;
+            }
+          });
+          setDayPickupSlots(restoredSlots);
+        }
+      } catch (err) {
+        // ignore: no active cart
+      }
+
+      // fallback: if not restored, check local/session selectedLocation
+      if (!restored) {
+        try {
+          const selectedLocation = JSON.parse(
+            sessionStorage.getItem("selectedLocation") ||
+            localStorage.getItem("selectedLocation") ||
+            "{}"
+          );
+
+          if (selectedLocation?.location) {
+            setActiveStep(2);
+            setMaxCompleted(1);
+            setPickupLocation(`${selectedLocation.location.name}, ${selectedLocation.location.info}`);
+          }
+        } catch (e) {
+          // ignore
+        }
+      }
+    };
+
+    loadStateFromApi();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
    // fallback: if not restored, check local/session selectedLocation
    if (!restored) {
@@ -853,18 +902,49 @@ const OrderNow = () => {
    current_step: nextStep,
   };
 
-  console.log("🛒 Confirming Order Payload:", JSON.stringify(payload, null, 2));
+    // determine currentMenuData for payload
+    let currentMenuData: any = [];
+    if (orderType === "Order Now") currentMenuData = orderNowMenu;
+    if (orderType === "Smart Grab") currentMenuData = smartGrabMenu;
+    if (isWeeklyPlan) currentMenuData = weekMenu;
+
+    // MONTHLY needs special: at last step send all weeks
+    let itemsToSend: any[] = [];
+
+    if (isMonthly && isLastStep) {
+      const finalItems: any[] = [];
+
+      const processWeek = (wm: any, weekNum: number) => {
+        Object.keys(wm || {}).forEach((day) => {
+          (wm[day] || []).forEach((item: any) => {
+            finalItems.push({
+              menu_item_id: item.id,
+              quantity: item.quantity || 1,
+              day_of_week: day,
+              week_number: weekNum,
+              vending_good_uuid: item.vendingGoodUuid || null,
+              pickup_slot_id: dayPickupSlots?.[`${weekNum}-${day}`] || null,
+            });
+          });
+        });
+      };
 
   try {
    await axios.post(`${baseUrl}/api/vending/cart/`, payload, authHeaders);
 
-   // progress update locally
-   if (activeStep === maxCompleted + 1) {
-    setMaxCompleted(activeStep);
-    setActiveStep(nextStep);
-   } else {
-    setActiveStep(maxCompleted + 1);
-   }
+      itemsToSend = Array.from(keyMap.values());
+    } else {
+      const payloadTemp = buildConfirmPayload({
+        locationId: locId,
+        orderType,
+        planType: orderType === "Start a Plan" ? planType : "",
+        pickOrder,
+        time,
+        timeSlots,
+        menuData: isMonthly ? (activeStep === 4 ? weekMenu1 : activeStep === 5 ? weekMenu2 : activeStep === 6 ? weekMenu3 : weekMenu4) : currentMenuData,
+        activeStep,
+        dayPickupSlots,
+      });
 
    // close side sheet if open
    if (isOpen) setIsOpen(false);
@@ -1565,75 +1645,314 @@ const OrderNow = () => {
              </div>
             </div>
 
-            {step6Status === "completed" && (
-             <div className="flex gap-3">
-              <Button
-               onClick={() => openSavePlan(6)}
-               className="border md:text-[14px] py-[6px]! px-3! text-[12px] leading-[18px] hover:bg-[#054A86] hover:text-white md:leading-[20px] font-[700] tracking-[0.3px] border-[#545563] rounded-[8px] bg-transparent text-[#545563] md:mt-0">
-               Save Plan
-              </Button>
-              <Button
-               onClick={() => handleEditStep(6)}
-               className="border md:text-[14px] py-[6px]! px-3! text-[12px] leading-[18px] hover:bg-[#054A86] hover:text-white md:leading-[20px] font-[700] tracking-[0.3px] border-[#545563] rounded-[8px] bg-transparent text-[#545563] md:mt-0">
-               Edit
-              </Button>
-             </div>
+                  {step4Status === "active" && (
+                    <div className="mt-4 pl-0">
+                      <PlanWeekly
+                        handleConfirmStep={handleConfirmStep}
+                        weekMenuFunc={weekMenuFunc}
+                        savedPlanData={weekMenu}
+                        allSavedPlans={allSavedPlans}
+                        apiMenuData={apiWeeklyMenu}
+                        timeSlots={timeSlots}
+                        dayPickupSlots={dayPickupSlots}
+                        setDayPickupSlots={setDayPickupSlots}
+                        weekNumber={1}
+                        defaultSlotId={defaultSlotId}
+                      />
+                    </div>
+                  )}
+                </div>
+              </div>
             )}
-           </div>
 
-           {step6Status === "active" && (
-            <div className="mt-4 pl-0">
-             <PlanWeekly
-              handleConfirmStep={handleConfirmStep}
-              weekMenuFunc={weekMenuFunc3}
-              savedPlanData={weekMenu3}
-              allSavedPlans={allSavedPlans}
-              apiMenuData={apiMonthlyMenu?.[2]?.menu}
-             />
-            </div>
-           )}
-          </div>
-         </div>
-        )}
+            {/* Monthly plan (Steps 4-7) */}
+            {orderType === "Start a Plan" && planType === "monthly" && (
+              <>
+                {/* Step 4 */}
+                {step4Status !== "pending" && (
+                  <div className={`w-full border rounded-[16px] transition-all ${step4Status === "active" ? "border-[#EDEEF2] bg-white shadow-lg" : "border-[#EDEEF2] bg-white"
+                    }`}>
+                    <div className="py-[20px] md:px-[24px] px-3">
+                      <div className="flex flex-row justify-between max-md:gap-4">
+                        <div className="flex gap-4">
+                          <div className={`md:h-[32px] h-[26px] w-[26px] md:w-[32px] rounded-full inline-flex items-center justify-center flex-shrink-0 transition-all ${step4Status === "completed" ? "bg-[#10B981] text-white" : "bg-[#054A86] text-white"
+                            }`}>
+                            {step4Status === "completed" ? <Check className="w-4 h-4" /> : 4}
+                          </div>
+                          <div className="flex-1">
+                            <h2 className="text-[18px] leading-[24px] md:text-[24px] md:leading-[32px] font-[700] tracking-[0.1px] text-[#545563]">
+                              Plan Your Week 1 Menu
+                            </h2>
 
-        {/* Step 7 */}
-        {step7Status !== "pending" && (
-         <div
-          className={`w-full border rounded-[16px] transition-all ${
-           step7Status === "active"
-            ? "border-[#EDEEF2] bg-white shadow-lg"
-            : "border-[#EDEEF2] bg-white"
-          }`}>
-          <div className="py-[20px] md:px-[24px] px-3">
-           <div className="flex flex-row justify-between max-md:gap-4">
-            <div className="flex gap-4">
-             <div
-              className={`md:h-[32px] h-[26px] w-[26px] md:w-[32px] rounded-full inline-flex items-center justify-center flex-shrink-0 transition-all ${
-               step7Status === "completed"
-                ? "bg-[#10B981] text-white"
-                : "bg-[#054A86] text-white"
-              }`}>
-              {step7Status === "completed" ? <Check className="w-4 h-4" /> : 7}
-             </div>
-             <div className="flex-1">
-              <h2 className="text-[18px] leading-[24px] md:text-[24px] md:leading-[32px] font-[700] tracking-[0.1px] text-[#545563]">
-               Plan Your Week 4 Menu
-              </h2>
+                            {step4Status === "completed" && (() => {
+                              const summary = generatePlanSummary(weekMenu1);
+                              return (
+                                <>
+                                  <h4 className="text-[16px] leading-[24px] font-[700] tracking-[0.1px] text-[#056AC1]">
+                                    {`“${summary.totalMeals} Meals”`}
+                                  </h4>
+                                  <div className="mt-1 space-y-1 text-[14px] leading-[20px] text-[#056AC1]">
+                                    {summary.lines.map((line, idx) => (
+                                      <h4 key={idx} className="font-[700] tracking-[0.1px]">{line}</h4>
+                                    ))}
+                                  </div>
+                                </>
+                              );
+                            })()}
+                          </div>
+                        </div>
 
-              {step7Status === "completed" &&
-               (() => {
-                const summary = generatePlanSummary(weekMenu4);
-                return (
-                 <>
-                  <h4 className="text-[16px] leading-[24px] font-[700] tracking-[0.1px] text-[#056AC1]">
-                   {`“${summary.totalMeals} Meals”`}
-                  </h4>
-                  <div className="mt-1 space-y-1 text-[14px] leading-[20px] text-[#056AC1]">
-                   {summary.lines.map((line, idx) => (
-                    <h4 key={idx} className="font-[700] tracking-[0.1px]">
-                     {line}
-                    </h4>
-                   ))}
+                        {step4Status === "completed" && (
+                          <div className="flex gap-3">
+                            <Button
+                              onClick={() => openSavePlan(4)}
+                              className="border md:text-[14px] py-[6px]! px-3! text-[12px] leading-[18px] hover:bg-[#054A86] hover:text-white md:leading-[20px] font-[700] tracking-[0.3px] border-[#545563] rounded-[8px] bg-transparent text-[#545563] md:mt-0"
+                            >
+                              Save Plan
+                            </Button>
+                            <Button
+                              onClick={() => handleEditStep(4)}
+                              className="border md:text-[14px] py-[6px]! px-3! text-[12px] leading-[18px] hover:bg-[#054A86] hover:text-white md:leading-[20px] font-[700] tracking-[0.3px] border-[#545563] rounded-[8px] bg-transparent text-[#545563] md:mt-0"
+                            >
+                              Edit
+                            </Button>
+                          </div>
+                        )}
+                      </div>
+
+                      {step4Status === "active" && (
+                        <div className="mt-4 pl-0">
+                          <PlanWeekly
+                            handleConfirmStep={handleConfirmStep}
+                            weekMenuFunc={weekMenuFunc1}
+                            savedPlanData={weekMenu1}
+                            allSavedPlans={allSavedPlans}
+                            apiMenuData={apiMonthlyMenu?.[0]?.menu}
+                            timeSlots={timeSlots}
+                            dayPickupSlots={dayPickupSlots}
+                            setDayPickupSlots={setDayPickupSlots}
+                            weekNumber={1}
+                            defaultSlotId={defaultSlotId}
+                          />
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* Step 5 */}
+                {step5Status !== "pending" && (
+                  <div className={`w-full border rounded-[16px] transition-all ${step5Status === "active" ? "border-[#EDEEF2] bg-white shadow-lg" : "border-[#EDEEF2] bg-white"
+                    }`}>
+                    <div className="py-[20px] md:px-[24px] px-3">
+                      <div className="flex flex-row justify-between max-md:gap-4">
+                        <div className="flex gap-4">
+                          <div className={`md:h-[32px] h-[26px] w-[26px] md:w-[32px] rounded-full inline-flex items-center justify-center flex-shrink-0 transition-all ${step5Status === "completed" ? "bg-[#10B981] text-white" : "bg-[#054A86] text-white"
+                            }`}>
+                            {step5Status === "completed" ? <Check className="w-4 h-4" /> : 5}
+                          </div>
+                          <div className="flex-1">
+                            <h2 className="text-[18px] leading-[24px] md:text-[24px] md:leading-[32px] font-[700] tracking-[0.1px] text-[#545563]">
+                              Plan Your Week 2 Menu
+                            </h2>
+
+                            {step5Status === "completed" && (() => {
+                              const summary = generatePlanSummary(weekMenu2);
+                              return (
+                                <>
+                                  <h4 className="text-[16px] leading-[24px] font-[700] tracking-[0.1px] text-[#056AC1]">
+                                    {`“${summary.totalMeals} Meals”`}
+                                  </h4>
+                                  <div className="mt-1 space-y-1 text-[14px] leading-[20px] text-[#056AC1]">
+                                    {summary.lines.map((line, idx) => (
+                                      <h4 key={idx} className="font-[700] tracking-[0.1px]">{line}</h4>
+                                    ))}
+                                  </div>
+                                </>
+                              );
+                            })()}
+                          </div>
+                        </div>
+
+                        {step5Status === "completed" && (
+                          <div className="flex gap-3">
+                            <Button
+                              onClick={() => openSavePlan(5)}
+                              className="border md:text-[14px] py-[6px]! px-3! text-[12px] leading-[18px] hover:bg-[#054A86] hover:text-white md:leading-[20px] font-[700] tracking-[0.3px] border-[#545563] rounded-[8px] bg-transparent text-[#545563] md:mt-0"
+                            >
+                              Save Plan
+                            </Button>
+                            <Button
+                              onClick={() => handleEditStep(5)}
+                              className="border md:text-[14px] py-[6px]! px-3! text-[12px] leading-[18px] hover:bg-[#054A86] hover:text-white md:leading-[20px] font-[700] tracking-[0.3px] border-[#545563] rounded-[8px] bg-transparent text-[#545563] md:mt-0"
+                            >
+                              Edit
+                            </Button>
+                          </div>
+                        )}
+                      </div>
+
+                      {step5Status === "active" && (
+                        <div className="mt-4 pl-0">
+                          <PlanWeekly
+                            handleConfirmStep={handleConfirmStep}
+                            weekMenuFunc={weekMenuFunc2}
+                            savedPlanData={weekMenu2}
+                            allSavedPlans={allSavedPlans}
+                            apiMenuData={apiMonthlyMenu?.[1]?.menu}
+                            timeSlots={timeSlots}
+                            dayPickupSlots={dayPickupSlots}
+                            setDayPickupSlots={setDayPickupSlots}
+                            weekNumber={2}
+                            defaultSlotId={defaultSlotId}
+                          />
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* Step 6 */}
+                {step6Status !== "pending" && (
+                  <div className={`w-full border rounded-[16px] transition-all ${step6Status === "active" ? "border-[#EDEEF2] bg-white shadow-lg" : "border-[#EDEEF2] bg-white"
+                    }`}>
+                    <div className="py-[20px] md:px-[24px] px-3">
+                      <div className="flex flex-row justify-between max-md:gap-4">
+                        <div className="flex gap-4">
+                          <div className={`md:h-[32px] h-[26px] w-[26px] md:w-[32px] rounded-full inline-flex items-center justify-center flex-shrink-0 transition-all ${step6Status === "completed" ? "bg-[#10B981] text-white" : "bg-[#054A86] text-white"
+                            }`}>
+                            {step6Status === "completed" ? <Check className="w-4 h-4" /> : 6}
+                          </div>
+                          <div className="flex-1">
+                            <h2 className="text-[18px] leading-[24px] md:text-[24px] md:leading-[32px] font-[700] tracking-[0.1px] text-[#545563]">
+                              Plan Your Week 3 Menu
+                            </h2>
+
+                            {step6Status === "completed" && (() => {
+                              const summary = generatePlanSummary(weekMenu3);
+                              return (
+                                <>
+                                  <h4 className="text-[16px] leading-[24px] font-[700] tracking-[0.1px] text-[#056AC1]">
+                                    {`“${summary.totalMeals} Meals”`}
+                                  </h4>
+                                  <div className="mt-1 space-y-1 text-[14px] leading-[20px] text-[#056AC1]">
+                                    {summary.lines.map((line, idx) => (
+                                      <h4 key={idx} className="font-[700] tracking-[0.1px]">{line}</h4>
+                                    ))}
+                                  </div>
+                                </>
+                              );
+                            })()}
+                          </div>
+                        </div>
+
+                        {step6Status === "completed" && (
+                          <div className="flex gap-3">
+                            <Button
+                              onClick={() => openSavePlan(6)}
+                              className="border md:text-[14px] py-[6px]! px-3! text-[12px] leading-[18px] hover:bg-[#054A86] hover:text-white md:leading-[20px] font-[700] tracking-[0.3px] border-[#545563] rounded-[8px] bg-transparent text-[#545563] md:mt-0"
+                            >
+                              Save Plan
+                            </Button>
+                            <Button
+                              onClick={() => handleEditStep(6)}
+                              className="border md:text-[14px] py-[6px]! px-3! text-[12px] leading-[18px] hover:bg-[#054A86] hover:text-white md:leading-[20px] font-[700] tracking-[0.3px] border-[#545563] rounded-[8px] bg-transparent text-[#545563] md:mt-0"
+                            >
+                              Edit
+                            </Button>
+                          </div>
+                        )}
+                      </div>
+
+                      {step6Status === "active" && (
+                        <div className="mt-4 pl-0">
+                          <PlanWeekly
+                            handleConfirmStep={handleConfirmStep}
+                            weekMenuFunc={weekMenuFunc3}
+                            savedPlanData={weekMenu3}
+                            allSavedPlans={allSavedPlans}
+                            apiMenuData={apiMonthlyMenu?.[2]?.menu}
+                            timeSlots={timeSlots}
+                            dayPickupSlots={dayPickupSlots}
+                            setDayPickupSlots={setDayPickupSlots}
+                            weekNumber={3}
+                            defaultSlotId={defaultSlotId}
+                          />
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* Step 7 */}
+                {step7Status !== "pending" && (
+                  <div className={`w-full border rounded-[16px] transition-all ${step7Status === "active" ? "border-[#EDEEF2] bg-white shadow-lg" : "border-[#EDEEF2] bg-white"
+                    }`}>
+                    <div className="py-[20px] md:px-[24px] px-3">
+                      <div className="flex flex-row justify-between max-md:gap-4">
+                        <div className="flex gap-4">
+                          <div className={`md:h-[32px] h-[26px] w-[26px] md:w-[32px] rounded-full inline-flex items-center justify-center flex-shrink-0 transition-all ${step7Status === "completed" ? "bg-[#10B981] text-white" : "bg-[#054A86] text-white"
+                            }`}>
+                            {step7Status === "completed" ? <Check className="w-4 h-4" /> : 7}
+                          </div>
+                          <div className="flex-1">
+                            <h2 className="text-[18px] leading-[24px] md:text-[24px] md:leading-[32px] font-[700] tracking-[0.1px] text-[#545563]">
+                              Plan Your Week 4 Menu
+                            </h2>
+
+                            {step7Status === "completed" && (() => {
+                              const summary = generatePlanSummary(weekMenu4);
+                              return (
+                                <>
+                                  <h4 className="text-[16px] leading-[24px] font-[700] tracking-[0.1px] text-[#056AC1]">
+                                    {`“${summary.totalMeals} Meals”`}
+                                  </h4>
+                                  <div className="mt-1 space-y-1 text-[14px] leading-[20px] text-[#056AC1]">
+                                    {summary.lines.map((line, idx) => (
+                                      <h4 key={idx} className="font-[700] tracking-[0.1px]">{line}</h4>
+                                    ))}
+                                  </div>
+                                </>
+                              );
+                            })()}
+                          </div>
+                        </div>
+
+                        {step7Status === "completed" && (
+                          <div className="flex gap-3">
+                            <Button
+                              onClick={() => openSavePlan(7)}
+                              className="border md:text-[14px] py-[6px]! px-3! text-[12px] leading-[18px] hover:bg-[#054A86] hover:text-white md:leading-[20px] font-[700] tracking-[0.3px] border-[#545563] rounded-[8px] bg-transparent text-[#545563] md:mt-0"
+                            >
+                              Save Plan
+                            </Button>
+                            <Button
+                              onClick={() => handleEditStep(7)}
+                              className="border md:text-[14px] py-[6px]! px-3! text-[12px] leading-[18px] hover:bg-[#054A86] hover:text-white md:leading-[20px] font-[700] tracking-[0.3px] border-[#545563] rounded-[8px] bg-transparent text-[#545563] md:mt-0"
+                            >
+                              Edit
+                            </Button>
+                          </div>
+                        )}
+                      </div>
+
+                      {step7Status === "active" && (
+                        <div className="mt-4 pl-0">
+                          <PlanWeekly
+                            handleConfirmStep={handleConfirmStep}
+                            weekMenuFunc={weekMenuFunc4}
+                            savedPlanData={weekMenu4}
+                            allSavedPlans={allSavedPlans}
+                            apiMenuData={apiMonthlyMenu?.[3]?.menu}
+                            timeSlots={timeSlots}
+                            dayPickupSlots={dayPickupSlots}
+                            setDayPickupSlots={setDayPickupSlots}
+                            weekNumber={4}
+                            defaultSlotId={defaultSlotId}
+                          />
+                        </div>
+                      )}
+                    </div>
                   </div>
                  </>
                 );

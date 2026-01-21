@@ -30,6 +30,7 @@ interface MenuItemAPI {
     price: string; // Decimal often returns as string
     image_url: string | null;
     description: string;
+    heating?: string; // "yes" or "no"
 }
 
 interface CartItemAPI {
@@ -42,6 +43,7 @@ interface CartItemAPI {
     vending_good_uuid: string | null;
     plan_type: string;
     plan_subtype: string;
+    heating_requested?: boolean;
 }
 
 interface CartAPI {
@@ -76,6 +78,10 @@ export interface CartItemType {
     vendingGoodUuid: string | null; // NEW: Good UUID
     planType: string;
     planSubtype: string;
+    heating?: string; // "yes" or "no" from API
+    heatingChoice?: "yes" | "no"; // User selection
+    status?: string; // Fulfillment status
+    pickupCode?: string | null; // Item-specific pickup code
 }
 
 const CartPage: React.FC = () => {
@@ -89,7 +95,8 @@ const CartPage: React.FC = () => {
     const baseUrl = import.meta.env.VITE_API_URL;
     const [stockMap, setStockMap] = useState<Record<string, number>>({});
     const [stockAlerts, setStockAlerts] = useState<string[]>([]);
-    const CART_STORAGE_KEY = "dosta_cart_data";
+    const [heatingChoices, setHeatingChoices] = useState<Record<number, "yes" | "no">>({});
+
 
     const fetchCart = async () => {
         try {
@@ -103,7 +110,6 @@ const CartPage: React.FC = () => {
                 console.log("🛒 Cart Data from API:", res.data);
                 setCartData(res.data);
                 mapCartToUI(res.data);
-                localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(res.data));
             }
         } catch (error) {
             console.error("Error fetching cart:", error);
@@ -118,20 +124,6 @@ const CartPage: React.FC = () => {
             try {
                 setLoading(true);
                 const token = sessionStorage.getItem("authToken");
-
-                // 0. Load from Local Storage (Fallback)
-                const cachedCart = localStorage.getItem(CART_STORAGE_KEY);
-                if (cachedCart) {
-                    try {
-                        const parsedCart = JSON.parse(cachedCart);
-                        console.log("🛒 Loaded Cart from Local Storage:", parsedCart);
-                        setCartData(parsedCart);
-                        mapCartToUI(parsedCart); // Will use empty imageMap initially, updates later
-                        setLoading(false); // Show data immediately
-                    } catch (e) {
-                        console.error("Error parsing cached cart:", e);
-                    }
-                }
 
                 // 1. Fetch Menu for Images
                 const menuRes = await axios.get(
@@ -157,7 +149,6 @@ const CartPage: React.FC = () => {
                     console.log("🛒 Cart Data from API:", cartRes.data);
                     setCartData(cartRes.data);
                     mapCartToUI(cartRes.data, newImageMap);
-                    localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cartRes.data));
                 }
             } catch (error) {
                 console.error("Error fetching cart or menu:", error);
@@ -263,68 +254,7 @@ const CartPage: React.FC = () => {
                 }
             };
 
-            // 1. Try Local Storage Cache First (Immediate)
-            try {
-                const cacheKey = `machine_goods_${serialNumber}`;
-                const cachedData = localStorage.getItem(cacheKey);
-                if (cachedData) {
-                    const parsed = JSON.parse(cachedData);
-
-
-                    const cacheStockMap: Record<string, number> = {};
-                    let loadedCount = 0;
-
-                    // PRIORITIZE aggregating from SHELVES (Physical Stock)
-                    if (parsed.shelves && Array.isArray(parsed.shelves)) {
-
-                        parsed.shelves.forEach((shelf: any) => {
-                            if (!shelf.spots) return;
-                            shelf.spots.forEach((spot: any) => {
-                                if (spot.goods && spot.presentNumber > 0) {
-                                    const count = spot.presentNumber;
-                                    const uuid = spot.goods.uuid;
-                                    const name = normalizeName(spot.goods.goodsName);
-
-                                    // Aggregate UUID
-                                    if (uuid) cacheStockMap[uuid] = (cacheStockMap[uuid] || 0) + count;
-                                    // Aggregate Name
-                                    if (name) cacheStockMap[name] = (cacheStockMap[name] || 0) + count;
-
-                                    loadedCount++;
-
-
-                                }
-                            });
-                        });
-
-                    }
-                    // FALLBACK to 'goods' list if shelves missing
-                    else {
-                        const cachedGoods = parsed.goods || [];
-                        if (cachedGoods.length > 0) {
-
-                            cachedGoods.forEach((good: any) => {
-                                const name = normalizeName(good.goodsName);
-                                const val = good.presentNumber || 0;
-                                cacheStockMap[name] = val;
-
-                                if (good.uuid) cacheStockMap[good.uuid] = val;
-                                if (good.id) cacheStockMap[String(good.id)] = val;
-
-
-                            });
-                        }
-                    }
-
-                    if (Object.keys(cacheStockMap).length > 0) {
-                        applyStockToItems(cacheStockMap, "Cache");
-                    }
-                }
-            } catch (e) {
-                console.error("Error reading machine goods cache:", e);
-            }
-
-            // 2. Fetch Fresh Data (Stale-While-Revalidate)
+            // Fetch Fresh Data
             try {
                 console.log("🔍 Fetching fresh stock for machine:", serialNumber);
                 const goodsResponse = await fetch(
@@ -337,10 +267,7 @@ const CartPage: React.FC = () => {
                 let loadedCount = 0;
 
                 if (goodsData.shelves && Array.isArray(goodsData.shelves)) {
-                    // CACHE THE FRESH DATA for Checkout usage
-                    const cacheKey = `machine_goods_${serialNumber}`;
-                    localStorage.setItem(cacheKey, JSON.stringify(goodsData));
-                    console.log("💾 Updated Local Cache with fresh API data.");
+                    console.log("📦 Updated stock with fresh API data.");
 
                     goodsData.shelves.forEach((shelf: any) => {
                         if (!shelf.spots) return;
@@ -413,10 +340,24 @@ const CartPage: React.FC = () => {
                 vendingGoodUuid: apiItem.vending_good_uuid,
                 planType: apiItem.plan_type,
                 planSubtype: apiItem.plan_subtype,
+                heating: apiItem.menu_item.heating,
+                heatingChoice: apiItem.heating_requested ? "yes" : (heatingChoices[apiItem.id] || "no"),
             };
         });
 
         setItems(mapped);
+    };
+
+    const handleHeatingChange = (id: number, choice: "yes" | "no") => {
+        setHeatingChoices((prev) => {
+            const next = { ...prev, [id]: choice };
+            return next;
+        });
+        setItems((prev) =>
+            prev.map((item) =>
+                item.id === id ? { ...item, heatingChoice: choice } : item
+            )
+        );
     };
 
     // --- Helper to normalize names for "spelling-only" comparison ---
@@ -494,6 +435,7 @@ const CartPage: React.FC = () => {
                 day_of_week: i.dayOfWeek,
                 week_number: i.weekNumber,
                 vending_good_uuid: i.vendingGoodUuid,
+                heating_requested: i.heatingChoice === "yes",
             }));
 
             await axios.post(
@@ -537,6 +479,7 @@ const CartPage: React.FC = () => {
                 day_of_week: i.dayOfWeek,
                 week_number: i.weekNumber,
                 vending_good_uuid: i.vendingGoodUuid,
+                heating_requested: i.heatingChoice === "yes",
             }));
 
             await axios.post(
@@ -696,6 +639,7 @@ const CartPage: React.FC = () => {
                                     groupedItems={group.groupedItems}
                                     onQuantityChange={handleQuantityChange}
                                     onDeleteItem={handleDeleteItem}
+                                    onHeatingChange={handleHeatingChange}
                                 />
                             ))}
                             {items.length === 0 && (
@@ -734,17 +678,15 @@ const CartPage: React.FC = () => {
 
                                         if (serialNumber && hasOrderNowItems) {
                                             try {
-                                                const cacheKey = `machine_goods_${serialNumber}`;
-                                                const cachedData = localStorage.getItem(cacheKey);
+                                                console.log("🔍 Checkout: Fetching fresh stock for validation...");
+                                                const goodsResponse = await fetch(
+                                                    `${baseUrl}/api/vending/external/machine-goods/?machineUuid=${serialNumber}`
+                                                );
+                                                const goodsData = await goodsResponse.json();
+                                                const shelves = goodsData.shelves || [];
 
-                                                if (cachedData) {
-                                                    const parsedCache = JSON.parse(cachedData);
-                                                    const shelves = parsedCache.shelves || [];
-
-                                                    console.log("📦 Checkout: Using Cached Stock for Validation:", shelves.length, "shelves");
-
-                                                    // Update items with UUIDs from cache if missing logic
-                                                    // (Though applyStockToItems likely already did this, safe to re-check or skip)
+                                                if (shelves.length > 0) {
+                                                    console.log("📦 Checkout: Using Fresh Stock for Validation:", shelves.length, "shelves");
 
                                                     // Calculate detailed usage per UUID
                                                     const usageMap: Record<string, number> = {};
@@ -768,11 +710,6 @@ const CartPage: React.FC = () => {
                                                                 const needed = usageMap[uuid];
                                                                 const present = spot.presentNumber || 0;
 
-                                                                // Logic: We consume stock from this spot up to 'needed' amount
-                                                                // Since this is real-world physical stock, we likely just reduce presentNumber.
-                                                                // NOTE: If one UUID is in multiple slots, we mistakenly might take from all? 
-                                                                // NO, we need to distribute.
-
                                                                 const take = Math.min(needed, present);
 
                                                                 if (take > 0) {
@@ -782,14 +719,14 @@ const CartPage: React.FC = () => {
                                                                     goodsListToUpdate.push({
                                                                         arrivalCapacity: spot.arrivalCapacity,
                                                                         arrivalName: spot.arrivalName,
-                                                                        commodityState: 0, // Assuming 0 is active/normal
-                                                                        equipmentUuid: serialNumber, // API expects equipmentUuid? or passed in outer? Outer has machineUuid.
+                                                                        commodityState: 0,
+                                                                        equipmentUuid: serialNumber,
                                                                         goodsUuid: Number(uuid),
                                                                         presentNumber: newQuantity,
                                                                         salePrice: spot.goods.goodsPrice
                                                                     });
 
-                                                                    usageMap[uuid] -= take; // Decrement needed
+                                                                    usageMap[uuid] -= take;
                                                                     console.log(`📉 Decrementing ${spot.goods.goodsName} (Slot: ${spot.arrivalName}): Present ${present} - Take ${take} = New ${newQuantity}. Remaining Needed: ${usageMap[uuid]}`);
                                                                 }
                                                             }
@@ -798,9 +735,8 @@ const CartPage: React.FC = () => {
 
                                                     stockUpdates = goodsListToUpdate;
                                                 }
-                                            } catch (cacheErr) {
-                                                console.error("Error reading cache for checkout stock update", cacheErr);
-                                                // Proceed anyway? Or block? Proceeding allows checkout, but stock calc might fail.
+                                            } catch (fetchErr) {
+                                                console.error("Error fetching fresh stock for checkout", fetchErr);
                                             }
                                         }
 
@@ -812,6 +748,9 @@ const CartPage: React.FC = () => {
                                                 day_of_week: uiItem.dayOfWeek,
                                                 week_number: uiItem.weekNumber,
                                                 vending_good_uuid: uiItem.vendingGoodUuid || null,
+                                                heating_requested: uiItem.heatingChoice === "yes",
+                                                plan_type: uiItem.planType || (cartData.plan_type === "START_PLAN" ? "START_PLAN" : "ORDER_NOW"),
+                                                plan_subtype: uiItem.planSubtype || "NONE",
                                             };
                                         });
 
@@ -880,11 +819,14 @@ const CartPage: React.FC = () => {
                                             orderNowItems.forEach((item) => {
                                                 if (item.vendingGoodUuid) {
                                                     totalGoodsCount += item.quantity;
-                                                    matchedGoods.push({
+                                                    const goodsObj: any = {
                                                         goodsNumber: item.quantity,
                                                         goodsPrice: 0.01,
                                                         goodsUuid: item.vendingGoodUuid,
-                                                    });
+                                                        heatingChoice: item.heatingChoice,
+                                                    };
+
+                                                    matchedGoods.push(goodsObj);
                                                 }
                                             });
 
