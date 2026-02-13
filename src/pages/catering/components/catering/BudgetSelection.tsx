@@ -61,7 +61,8 @@ const BudgetSelection: React.FC<BudgetSelectionProps> = ({
  const [error, setError] = useState<string | null>(null); // State for error message
 
  const baseUrl = import.meta.env.VITE_API_URL;
- const authToken = (sessionStorage.getItem("authToken") || localStorage.getItem("authToken"));
+ const authToken =
+  sessionStorage.getItem("authToken") || localStorage.getItem("authToken");
 
  // Auto-select Pax based on guestCount
  useEffect(() => {
@@ -115,6 +116,9 @@ const BudgetSelection: React.FC<BudgetSelectionProps> = ({
     const budgetEndpoint = "/api/catering/budget-options/";
     const paxEndpoint = "/api/catering/pax/";
     const isPrivate = !selectedEvent?.name?.toLowerCase().includes("corporate");
+    const isPrivateChef = selectedEvent?.name
+     ?.toLowerCase()
+     .includes("private chef");
 
     // Convert selected cuisines to CSV ID string
     const cuisineIds = selectedCuisines?.map((c) => c.id).join(",");
@@ -124,6 +128,7 @@ const BudgetSelection: React.FC<BudgetSelectionProps> = ({
       params: {
        service_style_id: selectedServiceStyles?.id,
        is_private: isPrivate,
+       is_private_chef: isPrivateChef,
        cuisine_ids: cuisineIds, // Pass cuisine_ids for filtering
       },
       headers: { Authorization: `Token ${authToken}` },
@@ -132,6 +137,7 @@ const BudgetSelection: React.FC<BudgetSelectionProps> = ({
       params: {
        service_style_id: selectedServiceStyles?.id,
        is_private: isPrivate,
+       is_private_chef: isPrivateChef,
       },
       headers: { Authorization: `Token ${authToken}` },
      }),

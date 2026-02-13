@@ -59,7 +59,8 @@ const ProviderTypeSelection: React.FC<ProviderTypeSelectionProps> = ({
  const [error, setError] = useState<string | null>(null);
 
  const baseUrl = import.meta.env.VITE_API_URL;
- const authToken = (sessionStorage.getItem("authToken") || localStorage.getItem("authToken"));
+ const authToken =
+  sessionStorage.getItem("authToken") || localStorage.getItem("authToken");
 
  // Determine if we should show Event Name selection (Non-Corporate)
  const showEventNameSelection = !selectedEvent?.name
@@ -71,10 +72,13 @@ const ProviderTypeSelection: React.FC<ProviderTypeSelectionProps> = ({
    try {
     const requests = [];
 
-    // 1. Service Styles
-    let styleEndpoint = "/api/catering/service-styles-private/";
+    // 1. Service Styles - Determine which endpoint to use
+    let styleEndpoint = "/api/catering/service-styles-private/"; // Default to private event
+
     if (selectedEvent?.name?.toLowerCase().includes("corporate")) {
      styleEndpoint = "/api/catering/service-styles/";
+    } else if (selectedEvent?.name?.toLowerCase().includes("private chef")) {
+     styleEndpoint = "/api/catering/service-styles-private-chef/";
     }
     requests.push(
      axios.get(`${baseUrl}${styleEndpoint}`, {
