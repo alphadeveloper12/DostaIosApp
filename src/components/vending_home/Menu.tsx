@@ -95,11 +95,12 @@ const Menu: React.FC<MenuProps> = ({
                         enrichedItem: {
                             ...menuItem,
                             vendingGoodUuid: spot.goods.uuid,
-                            price: `AED ${parseFloat(spot.goods.goodsPrice).toFixed(2)}`,
                             // Initialize quantity to 1 for cart addition
                             quantity: 1,
                             // Track total available stock for this spot
-                            availableQuantity: spot.presentNumber
+                            availableQuantity: spot.presentNumber,
+                            // Track locked status
+                            locked: spot.goods.locked || false
                         }
                     };
                 }
@@ -190,7 +191,7 @@ const Menu: React.FC<MenuProps> = ({
             setError(null);
 
             try {
-                const token = sessionStorage.getItem("authToken");
+                const token = (sessionStorage.getItem("authToken") || localStorage.getItem("authToken"));
                 const res = await fetch(
                     `${import.meta.env.VITE_API_URL || ""}/api/vending/menu/ORDER_NOW/`,
                     {
@@ -294,7 +295,10 @@ const Menu: React.FC<MenuProps> = ({
             shelfData.forEach((shelf: any) => {
                 shelf.spots.forEach((spot: any) => {
                     if (spot.enrichedItem && normalizeName(spot.enrichedItem.heading) === normalizeName(item.heading)) {
-                        totalAvailable += spot.presentNumber;
+                        // FIX: Only add to totalAvailable if the spot is NOT locked
+                        if (!spot.goods?.locked) {
+                            totalAvailable += spot.presentNumber;
+                        }
                     }
                 });
             });
@@ -455,28 +459,35 @@ const Menu: React.FC<MenuProps> = ({
                                                         (item) => item.imgAlt === data.imgAlt
                                                     );
                                                     const isSoldOut = spot.presentNumber <= 0;
+                                                    const isLocked = spot.goods?.locked || false;
 
                                                     return (
                                                         <div key={index} className="relative">
                                                             <div className="absolute -top-1.5 -left-1.5 z-10 bg-[#054A86] text-white text-[9px] md:text-[10px] font-bold px-1.5 py-0.5 md:px-2 md:py-1 rounded-full shadow-sm">
                                                                 Spot {spot.arrivalName}
                                                             </div>
-                                                            <div className={isSoldOut ? "opacity-60 grayscale-[0.5]" : ""}>
+                                                            <div className={(isSoldOut || isLocked) ? "opacity-60 grayscale-[0.5]" : ""}>
                                                                 <MenuCard
                                                                     data={data}
                                                                     itemInCart={itemInCart}
-                                                                    handleCardClick={handleCardClick}
-                                                                    handleQuantityChange={handleQuantityChange}
+                                                                    handleCardClick={(item) => !isLocked && handleCardClick(item)}
+                                                                    handleQuantityChange={(e, item, delta) => !isLocked && handleQuantityChange(e, item, delta)}
                                                                 />
                                                             </div>
-                                                            {isSoldOut && (
+                                                            {isLocked ? (
+                                                                <div className="absolute inset-0 flex items-center justify-center z-20 pointer-events-none">
+                                                                    <div className="bg-orange-500 text-white px-4 py-1 rounded-full font-bold text-sm shadow-lg transform -rotate-12">
+                                                                        LOCKED
+                                                                    </div>
+                                                                </div>
+                                                            ) : isSoldOut ? (
                                                                 <div className="absolute inset-0 flex items-center justify-center z-20 pointer-events-none">
                                                                     <div className="bg-red-500 text-white px-4 py-1 rounded-full font-bold text-sm shadow-lg transform -rotate-12">
                                                                         SOLD OUT
                                                                     </div>
                                                                 </div>
-                                                            )}
-                                                            {!isSoldOut && spot.presentNumber < 5 && (
+                                                            ) : null}
+                                                            {!isSoldOut && !isLocked && spot.presentNumber < 5 && (
                                                                 <div className="absolute top-1.5 right-1.5 z-10 bg-orange-500 text-white text-[9px] md:text-[10px] font-bold px-1.5 py-0.5 md:px-2 md:py-1 rounded-full shadow-sm">
                                                                     Only {spot.presentNumber} left
                                                                 </div>

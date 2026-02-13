@@ -14,6 +14,7 @@ interface OrderSummaryProps {
 
     onCheckout?: () => void;
     loading?: boolean;
+    disabled?: boolean;
 }
 
 const OrderSummary: React.FC<OrderSummaryProps> = ({
@@ -25,6 +26,7 @@ const OrderSummary: React.FC<OrderSummaryProps> = ({
     setCoupon,
     onCheckout,
     loading = false,
+    disabled = false,
 }) => {
     const isCouponApplied = coupon.trim().toUpperCase() === "DOSTA25";
 
@@ -91,7 +93,7 @@ const OrderSummary: React.FC<OrderSummaryProps> = ({
             <Button
                 className="w-full bg-[#054A86] hover:bg-[#054A86] text-neutral-white font-bold py-3 rounded-md mt-5 flex items-center justify-center gap-2"
                 onClick={onCheckout}
-                disabled={loading || !onCheckout}
+                disabled={loading || disabled || !onCheckout}
                 title={!onCheckout ? "No checkout handler provided" : undefined}
             >
                 {loading ? (

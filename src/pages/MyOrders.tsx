@@ -89,7 +89,7 @@ const MyOrders = () => {
       if (stopPolling) return; // Fail-safe: Stop fetching if terminal status hit
 
       try {
-        const token = sessionStorage.getItem("authToken");
+        const token = (sessionStorage.getItem("authToken") || localStorage.getItem("authToken"));
         const res = await axios.get(`${baseUrl}/api/vending/orders/`, {
           headers: { Authorization: `Token ${token}` },
         });
@@ -144,7 +144,7 @@ const MyOrders = () => {
   useEffect(() => {
     const fetchMenu = async () => {
       try {
-        const token = sessionStorage.getItem("authToken");
+        const token = (sessionStorage.getItem("authToken") || localStorage.getItem("authToken"));
         const res = await axios.get(`${baseUrl}/api/vending/menu/ORDER_NOW/`, {
           headers: { Authorization: `Token ${token}` },
         });

@@ -30,7 +30,7 @@ export default function AddressSettings() {
     });
     const [loading, setLoading] = useState(false);
 
-    const authToken = sessionStorage.getItem("authToken");
+    const authToken = (sessionStorage.getItem("authToken") || localStorage.getItem("authToken")) || localStorage.getItem("authToken");
 
     // Get all countries from the library
     const countries = Country.getAllCountries();

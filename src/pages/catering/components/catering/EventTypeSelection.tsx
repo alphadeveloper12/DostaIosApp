@@ -44,7 +44,7 @@ const EventTypeSelection: React.FC<EventTypeSelectionProps> = ({
  >([]);
  const [loading, setLoading] = useState<boolean>(true);
  const baseUrl = import.meta.env.VITE_API_URL;
- const authToken = sessionStorage.getItem("authToken");
+ const authToken = (sessionStorage.getItem("authToken") || localStorage.getItem("authToken"));
  useEffect(() => {
   const fetchEventTypes = async () => {
    try {

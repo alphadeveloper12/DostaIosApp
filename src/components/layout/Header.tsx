@@ -13,7 +13,7 @@ const Header = () => {
  useEffect(() => {
   const checkAuth = () => {
    const token =
-    localStorage.getItem("authToken") || sessionStorage.getItem("authToken");
+    localStorage.getItem("authToken") || (sessionStorage.getItem("authToken") || localStorage.getItem("authToken"));
    setIsLoggedIn(!!token);
   };
   checkAuth();

@@ -98,10 +98,15 @@ const CartPage: React.FC = () => {
     const [heatingChoices, setHeatingChoices] = useState<Record<number, "yes" | "no">>({});
 
 
+    const [showPaymentModal, setShowPaymentModal] = useState<boolean>(false);
+    const [paymentError, setPaymentError] = useState<string | null>(null);
+
+
+
     const fetchCart = async () => {
         try {
             setLoading(true);
-            const token = sessionStorage.getItem("authToken");
+            const token = (sessionStorage.getItem("authToken") || localStorage.getItem("authToken"));
             const res = await axios.get(`${baseUrl}/api/vending/cart/`, {
                 headers: { Authorization: `Token ${token}` },
             });
@@ -119,11 +124,353 @@ const CartPage: React.FC = () => {
         }
     };
 
+    // Check for Payment Success redirect
+    useEffect(() => {
+        const verifyPaymentReturn = async () => {
+            const params = new URLSearchParams(window.location.search);
+            const paymentSuccess = params.get("payment_success");
+            const orderId = params.get("order_id");
+            const cartId = params.get("cart_id");
+
+            if (paymentSuccess === "true" && (orderId || cartId)) {
+                // Clear URL params to prevent re-trigger on refresh
+                window.history.replaceState({}, document.title, window.location.pathname);
+
+                setIsCheckingOut(true); // Show loading
+                try {
+                    const token = (sessionStorage.getItem("authToken") || localStorage.getItem("authToken"));
+
+                    // Handle either old order_id or new deferred cart_id
+                    const verifyUrl = orderId
+                        ? `${baseUrl}/api/vending/payment/callback/?order_id=${orderId}`
+                        : `${baseUrl}/api/vending/payment/callback/?order_id=CART-${cartId}`;
+
+                    const res = await axios.get(verifyUrl, {
+                        headers: { Authorization: `Token ${token}` }
+                    });
+
+                    if (res.status === 200 || res.status === 201) {
+                        try {
+                            // --- NEW: Create the Order RECORD only now ---
+                            // Fetch the cart data to recreate the payload
+                            const cartRes = await axios.get(`${baseUrl}/api/vending/cart/`, {
+                                headers: { Authorization: `Token ${token}` }
+                            });
+                            const currentCart = cartRes.data;
+
+                            if (currentCart && currentCart.items) {
+                                const checkoutItems = currentCart.items.map((it: any) => ({
+                                    menu_item_id: it.menu_item?.id,
+                                    quantity: it.quantity,
+                                    day_of_week: it.day_of_week,
+                                    week_number: it.week_number,
+                                    vending_good_uuid: it.vending_good_uuid || null,
+                                    heating_requested: it.heating_requested,
+                                    plan_type: it.plan_type,
+                                    plan_subtype: it.plan_subtype,
+                                }));
+
+                                const orderPayload = {
+                                    location_id: currentCart.location?.id,
+                                    plan_type: currentCart.plan_type,
+                                    plan_subtype: currentCart.plan_subtype,
+                                    pickup_type: currentCart.pickup_type,
+                                    pickup_date: currentCart.pickup_date,
+                                    pickup_slot_id: currentCart.pickup_slot?.id,
+                                    items: checkoutItems,
+                                    is_payment_verified: true // SPECIAL FLAG
+                                };
+
+                                console.log("📝 Creating Deferred Order Record...");
+                                const orderRes = await axios.post(
+                                    `${baseUrl}/api/vending/order/confirm/`,
+                                    orderPayload,
+                                    { headers: { Authorization: `Token ${token}` } }
+                                );
+
+                                const newOrder = orderRes.data.order;
+                                if (newOrder) {
+                                    console.log("✅ Order Record Created:", newOrder.id);
+
+                                    // Fulfillment is now handled by the backend ConfirmOrderView
+                                }
+                            }
+
+                            // Clear Backend Cart
+                            await axios.post(`${baseUrl}/api/vending/cart/`, { clear_all: true }, { headers: { Authorization: `Token ${token}` } });
+                            setItems([]);
+
+                            toast.success("Payment Successful! Order Confirmed.");
+                            navigate("/vending-home/my-orders");
+
+                        } catch (e) {
+                            console.error("Order creation after payment failed", e);
+                            toast.error("Verified, but failed to create order record. Please check My Orders.");
+                            navigate("/vending-home/my-orders");
+                        }
+                    }
+                } catch (err) {
+                    console.error("Payment Verification Failed", err);
+                    toast.error("Could not verify payment. Please check 'My Orders'.");
+                } finally {
+                    setIsCheckingOut(false);
+                }
+            }
+        };
+        verifyPaymentReturn();
+    }, []);
+
+    const handleVendingFulfillment = async (order: any) => {
+        const serialNumber = order.location?.serial_number;
+        if (!serialNumber) return;
+
+        // Filter only Order Now / Smart Grab items
+        const vendingItems = (order.items || []).filter(
+            (item: any) => item.plan_type === "ORDER_NOW" || item.plan_type === "SMART_GRAB"
+        );
+        if (vendingItems.length === 0) return;
+
+        try {
+            const token = (sessionStorage.getItem("authToken") || localStorage.getItem("authToken"));
+
+            // --- 1. Fresh Stock Validation & Update ---
+            console.log("🔍 Fulfillment: Fetching fresh stock for validation...");
+            const goodsResponse = await fetch(
+                `${baseUrl}/api/vending/external/machine-goods/?machineUuid=${serialNumber}`
+            );
+            const goodsData = await goodsResponse.json();
+            const shelves = goodsData.shelves || [];
+
+            if (shelves.length > 0) {
+                // Calculate detailed usage per UUID
+                const usageMap: Record<string, number> = {};
+                vendingItems.forEach((item: any) => {
+                    if (item.vending_good_uuid) {
+                        usageMap[item.vending_good_uuid] = (usageMap[item.vending_good_uuid] || 0) + item.quantity;
+                    }
+                });
+
+                const goodsListToUpdate: any[] = [];
+                shelves.forEach((shelf: any) => {
+                    if (!shelf.spots) return;
+                    shelf.spots.forEach((spot: any) => {
+                        if (spot.goods && spot.goods.uuid && !spot.goods.locked && usageMap[spot.goods.uuid] > 0) {
+                            const uuid = spot.goods.uuid;
+                            const needed = usageMap[uuid];
+                            const present = spot.presentNumber || 0;
+                            const take = Math.min(needed, present);
+
+                            if (take > 0) {
+                                const newQuantity = Math.max(0, present - take);
+                                goodsListToUpdate.push({
+                                    arrivalCapacity: spot.arrivalCapacity,
+                                    arrivalName: spot.arrivalName,
+                                    commodityState: 0,
+                                    equipmentUuid: serialNumber,
+                                    goodsUuid: Number(uuid),
+                                    presentNumber: newQuantity,
+                                    salePrice: spot.goods.goodsPrice
+                                });
+                                usageMap[uuid] -= take;
+                            }
+                        }
+                    });
+                });
+
+                if (goodsListToUpdate.length > 0) {
+                    console.log("🔄 Updating Stock on Machine...", goodsListToUpdate);
+                    await axios.put(
+                        `${baseUrl}/api/vending/external/update-commodity/`,
+                        { list: goodsListToUpdate, machineUuid: Number(serialNumber) },
+                        { headers: { Authorization: `Token ${token}` } }
+                    );
+                }
+            }
+
+            // --- 2. Request Pickup Code ---
+            const matchedGoods = vendingItems.map((item: any) => {
+                if (!item.vending_good_uuid) return null;
+                return {
+                    goodsNumber: item.quantity,
+                    goodsPrice: 0.01,
+                    goodsUuid: item.vending_good_uuid,
+                    heatingChoice: item.heating_requested ? "yes" : "no",
+                };
+            }).filter(Boolean);
+
+            if (matchedGoods.length > 0) {
+                const totalGoodsCount = matchedGoods.reduce((acc: number, g: any) => acc + g.goodsNumber, 0);
+                const now = new Date();
+                const uaeOffset = 4 * 60;
+                const uaeTime = new Date(now.getTime() + (now.getTimezoneOffset() + uaeOffset) * 60000);
+                const orderTimeStr = uaeTime.toISOString();
+
+                const pickPayload = {
+                    goodsList: matchedGoods,
+                    goodsNumber: totalGoodsCount,
+                    machineUuid: serialNumber,
+                    orderNo: order.id.toString(),
+                    orderTime: orderTimeStr,
+                    timeOut: 1,
+                    lock: 0,
+                };
+
+                console.log("🚀 Requesting Pickup Code for Order:", order.id);
+                const pickResponse = await fetch(
+                    `${baseUrl}/api/vending/external/production-pick/`,
+                    {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify(pickPayload),
+                    }
+                );
+                const pickData = await pickResponse.json();
+
+                if (pickData.result === "200" && pickData.data) {
+                    console.log("🔑 Pickup Code Received:", pickData.data);
+                    const storageKey = `pickup_codes_${order.id}`;
+                    const codes: any = {};
+                    vendingItems.forEach((vi: any) => {
+                        if (vi.vending_good_uuid) codes[vi.vending_good_uuid] = pickData.data;
+                    });
+                    localStorage.setItem(storageKey, JSON.stringify(codes));
+
+                    await axios.post(
+                        `${baseUrl}/api/vending/order/update-pickup-code/`,
+                        { order_id: order.id, pickup_code: pickData.data },
+                        { headers: { Authorization: `Token ${token}` } }
+                    );
+                    console.log("✅ Pickup code saved to backend.");
+                }
+            }
+        } catch (err) {
+            console.error("Vending fulfillment step failed:", err);
+        }
+    };
+
+    const processCheckout = async () => {
+        if (!cartData) return;
+        setIsCheckingOut(true);
+        setPaymentError(null);
+
+        let updatedItems = [...items];
+        const serialNumber = cartData.location?.serial_number;
+
+        try {
+            // --- 1. Vending Machine Validation & Matching ---
+            const hasOrderNowItems = items.some(
+                (item) => item.planType === "ORDER_NOW" || item.planType === "SMART_GRAB"
+            );
+
+            // --- 1. Vending Machine Validation & Stock Update Preparation ---
+            let stockUpdates: any[] = [];
+
+            if (serialNumber && hasOrderNowItems) {
+                try {
+                    console.log("🔍 Checkout: Fetching fresh stock for validation...");
+                    const goodsResponse = await fetch(
+                        `${baseUrl}/api/vending/external/machine-goods/?machineUuid=${serialNumber}`
+                    );
+                    const goodsData = await goodsResponse.json();
+                    const shelves = goodsData.shelves || [];
+
+                    if (shelves.length > 0) {
+                        console.log("📦 Checkout: Using Fresh Stock for Validation:", shelves.length, "shelves");
+
+                        // Calculate detailed usage per UUID
+                        const usageMap: Record<string, number> = {};
+                        items.forEach(item => {
+                            if ((item.planType === "ORDER_NOW" || item.planType === "SMART_GRAB") && item.vendingGoodUuid) {
+                                usageMap[item.vendingGoodUuid] = (usageMap[item.vendingGoodUuid] || 0) + item.quantity;
+                            }
+                        });
+
+                        // Find spots to decrement
+                        const goodsListToUpdate: any[] = [];
+
+                        shelves.forEach((shelf: any) => {
+                            if (!shelf.spots) return;
+                            shelf.spots.forEach((spot: any) => {
+                                if (spot.goods && spot.goods.uuid && !spot.goods.locked && usageMap[spot.goods.uuid] > 0) {
+                                    const uuid = spot.goods.uuid;
+                                    const needed = usageMap[uuid];
+                                    const present = spot.presentNumber || 0;
+
+                                    const take = Math.min(needed, present);
+
+                                    if (take > 0) {
+                                        const newQuantity = Math.max(0, present - take);
+
+                                        // Push update payload for this spot
+                                        goodsListToUpdate.push({
+                                            arrivalCapacity: spot.arrivalCapacity,
+                                            arrivalName: spot.arrivalName,
+                                            commodityState: 0,
+                                            equipmentUuid: serialNumber,
+                                            goodsUuid: Number(uuid),
+                                            presentNumber: newQuantity,
+                                            salePrice: spot.goods.goodsPrice
+                                        });
+
+                                        usageMap[uuid] -= take;
+                                    }
+                                }
+                            });
+                        });
+
+                        stockUpdates = goodsListToUpdate;
+                    }
+                } catch (fetchErr) {
+                    console.error("Error fetching fresh stock for validation", fetchErr);
+                }
+            }
+
+            const token = (sessionStorage.getItem("authToken") || localStorage.getItem("authToken"));
+
+            // --- 2. Initiate Payment Session (DO NOT CREATE ORDER YET) ---
+            console.log("💳 Initiating Payment Session for Cart...");
+            const payRes = await axios.post(
+                `${baseUrl}/api/vending/payment/initiate/`,
+                { location_id: cartData.location?.id },
+                { headers: { Authorization: `Token ${token}` } }
+            );
+
+            const redirectUrl = payRes.data.payment_redirect_url;
+
+            if (redirectUrl) {
+                console.log("💳 Redirecting to Payment Gateway:", redirectUrl);
+                window.location.href = redirectUrl;
+                return;
+            }
+
+            // Fallback for zero-price or system-error (if no redirect but logic says confirmed)
+            // (Currently backend always initiates if TotalPay is configured)
+
+            navigate("/vending-home/my-orders");
+
+        } catch (err: any) {
+            console.error("Checkout failed", err);
+            // Handle Payment Gateway Errors specially
+            if (err.response && err.response.data && err.response.data.error) {
+                // "Request data is invalid." comes from TotalPay or custom backend error
+                // TotalPay might send detailed errors in a separate field or string
+                let msg = err.response.data.error;
+                if (typeof msg !== 'string') msg = JSON.stringify(msg);
+                setPaymentError(msg);
+            } else {
+                setPaymentError("An unexpected error occurred during checkout. Please try again.");
+            }
+            // Keep modal open to show error
+        } finally {
+            setIsCheckingOut(false);
+        }
+    };
+
     useEffect(() => {
         const fetchMenuAndCart = async () => {
             try {
                 setLoading(true);
-                const token = sessionStorage.getItem("authToken");
+                const token = (sessionStorage.getItem("authToken") || localStorage.getItem("authToken"));
 
                 // 1. Fetch Menu for Images
                 const menuRes = await axios.get(
@@ -226,7 +573,7 @@ const CartPage: React.FC = () => {
                         const original = items.find(i => i.id === item.id);
                         if (original && original.quantity !== item.quantity) {
                             try {
-                                const token = sessionStorage.getItem("authToken");
+                                const token = (sessionStorage.getItem("authToken") || localStorage.getItem("authToken"));
                                 await axios.post(
                                     `${baseUrl}/api/vending/cart/`,
                                     {
@@ -272,7 +619,7 @@ const CartPage: React.FC = () => {
                     goodsData.shelves.forEach((shelf: any) => {
                         if (!shelf.spots) return;
                         shelf.spots.forEach((spot: any) => {
-                            if (spot.goods && spot.presentNumber > 0) {
+                            if (spot.goods && spot.presentNumber > 0 && !spot.goods.locked) {
                                 const count = spot.presentNumber;
                                 const uuid = spot.goods.uuid;
                                 const name = normalizeName(spot.goods.goodsName);
@@ -291,8 +638,8 @@ const CartPage: React.FC = () => {
                     const allGoods = goodsData.data.flatMap((cat: any) => cat.goodsList || []);
                     console.log(`📦 API Fallback: Loaded ${allGoods.length} goods from legacy list.`);
                     allGoods.forEach((good: any) => {
+                        if (good.locked) return; // Skip locked items in fallback
                         const name = normalizeName(good.goodsName);
-                        // In new API, presentNumber might correspond to SINGLE items or be missing in this list
                         const val = good.presentNumber || 0;
                         freshStockMap[name] = val;
                         if (good.uuid) freshStockMap[good.uuid] = val;
@@ -422,7 +769,7 @@ const CartPage: React.FC = () => {
         setItems(updatedAllItems);
 
         try {
-            const token = sessionStorage.getItem("authToken");
+            const token = (sessionStorage.getItem("authToken") || localStorage.getItem("authToken"));
             // Filter items of the same plan type to sync
             const samePlanItems = updatedAllItems.filter(
                 (i) => i.planType === itemToUpdate.planType && i.planSubtype === itemToUpdate.planSubtype
@@ -465,7 +812,7 @@ const CartPage: React.FC = () => {
         setItems(updatedAllItems);
 
         try {
-            const token = sessionStorage.getItem("authToken");
+            const token = (sessionStorage.getItem("authToken") || localStorage.getItem("authToken"));
 
             // Filter items of the same plan type to sync
             const samePlanItems = updatedAllItems.filter(
@@ -518,7 +865,7 @@ const CartPage: React.FC = () => {
         // Removed window.confirm, handled by AlertDialog
 
         try {
-            const token = sessionStorage.getItem("authToken");
+            const token = (sessionStorage.getItem("authToken") || localStorage.getItem("authToken"));
             await axios.post(
                 `${baseUrl}/api/vending/cart/`,
                 { clear_all: true },
@@ -662,278 +1009,70 @@ const CartPage: React.FC = () => {
                                 setCoupon={setCoupon}
                                 onCheckout={async () => {
                                     if (!cartData || isCheckingOut) return;
-                                    setIsCheckingOut(true);
 
-                                    let updatedItems = [...items];
-                                    const serialNumber = cartData.location?.serial_number;
-
+                                    // --- Check Payment Method ---
                                     try {
-                                        // --- 1. Vending Machine Validation & Matching ---
-                                        const hasOrderNowItems = items.some(
-                                            (item) => item.planType === "ORDER_NOW" || item.planType === "SMART_GRAB"
+                                        const token = (sessionStorage.getItem("authToken") || localStorage.getItem("authToken"));
+                                        const paymentRes = await axios.get(
+                                            `${baseUrl}/api/payment-methods/`,
+                                            { headers: { Authorization: `Token ${token}` } }
                                         );
 
-                                        // --- 1. Vending Machine Validation & Stock Update Preparation ---
-                                        let stockUpdates: any[] = [];
-
-                                        if (serialNumber && hasOrderNowItems) {
-                                            try {
-                                                console.log("🔍 Checkout: Fetching fresh stock for validation...");
-                                                const goodsResponse = await fetch(
-                                                    `${baseUrl}/api/vending/external/machine-goods/?machineUuid=${serialNumber}`
-                                                );
-                                                const goodsData = await goodsResponse.json();
-                                                const shelves = goodsData.shelves || [];
-
-                                                if (shelves.length > 0) {
-                                                    console.log("📦 Checkout: Using Fresh Stock for Validation:", shelves.length, "shelves");
-
-                                                    // Calculate detailed usage per UUID
-                                                    const usageMap: Record<string, number> = {};
-                                                    items.forEach(item => {
-                                                        if ((item.planType === "ORDER_NOW" || item.planType === "SMART_GRAB") && item.vendingGoodUuid) {
-                                                            usageMap[item.vendingGoodUuid] = (usageMap[item.vendingGoodUuid] || 0) + item.quantity;
-                                                        }
-                                                    });
-
-                                                    console.log("🛒 Checkout Usage Map:", JSON.stringify(usageMap));
-                                                    console.log("🛒 Items in Cart:", JSON.stringify(items.map(i => ({ name: i.name, qty: i.quantity, uuid: i.vendingGoodUuid }))));
-
-                                                    // Find spots to decrement
-                                                    const goodsListToUpdate: any[] = [];
-
-                                                    shelves.forEach((shelf: any) => {
-                                                        if (!shelf.spots) return;
-                                                        shelf.spots.forEach((spot: any) => {
-                                                            if (spot.goods && spot.goods.uuid && usageMap[spot.goods.uuid] > 0) {
-                                                                const uuid = spot.goods.uuid;
-                                                                const needed = usageMap[uuid];
-                                                                const present = spot.presentNumber || 0;
-
-                                                                const take = Math.min(needed, present);
-
-                                                                if (take > 0) {
-                                                                    const newQuantity = Math.max(0, present - take);
-
-                                                                    // Push update payload for this spot
-                                                                    goodsListToUpdate.push({
-                                                                        arrivalCapacity: spot.arrivalCapacity,
-                                                                        arrivalName: spot.arrivalName,
-                                                                        commodityState: 0,
-                                                                        equipmentUuid: serialNumber,
-                                                                        goodsUuid: Number(uuid),
-                                                                        presentNumber: newQuantity,
-                                                                        salePrice: spot.goods.goodsPrice
-                                                                    });
-
-                                                                    usageMap[uuid] -= take;
-                                                                    console.log(`📉 Decrementing ${spot.goods.goodsName} (Slot: ${spot.arrivalName}): Present ${present} - Take ${take} = New ${newQuantity}. Remaining Needed: ${usageMap[uuid]}`);
-                                                                }
-                                                            }
-                                                        });
-                                                    });
-
-                                                    stockUpdates = goodsListToUpdate;
-                                                }
-                                            } catch (fetchErr) {
-                                                console.error("Error fetching fresh stock for checkout", fetchErr);
-                                            }
-                                        }
-
-                                        // --- 2. Backend Order Confirmation ---
-                                        const checkoutItems = updatedItems.map((uiItem) => {
-                                            return {
-                                                menu_item_id: uiItem.menuItemId,
-                                                quantity: uiItem.quantity,
-                                                day_of_week: uiItem.dayOfWeek,
-                                                week_number: uiItem.weekNumber,
-                                                vending_good_uuid: uiItem.vendingGoodUuid || null,
-                                                heating_requested: uiItem.heatingChoice === "yes",
-                                                plan_type: uiItem.planType || (cartData.plan_type === "START_PLAN" ? "START_PLAN" : "ORDER_NOW"),
-                                                plan_subtype: uiItem.planSubtype || "NONE",
-                                            };
-                                        });
-
-                                        const payload = {
-                                            location_id: cartData.location?.id || null,
-                                            plan_type: cartData.plan_type,
-                                            plan_subtype: cartData.plan_subtype,
-                                            pickup_type: cartData.pickup_type,
-                                            pickup_date: cartData.pickup_date,
-                                            pickup_slot_id: cartData.pickup_slot?.id || null,
-                                            items: checkoutItems,
-                                        };
-
-                                        const token = sessionStorage.getItem("authToken");
-                                        if (!payload.location_id) {
-                                            alert(
-                                                "Location data is missing. Please re-select location."
-                                            );
-                                            setIsCheckingOut(false);
+                                        if (!Array.isArray(paymentRes.data) || paymentRes.data.length === 0) {
+                                            toast.error("No payment information found. Please add a payment method in your profile.");
+                                            // Optional: Redirect to settings?
+                                            // navigate("/settings?tab=payment"); 
                                             return;
                                         }
-
-                                        const orderRes = await axios.post(
-                                            `${baseUrl}/api/vending/order/confirm/`,
-                                            payload,
-                                            {
-                                                headers: { Authorization: `Token ${token}` },
-                                            }
-                                        );
-
-                                        const orderId = orderRes.data.id;
-                                        console.log("✅ Order Confirmed. ID:", orderId);
-
-                                        // --- 3. Update Vending Machine Stock (New API) ---
-                                        if (stockUpdates.length > 0) {
-                                            try {
-                                                console.log("🔄 Sending Stock Update to Vending Machine...", stockUpdates);
-                                                const updatePayload = {
-                                                    list: stockUpdates,
-                                                    machineUuid: Number(serialNumber)
-                                                };
-
-                                                await axios.put(
-                                                    `${baseUrl}/api/vending/external/update-commodity/`,
-                                                    updatePayload,
-                                                    {
-                                                        headers: { Authorization: `Token ${token}` },
-                                                    }
-                                                );
-                                                console.log("✅ Stock Updated Successfully on Machine.");
-                                            } catch (updateErr) {
-                                                console.error("❌ Failed to update machine stock", updateErr);
-                                                // Don't block flow, but log error
-                                            }
-                                        }
-
-                                        // Filter only Order Now / Smart Grab items for the vending machine pickup code
-                                        const orderNowItems = updatedItems.filter(
-                                            (item) => item.planType === "ORDER_NOW" || item.planType === "SMART_GRAB"
-                                        );
-
-                                        if (orderNowItems.length > 0) {
-                                            const matchedGoods: any[] = [];
-                                            let totalGoodsCount = 0;
-
-                                            orderNowItems.forEach((item) => {
-                                                if (item.vendingGoodUuid) {
-                                                    totalGoodsCount += item.quantity;
-                                                    const goodsObj: any = {
-                                                        goodsNumber: item.quantity,
-                                                        goodsPrice: 0.01,
-                                                        goodsUuid: item.vendingGoodUuid,
-                                                        heatingChoice: item.heatingChoice,
-                                                    };
-
-                                                    matchedGoods.push(goodsObj);
-                                                }
-                                            });
-
-                                            if (matchedGoods.length > 0) {
-                                                console.log("🚀 Requesting Pickup Code for:", matchedGoods);
-                                                // Generate UAE time (UTC+4) for the external API
-                                                const now = new Date();
-                                                const uaeOffset = 4 * 60; // 4 hours in minutes
-                                                const uaeTime = new Date(now.getTime() + (now.getTimezoneOffset() + uaeOffset) * 60000);
-                                                const orderTimeStr = uaeTime.toISOString();
-
-                                                const pickPayload = {
-                                                    goodsList: matchedGoods,
-                                                    goodsNumber: totalGoodsCount,
-                                                    machineUuid: serialNumber,
-                                                    orderNo: orderId.toString(),
-                                                    orderTime: orderTimeStr,
-                                                    timeOut: 1,
-                                                    lock: 0,
-                                                };
-
-                                                const pickResponse = await fetch(
-                                                    `${baseUrl}/api/vending/external/production-pick/`,
-                                                    {
-                                                        method: "POST",
-                                                        headers: {
-                                                            "Content-Type": "application/json",
-                                                        },
-                                                        body: JSON.stringify(pickPayload),
-                                                    }
-                                                );
-                                                const pickData = await pickResponse.json();
-
-                                                if (pickData.result === "200" && pickData.data) {
-                                                    console.log("🔑 Pickup Code Received:", pickData.data);
-                                                    const storageKey = `pickup_codes_${orderId}`;
-                                                    const existingCodes = JSON.parse(
-                                                        localStorage.getItem(storageKey) || "{}"
-                                                    );
-
-                                                    matchedGoods.forEach((mg) => {
-                                                        existingCodes[mg.goodsUuid] = pickData.data;
-                                                        const item = updatedItems.find(
-                                                            (i) => i.vendingGoodUuid === mg.goodsUuid
-                                                        );
-                                                        if (item) {
-                                                            existingCodes[`menu_${item.menuItemId}`] =
-                                                                pickData.data;
-                                                        }
-                                                    });
-
-                                                    localStorage.setItem(
-                                                        storageKey,
-                                                        JSON.stringify(existingCodes)
-                                                    );
-
-                                                    // --- 3.5 Save Pickup Code to Backend ---
-                                                    try {
-                                                        await axios.post(
-                                                            `${baseUrl}/api/vending/order/update-pickup-code/`,
-                                                            {
-                                                                order_id: orderId,
-                                                                pickup_code: pickData.data,
-                                                            },
-                                                            {
-                                                                headers: { Authorization: `Token ${token}` },
-                                                            }
-                                                        );
-                                                        console.log("✅ Pickup code saved to backend.");
-                                                    } catch (backendErr) {
-                                                        console.error("Failed to save pickup code to backend", backendErr);
-                                                    }
-                                                } else {
-                                                    console.warn("Pickup code not received:", pickData);
-                                                }
-                                            }
-                                        }
-
-                                        // --- 4. Clear Cart ---
-                                        try {
-                                            await axios.post(
-                                                `${baseUrl}/api/vending/cart/`,
-                                                { clear_all: true },
-                                                {
-                                                    headers: { Authorization: `Token ${token}` },
-                                                }
-                                            );
-                                            setItems([]);
-                                            console.log("🗑️ Cart cleared successfully.");
-                                        } catch (clearErr) {
-                                            console.error("Failed to clear cart", clearErr);
-                                        }
-
-                                        navigate("/vending-home/my-orders");
                                     } catch (err) {
-                                        console.error("Checkout failed", err);
-                                        alert("Failed to place order.");
-                                    } finally {
-                                        setIsCheckingOut(false);
+                                        console.error("Failed to check payment methods", err);
+                                        toast.error("Unable to verify payment information. Please try again.");
+                                        return;
                                     }
+
+                                    // Open Confirmation Modal instead of immediate checkout
+                                    setPaymentError(null);
+                                    setShowPaymentModal(true);
                                 }}
                                 loading={isCheckingOut}
+                                disabled={items.length === 0}
                             />
                         </div>
                     </div>
                 )}
             </div>
+
+            {/* Payment Confirmation Modal */}
+            <AlertDialog open={showPaymentModal} onOpenChange={setShowPaymentModal}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Confirm Payment</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            You are about to be redirected to our secure payment gateway to complete your purchase.
+
+                            {paymentError && (
+                                <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded text-red-600 text-sm">
+                                    <strong>Payment Error:</strong> {paymentError}
+                                </div>
+                            )}
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel onClick={() => setShowPaymentModal(false)}>Cancel</AlertDialogCancel>
+                        <AlertDialogAction
+                            onClick={async (e) => {
+                                e.preventDefault(); // Prevent auto-close
+                                await processCheckout();
+                            }}
+                            className="bg-[#054A86] hover:bg-[#043d6e]"
+                            disabled={isCheckingOut}
+                        >
+                            {isCheckingOut ? "Processing..." : "Confirm & Pay"}
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
+
 
             <div className="max-md:hidden">
                 <Footer />

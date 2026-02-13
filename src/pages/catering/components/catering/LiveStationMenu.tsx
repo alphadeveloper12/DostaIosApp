@@ -43,7 +43,7 @@ const LiveStationMenu: React.FC<LiveStationMenuProps> = ({
  const [error, setError] = useState<string | null>(null);
 
  const baseUrl = import.meta.env.VITE_API_URL;
- const authToken = sessionStorage.getItem("authToken");
+ const authToken = (sessionStorage.getItem("authToken") || localStorage.getItem("authToken"));
 
  useEffect(() => {
   const fetchItems = async () => {

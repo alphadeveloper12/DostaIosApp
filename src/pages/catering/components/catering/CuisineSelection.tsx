@@ -43,7 +43,7 @@ const CuisineSelection: React.FC<CuisineSelectionProps> = ({
   const fetchCuisines = async () => {
    try {
     const baseUrl = import.meta.env.VITE_API_URL;
-    const authToken = sessionStorage.getItem("authToken");
+    const authToken = (sessionStorage.getItem("authToken") || localStorage.getItem("authToken"));
 
     // Add query params
     const params: any = {};

@@ -61,7 +61,7 @@ const BudgetSelection: React.FC<BudgetSelectionProps> = ({
  const [error, setError] = useState<string | null>(null); // State for error message
 
  const baseUrl = import.meta.env.VITE_API_URL;
- const authToken = sessionStorage.getItem("authToken");
+ const authToken = (sessionStorage.getItem("authToken") || localStorage.getItem("authToken"));
 
  // Auto-select Pax based on guestCount
  useEffect(() => {

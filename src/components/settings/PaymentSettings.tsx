@@ -24,7 +24,7 @@ export default function PaymentSettings() {
         cardholder_name: "",
     });
 
-    const authToken = sessionStorage.getItem("authToken");
+    const authToken = (sessionStorage.getItem("authToken") || localStorage.getItem("authToken")) || localStorage.getItem("authToken");
 
     // Fetch payment methods
     const fetchPayments = async () => {

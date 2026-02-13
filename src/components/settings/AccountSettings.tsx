@@ -18,7 +18,7 @@ export default function AccountSettings() {
 
     // ✅ Get Auth Token (checks both storages)
     const getAuthToken = () =>
-        sessionStorage.getItem("authToken") || localStorage.getItem("authToken");
+        (sessionStorage.getItem("authToken") || localStorage.getItem("authToken")) || localStorage.getItem("authToken");
 
     // ✅ Fetch profile data on mount
     useEffect(() => {
