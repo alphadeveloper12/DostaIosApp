@@ -1,4 +1,5 @@
 import { Link, useNavigate } from "react-router-dom"; // Import useNavigate
+import ImageWithShimmer from "@/components/ui/ImageWithShimmer";
 
 const steps = [
  // Commented out - Delivery card
@@ -79,10 +80,11 @@ const ShowCase = () => {
         <Link key={index} to={step.link}>
          <div className="relative   md:max-w-[350px] w-full h-auto md:h-[478px] shadow-xl bg-neutral-white rounded-[16px] flex flex-col justify-between overflow-hidden">
           <div className="relative w-full h-[224px] md:h-[224px]">
-           <img
+           <ImageWithShimmer
             src={step.icon}
             alt="logo"
             className="w-full h-full object-cover rounded-t-[16px]"
+            wrapperClassName="w-full h-full rounded-t-[16px]"
            />
            <span className="text-primary-dark absolute bottom-[-14px] left-4 z-10 text-[10px] md:text-[11px] leading-4 font-[700] tracking-[0.6px] rounded-[16px] bg-[#A7CF38] py-[6px] px-[12px]">
             {step.tag}
