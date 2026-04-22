@@ -19,13 +19,15 @@ workflows:
 
     scripts:
       - name: Install dependencies
-        script: npm install
+        script: |
+          npm install
+          npm install -g @capacitor/cli
 
       - name: Build web app
         script: npm run build
 
       - name: Capacitor sync iOS
-        script: ./node_modules/.bin/cap sync ios
+        script: cap sync ios
 
       - name: Set up code signing
         script: xcode-project use-profiles
