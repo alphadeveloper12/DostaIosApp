@@ -25,7 +25,9 @@ workflows:
         script: npm run build
 
       - name: Capacitor sync iOS
-        script: node node_modules/@capacitor/cli/bin/capacitor sync ios
+        script: |
+          npm install @capacitor/cli @capacitor/ios @capacitor/core
+          node node_modules/@capacitor/cli/bin/capacitor sync ios
 
       - name: Set up code signing
         script: xcode-project use-profiles
